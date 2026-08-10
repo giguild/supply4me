@@ -1,0 +1,16 @@
+<?php
+
+namespace App\Resources\Payments;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\ResourceCollection;
+
+class PaymentCollection extends ResourceCollection
+{
+    public $collects = PaymentResource::class;
+
+    public function toArray(Request $request): array
+    {
+        return $this->collection->toArray();
+    }
+}
