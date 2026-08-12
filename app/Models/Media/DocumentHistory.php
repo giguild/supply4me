@@ -12,6 +12,8 @@ class DocumentHistory extends Model
 {
     use HasFactory, HasUuid;
 
+    protected $table = 'document_history';
+
     protected $fillable = [
         'company_id',
         'media_id',

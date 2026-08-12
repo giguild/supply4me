@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Str;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -23,11 +24,23 @@ class Product extends Model
 
     public const PREFIX = 'PRD';
 
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::creating(function (Product $product) {
+            if (empty($product->slug)) {
+                $product->slug = Str::slug($product->name);
+            }
+        });
+    }
+
     protected $fillable = [
         'company_id',
         'sku',
         'barcode',
         'name',
+        'slug',
         'description',
         'short_description',
         'category_id',
@@ -90,17 +103,17 @@ class Product extends Model
 
     public function category(): BelongsTo
     {
-        return $this->belongsTo(ProductCategory::class);
+        return $this->belongsTo(ProductCategory::class, 'category_id');
     }
 
     public function brand(): BelongsTo
     {
-        return $this->belongsTo(ProductBrand::class);
+        return $this->belongsTo(ProductBrand::class, 'brand_id');
     }
 
     public function unit(): BelongsTo
     {
-        return $this->belongsTo(ProductUnit::class);
+        return $this->belongsTo(ProductUnit::class, 'unit_id');
     }
 
     public function variants(): HasMany

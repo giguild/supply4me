@@ -51,12 +51,15 @@
             <button type="submit" :disabled="adding" class="flex-1 bg-accent text-white py-3 rounded-full font-semibold hover:bg-accent-hover transition-colors disabled:opacity-50">
               {{ adding ? 'Adding...' : 'Add to Cart' }}
             </button>
+            <button v-if="$page.props.auth?.customer" type="button" @click="toggleWishlist" class="p-3 rounded-full border border-[var(--color-border)] hover:border-red-300 transition-colors dark:border-gray-600">
+              <svg class="h-6 w-6 transition-colors" :class="isWishlisted ? 'text-red-500 fill-red-500' : 'text-gray-400 hover:text-red-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            </button>
           </form>
 
           <div class="mt-3 text-xs text-[var(--color-text-secondary)]">
-            <span>Min order: {{ minQty }}</span>
+            <span>Min order: {{ minQty }} {{ product.unit?.short_name || 'pc' }}</span>
             <span class="mx-2">|</span>
-            <span>Max order: {{ maxQty ? maxQty : 'No limit' }}</span>
+            <span>Max order: {{ maxQty ? maxQty + ' ' + (product.unit?.short_name || 'pc') : 'No limit' }}</span>
           </div>
 
           <p v-if="message" class="mt-4 text-sm text-green-600 dark:text-green-400">{{ message }}</p>
@@ -87,6 +90,7 @@ import StorefrontLayout from '@/Components/Layout/StorefrontLayout.vue'
 const props = defineProps({
   product: Object,
   cartCount: { type: Number, default: 0 },
+  wishlistIds: { type: Array, default: () => [] },
   company: Object,
 })
 
@@ -94,6 +98,7 @@ const quantity = ref(1)
 const adding = ref(false)
 const message = ref('')
 const error = ref('')
+const isWishlisted = ref(props.wishlistIds.includes(props.product.id))
 
 const minQty = props.product.minimum_order_quantity || 1
 const maxQty = props.product.maximum_order_quantity || null
@@ -118,5 +123,21 @@ function addToCart() {
       error.value = Object.values(errors)[0] || 'Failed to add to cart'
     },
   })
+}
+
+function toggleWishlist() {
+  fetch('/wishlist/toggle', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-XSRF-TOKEN': decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || ''),
+    },
+    body: JSON.stringify({ product_id: props.product.id }),
+  })
+    .then(res => res.json())
+    .then(data => {
+      isWishlisted.value = data.added
+    })
 }
 </script>

@@ -13,33 +13,32 @@
                         </Link>
 
                         <!-- Desktop Nav -->
-                        <nav class="hidden lg:flex items-center gap-0.5">
-                            <Link v-for="item in mainNav" :key="item.route" :href="route(item.route)"
-                                class="px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
-                                :class="isActive(item.route) ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'">
-                                {{ item.label }}
-                            </Link>
+                        <nav class="hidden lg:flex items-center gap-0.5 overflow-x-auto">
+                            <template v-for="item in mainNav" :key="item.route">
+                                <Link :href="route(item.route)"
+                                    class="px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                                    :class="isActive(item.route) ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'">
+                                    {{ item.label }}
+                                </Link>
+                            </template>
 
-                            <!-- More dropdown -->
-                            <div class="relative" v-if="moreNav.length"
-                                @mouseenter="showMoreMenu = true"
-                                @mouseleave="showMoreMenu = false">
-                                <button class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
-                                    More
-                                </button>
-                                <div v-if="showMoreMenu" class="absolute left-0 top-full mt-1 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50 max-h-80 overflow-y-auto">
-                                    <template v-for="group in moreNavGroups" :key="group.label">
-                                        <div class="px-3 py-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{{ group.label }}</div>
-                                        <Link v-for="item in group.items" :key="item.route" :href="route(item.route)"
-                                            class="flex items-center gap-3 px-3 py-2 text-sm font-medium"
-                                            :class="isActive(item.route) ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'">
-                                            <span v-html="item.icon" class="w-4 h-4 shrink-0" />
-                                            {{ item.label }}
-                                        </Link>
-                                    </template>
-                                </div>
-                            </div>
+                            <div class="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1 shrink-0"></div>
+
+                            <template v-for="group in moreNavGroups" :key="group.label">
+                                <div class="px-2 py-1 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider whitespace-nowrap shrink-0">{{ group.label }}</div>
+                                <Link v-for="item in group.items" :key="item.route" :href="route(item.route)"
+                                    class="px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                                    :class="isActive(item.route) ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'">
+                                    {{ item.label }}
+                                </Link>
+                                <div class="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1 shrink-0"></div>
+                            </template>
+
+                            <Link :href="route('settings.index')"
+                                class="px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                                :class="isActive('settings.index') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'">
+                                Settings
+                            </Link>
                         </nav>
                     </div>
 
@@ -102,14 +101,35 @@
             </div>
 
             <!-- Mobile Nav -->
-            <div v-if="mobileMenuOpen" class="lg:hidden border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div v-if="mobileMenuOpen" class="lg:hidden border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 max-h-[70vh] overflow-y-auto">
                 <div class="px-4 py-3 space-y-1">
-                    <Link v-for="item in allNav" :key="item.route" :href="route(item.route)"
+                    <Link v-for="item in mainNav" :key="item.route" :href="route(item.route)"
                         @click="mobileMenuOpen = false"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium"
                         :class="isActive(item.route) ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'">
                         <span v-html="item.icon" class="w-4 h-4" />
                         {{ item.label }}
+                    </Link>
+
+                    <hr class="my-2 border-gray-200 dark:border-gray-700" />
+
+                    <template v-for="group in moreNavGroups" :key="group.label">
+                        <div class="px-3 py-1 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{{ group.label }}</div>
+                        <Link v-for="item in group.items" :key="item.route" :href="route(item.route)"
+                            @click="mobileMenuOpen = false"
+                            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium"
+                            :class="isActive(item.route) ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'">
+                            <span v-html="item.icon" class="w-4 h-4" />
+                            {{ item.label }}
+                        </Link>
+                    </template>
+
+                    <hr class="my-2 border-gray-200 dark:border-gray-700" />
+
+                    <Link :href="route('settings.index')" @click="mobileMenuOpen = false"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <span v-html="icons.settings" class="w-4 h-4" />
+                        Settings
                     </Link>
                 </div>
             </div>
@@ -135,7 +155,6 @@ const props = defineProps({ user: Object });
 const toast = useToast();
 const page = usePage();
 const showUserMenu = ref(false);
-const showMoreMenu = ref(false);
 const mobileMenuOpen = ref(false);
 const { theme, toggleTheme } = useTheme();
 
@@ -212,15 +231,6 @@ const moreNavGroups = [
             { label: 'Financial Report', route: 'reports.financial', icon: icons.reports },
         ],
     },
-];
-
-const moreNav = moreNavGroups.flatMap(g => g.items);
-
-const allNav = [
-    ...mainNav,
-    ...moreNav,
-    { label: 'Settings', route: 'settings.index', icon: icons.settings },
-    { label: 'Profile', route: 'profile.edit', icon: icons.settings },
 ];
 
 const logout = () => router.post(route('logout'));

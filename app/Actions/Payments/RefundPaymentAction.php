@@ -20,7 +20,7 @@ class RefundPaymentAction
 
         return DB::transaction(function () use ($payment, $user, $reason) {
             $payment->update([
-                'status' => PaymentStatus::Refunded,
+                'status' => PaymentStatus::Cancelled,
                 'notes' => $reason ? ($payment->notes ? $payment->notes . "\nRefund reason: " . $reason : "Refund reason: " . $reason) : $payment->notes,
             ]);
 

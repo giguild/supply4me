@@ -23,7 +23,7 @@ class PaymentObserver
                 'amount' => $payment->amount,
                 'customer_id' => $payment->customer_id,
                 'status' => $payment->status->value,
-                'method' => $payment->method->value,
+                'method' => $payment->payment_method?->value,
                 'company_id' => $payment->company_id,
             ])
             ->log();
@@ -53,7 +53,7 @@ class PaymentObserver
 
             match ($newStatus) {
                 PaymentStatus::Completed => PaymentCompleted::dispatch($payment),
-                PaymentStatus::Refunded => PaymentRefunded::dispatch($payment),
+                PaymentStatus::Cancelled => PaymentRefunded::dispatch($payment),
                 default => null,
             };
         }
@@ -95,10 +95,10 @@ class PaymentObserver
         }
 
         $validTransitions = [
-            PaymentStatus::Pending => [PaymentStatus::Processing, PaymentStatus::Cancelled],
-            PaymentStatus::Processing => [PaymentStatus::Completed, PaymentStatus::Failed],
-            PaymentStatus::Failed => [PaymentStatus::Pending, PaymentStatus::Cancelled],
-            PaymentStatus::Completed => [PaymentStatus::Refunded],
+            PaymentStatus::Pending => [PaymentStatus::Approved, PaymentStatus::Rejected, PaymentStatus::Cancelled, PaymentStatus::Completed],
+            PaymentStatus::Approved => [PaymentStatus::Completed, PaymentStatus::Cancelled],
+            PaymentStatus::Rejected => [PaymentStatus::Pending],
+            PaymentStatus::Completed => [PaymentStatus::Cancelled],
         ];
 
         if (! in_array($newStatus, $validTransitions[$oldStatus] ?? [])) {

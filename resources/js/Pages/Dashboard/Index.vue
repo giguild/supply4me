@@ -10,38 +10,31 @@
         <StatCard
           label="Total Orders"
           :value="stats.total_orders ?? 0"
-          trend="12.5"
-          subtitle="vs last month"
+          :subtitle="`${stats.pending_orders ?? 0} pending`"
+        />
+        <StatCard
+          label="Total Customers"
+          :value="stats.total_customers ?? 0"
+        />
+        <StatCard
+          label="Total Products"
+          :value="stats.total_products ?? 0"
+          :subtitle="`${stats.low_stock_count ?? 0} low stock`"
+        />
+        <StatCard
+          label="Pending Payments"
+          :value="stats.pending_payments ?? 0"
+          :subtitle="`${stats.pending_payments ?? 0} awaiting approval`"
+        />
+        <StatCard
+          label="Monthly Revenue"
+          :value="formatCurrency(stats.monthly_revenue ?? 0)"
+          :format="false"
         />
         <StatCard
           label="Pending Orders"
           :value="stats.pending_orders ?? 0"
           :subtitle="`${stats.pending_orders ?? 0} awaiting processing`"
-        />
-        <StatCard
-          label="Total Customers"
-          :value="stats.total_customers ?? 0"
-          trend="8.2"
-          subtitle="vs last month"
-        />
-        <StatCard
-          label="Total Products"
-          :value="stats.total_products ?? 0"
-          trend="3.1"
-          subtitle="vs last month"
-        />
-        <StatCard
-          label="Pending Payments"
-          :value="stats.pending_payments ?? 0"
-          :subtitle="`${stats.pending_payments ?? 0} invoices pending`"
-        />
-        <StatCard
-          label="Monthly Revenue"
-          :value="formatCurrency(stats.monthly_revenue ?? 0)"
-          prefix="₦ "
-          :format="false"
-          trend="15.3"
-          subtitle="vs last month"
         />
       </div>
 
@@ -80,7 +73,7 @@
                     <StatusBadge :value="order.status" />
                   </td>
                    <td class="py-3 text-right font-medium text-gray-900 dark:text-gray-100">
-                    ₦ {{ formatCurrency(order.total) }}
+                    ₦{{ formatCurrency(order.total_amount) }}
                   </td>
                 </tr>
               </tbody>

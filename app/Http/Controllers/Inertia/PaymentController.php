@@ -64,11 +64,11 @@ class PaymentController extends Controller
             'supplier_id' => 'nullable|exists:suppliers,id',
             'order_id' => 'nullable|exists:orders,id',
             'invoice_id' => 'nullable|exists:invoices,id',
-            'type' => 'nullable|string|max:50',
-            'method' => 'required|string|max:50',
+            'payment_type' => 'nullable|string|max:50',
+            'payment_method' => 'required|string|max:50',
             'amount' => 'required|numeric|min:0.01',
             'currency_code' => 'nullable|string|max:3',
-            'reference' => 'nullable|string|max:255',
+            'reference_number' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'payment_date' => 'required|date',
         ]);
@@ -97,7 +97,7 @@ class PaymentController extends Controller
         $payment->load([
             'customer',
             'supplier',
-            'allocations.invoice',
+            'allocations.invoice.payments',
             'approvedBy',
             'receivedBy',
             'branch',
@@ -131,11 +131,11 @@ class PaymentController extends Controller
             'supplier_id' => 'nullable|exists:suppliers,id',
             'order_id' => 'nullable|exists:orders,id',
             'invoice_id' => 'nullable|exists:invoices,id',
-            'type' => 'nullable|string|max:50',
-            'method' => 'required|string|max:50',
+            'payment_type' => 'nullable|string|max:50',
+            'payment_method' => 'required|string|max:50',
             'amount' => 'required|numeric|min:0.01',
             'currency_code' => 'nullable|string|max:3',
-            'reference' => 'nullable|string|max:255',
+            'reference_number' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'payment_date' => 'required|date',
         ]);
@@ -168,10 +168,56 @@ class PaymentController extends Controller
         $payment->update([
             'status' => 'completed',
             'approved_by' => $request->user()->id,
-            'cleared_date' => now()->toDateString(),
+            'approved_at' => now(),
         ]);
 
-        return redirect()->route('payments.show', $payment)->with('success', 'Payment approved successfully');
+        $this->syncInvoicePayment($payment);
+
+        return redirect()->route('payments.show', $payment)->with('success', 'Payment approved — invoice updated');
+    }
+
+    public function markPartial(Request $request, Payment $payment): \Illuminate\Http\RedirectResponse
+    {
+        $request->validate([
+            'paid_amount' => 'required|numeric|min:0.01',
+        ]);
+
+        $payment->update([
+            'status' => 'completed',
+            'approved_by' => $request->user()->id,
+            'approved_at' => now(),
+            'amount' => $request->paid_amount,
+            'notes' => ($payment->notes ? $payment->notes . "\n" : '') . "Partial payment of ₦" . number_format($request->paid_amount, 2) . " approved by admin",
+        ]);
+
+        $this->syncInvoicePayment($payment);
+
+        return redirect()->route('payments.show', $payment)->with('success', 'Partial payment recorded — invoice updated');
+    }
+
+    private function syncInvoicePayment(Payment $payment): void
+    {
+        $allocation = $payment->allocations()->first();
+        if (!$allocation) return;
+
+        $invoice = $allocation->invoice;
+        if (!$invoice) return;
+
+        $totalPaid = $invoice->payments()
+            ->where('status', 'completed')
+            ->sum('payments.amount');
+
+        $invoice->update([
+            'paid_amount' => $totalPaid,
+            'due_amount' => $invoice->total_amount - $totalPaid,
+            'status' => $totalPaid >= $invoice->total_amount ? 'paid' : 'partial',
+        ]);
+
+        if ($invoice->order) {
+            $invoice->order->update([
+                'payment_status' => $totalPaid >= $invoice->total_amount ? 'paid' : 'partial',
+            ]);
+        }
     }
 
     public function reject(Request $request, Payment $payment): \Illuminate\Http\RedirectResponse
@@ -181,6 +227,8 @@ class PaymentController extends Controller
             'approved_by' => $request->user()->id,
         ]);
 
-        return redirect()->route('payments.show', $payment)->with('success', 'Payment rejected successfully');
+        $this->syncInvoicePayment($payment);
+
+        return redirect()->route('payments.show', $payment)->with('success', 'Payment rejected');
     }
 }

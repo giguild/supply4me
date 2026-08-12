@@ -5,21 +5,19 @@ namespace App\Enums\Payments;
 enum PaymentStatus: string
 {
     case Pending = 'pending';
-    case Processing = 'processing';
-    case Completed = 'completed';
-    case Failed = 'failed';
+    case Approved = 'approved';
+    case Rejected = 'rejected';
     case Cancelled = 'cancelled';
-    case Refunded = 'refunded';
+    case Completed = 'completed';
 
     public function label(): string
     {
         return match ($this) {
             self::Pending => 'Pending',
-            self::Processing => 'Processing',
-            self::Completed => 'Completed',
-            self::Failed => 'Failed',
+            self::Approved => 'Approved',
+            self::Rejected => 'Rejected',
             self::Cancelled => 'Cancelled',
-            self::Refunded => 'Refunded',
+            self::Completed => 'Completed',
         };
     }
 
@@ -27,11 +25,10 @@ enum PaymentStatus: string
     {
         return match ($this) {
             self::Pending => 'warning',
-            self::Processing => 'info',
-            self::Completed => 'success',
-            self::Failed => 'danger',
+            self::Approved => 'success',
+            self::Rejected => 'danger',
             self::Cancelled => 'secondary',
-            self::Refunded => 'primary',
+            self::Completed => 'success',
         };
     }
 }

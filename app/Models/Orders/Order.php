@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Order extends Model
@@ -36,6 +37,8 @@ class Order extends Model
         'payment_status',
         'fulfillment_status',
         'priority',
+        'order_date',
+        'requested_delivery_date',
         'subtotal',
         'tax_amount',
         'discount_amount',
@@ -107,6 +110,11 @@ class Order extends Model
     public function statusHistory(): HasMany
     {
         return $this->hasMany(OrderStatusHistory::class);
+    }
+
+    public function invoice(): HasOne
+    {
+        return $this->hasOne(\App\Models\Invoicing\Invoice::class);
     }
 
     public function shippingAddress(): BelongsTo

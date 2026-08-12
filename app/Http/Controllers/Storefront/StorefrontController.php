@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Products\Product;
 use App\Models\Products\ProductCategory;
 use App\Models\Products\ProductBrand;
+use App\Models\Wishlists\Wishlist;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class StorefrontController extends Controller
@@ -49,6 +51,7 @@ class StorefrontController extends Controller
         $brands = ProductBrand::where('company_id', $company->id)->where('status', 'active')->get();
 
         $cartCount = $this->getCartCount();
+        $wishlistIds = $this->getWishlistIds();
 
         return Inertia::render('Storefront/Home', [
             'products' => $products,
@@ -56,6 +59,7 @@ class StorefrontController extends Controller
             'brands' => $brands,
             'filters' => $request->only(['search', 'category_id', 'brand_id', 'sort']),
             'cartCount' => $cartCount,
+            'wishlistIds' => $wishlistIds,
             'company' => $company,
         ]);
     }
@@ -72,10 +76,12 @@ class StorefrontController extends Controller
             ->firstOrFail();
 
         $cartCount = $this->getCartCount();
+        $wishlistIds = $this->getWishlistIds();
 
         return Inertia::render('Storefront/ProductDetail', [
             'product' => $product,
             'cartCount' => $cartCount,
+            'wishlistIds' => $wishlistIds,
             'company' => $company,
         ]);
     }
@@ -89,5 +95,15 @@ class StorefrontController extends Controller
     {
         $cart = session()->get('cart', []);
         return array_sum(array_column($cart, 'quantity'));
+    }
+
+    protected function getWishlistIds(): array
+    {
+        $customer = Auth::guard('customer')->user();
+        if (!$customer) return [];
+
+        return Wishlist::where('customer_id', $customer->id)
+            ->pluck('product_id')
+            ->toArray();
     }
 }

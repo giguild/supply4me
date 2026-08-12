@@ -167,7 +167,7 @@ watch(() => form.tax_amount, recalculateTotals);
 watch(() => form.discount_amount, recalculateTotals);
 
 const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount || 0);
+    return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount || 0);
 };
 
 const submit = () => {

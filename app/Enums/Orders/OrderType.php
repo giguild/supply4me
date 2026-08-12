@@ -4,19 +4,15 @@ namespace App\Enums\Orders;
 
 enum OrderType: string
 {
-    case Standard = 'standard';
-    case Repeat = 'repeat';
-    case Standing = 'standing';
-    case Sample = 'sample';
+    case Sales = 'sales';
+    case Return = 'return';
     case Exchange = 'exchange';
 
     public function label(): string
     {
         return match ($this) {
-            self::Standard => 'Standard',
-            self::Repeat => 'Repeat',
-            self::Standing => 'Standing',
-            self::Sample => 'Sample',
+            self::Sales => 'Sales',
+            self::Return => 'Return',
             self::Exchange => 'Exchange',
         };
     }
@@ -24,11 +20,9 @@ enum OrderType: string
     public function color(): string
     {
         return match ($this) {
-            self::Standard => 'primary',
-            self::Repeat => 'info',
-            self::Standing => 'success',
-            self::Sample => 'warning',
-            self::Exchange => 'danger',
+            self::Sales => 'primary',
+            self::Return => 'warning',
+            self::Exchange => 'info',
         };
     }
 }

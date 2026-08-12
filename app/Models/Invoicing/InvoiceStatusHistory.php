@@ -13,6 +13,8 @@ class InvoiceStatusHistory extends Model
 {
     use HasFactory, HasUuid;
 
+    protected $table = 'invoice_status_history';
+
     protected $fillable = [
         'invoice_id',
         'status',

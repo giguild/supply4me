@@ -47,9 +47,15 @@
             <div class="flex items-center justify-between">
               <span class="font-bold text-accent">₦{{ Number(order.total_amount).toLocaleString() }}</span>
               <div class="flex gap-2">
-                <a v-if="order.payment_status === 'unpaid'" :href="`/payment/${order.id}`" class="text-xs bg-accent text-white px-3 py-1 rounded-full hover:bg-accent-hover transition-colors">Upload Payment</a>
+                <a v-if="order.invoice && order.invoice.status !== 'paid'" :href="`/payment/${order.invoice.id}`" class="text-xs bg-accent text-white px-3 py-1 rounded-full hover:bg-accent-hover transition-colors">Upload Payment</a>
+                <span v-if="order.invoice?.status === 'paid'" class="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full dark:bg-green-900/30 dark:text-green-400">Paid</span>
                 <a :href="`/order-confirmation/${order.id}`" class="text-xs border border-[var(--color-border)] text-[var(--color-text)] px-3 py-1 rounded-full hover:border-accent transition-colors dark:border-gray-600">View</a>
               </div>
+            </div>
+            <div v-if="order.invoice" class="mt-2 text-xs text-[var(--color-text-secondary)]">
+              Invoice: {{ order.invoice.invoice_number }} &middot;
+              Paid: ₦{{ Number(order.invoice.paid_amount || 0).toLocaleString() }} &middot;
+              Due: <span :class="order.invoice.due_amount > 0 ? 'text-accent font-semibold' : 'text-green-600 dark:text-green-400'">₦{{ Number(order.invoice.due_amount || 0).toLocaleString() }}</span>
             </div>
           </div>
         </div>

@@ -32,7 +32,7 @@
                   <form @submit.prevent="updateQuantity(item, Math.max(item.minimum_order_quantity || 1, item.quantity - 1))">
                     <button type="submit" class="px-3 py-1.5 text-[var(--color-text)] hover:text-accent transition-colors text-sm">-</button>
                   </form>
-                  <span class="px-3 text-sm font-medium text-[var(--color-text)]">{{ item.quantity }}</span>
+                  <span class="px-3 text-sm font-medium text-[var(--color-text)]">{{ item.quantity }} {{ item.unit?.short_name || 'pc' }}</span>
                   <form @submit.prevent="updateQuantity(item, item.maximum_order_quantity ? Math.min(item.maximum_order_quantity, item.quantity + 1) : item.quantity + 1)">
                     <button type="submit" class="px-3 py-1.5 text-[var(--color-text)] hover:text-accent transition-colors text-sm">+</button>
                   </form>
@@ -57,7 +57,7 @@
                 <form @submit.prevent="updateQuantity(item, Math.max(item.minimum_order_quantity || 1, item.quantity - 1))">
                   <button type="submit" class="px-3 py-1 text-[var(--color-text)] hover:text-accent transition-colors">-</button>
                 </form>
-                <span class="px-3 text-sm font-medium text-[var(--color-text)]">{{ item.quantity }}</span>
+                <span class="px-3 text-sm font-medium text-[var(--color-text)]">{{ item.quantity }} {{ item.unit?.short_name || 'pc' }}</span>
                 <form @submit.prevent="updateQuantity(item, item.maximum_order_quantity ? Math.min(item.maximum_order_quantity, item.quantity + 1) : item.quantity + 1)">
                   <button type="submit" class="px-3 py-1 text-[var(--color-text)] hover:text-accent transition-colors">+</button>
                 </form>

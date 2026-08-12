@@ -2,26 +2,37 @@
     <AppLayout :user="$page.props.auth.user">
         <PageHeader title="Products">
             <template #actions>
-                <Link :href="route('products.create')" class="btn btn-accent">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Add Product
-                </Link>
+                <div class="flex flex-wrap items-center gap-2">
+                    <Link :href="route('product-categories.index')" class="btn btn-outline btn-sm">
+                        Categories
+                    </Link>
+                    <Link :href="route('product-brands.index')" class="btn btn-outline btn-sm">
+                        Brands
+                    </Link>
+                    <Link :href="route('product-units.index')" class="btn btn-outline btn-sm">
+                        Units
+                    </Link>
+                    <Link :href="route('products.create')" class="btn btn-accent">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Add Product
+                    </Link>
+                </div>
             </template>
         </PageHeader>
 
-        <div class="flex flex-wrap items-center gap-3 mb-6">
-            <div class="w-64">
+        <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-3 mb-6">
+            <div class="w-full sm:w-64">
                 <SearchInput v-model="search" @input="debouncedSearch" />
             </div>
-            <select v-model="filterCategory" class="form-input w-48" @change="applyFilters">
+            <select v-model="filterCategory" class="form-input w-full sm:w-48" @change="applyFilters">
                 <option value="">All Categories</option>
                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
             </select>
-            <select v-model="filterBrand" class="form-input w-48" @change="applyFilters">
+            <select v-model="filterBrand" class="form-input w-full sm:w-48" @change="applyFilters">
                 <option value="">All Brands</option>
                 <option v-for="brand in brands" :key="brand.id" :value="brand.id">{{ brand.name }}</option>
             </select>
-            <select v-model="filterStatus" class="form-input w-40" @change="applyFilters">
+            <select v-model="filterStatus" class="form-input w-full sm:w-40" @change="applyFilters">
                 <option value="">All Statuses</option>
                 <option value="active">Active</option>
                 <option value="pending">Pending</option>
@@ -189,6 +200,6 @@ const deleteProduct = (id) => {
 };
 
 const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
+    return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(value || 0);
 };
 </script>

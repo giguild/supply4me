@@ -7,8 +7,8 @@
         </PageHeader>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard label="Cost Price" :value="formatCurrency(product.cost_price)" prefix="$" />
-            <StatCard label="Selling Price" :value="formatCurrency(product.selling_price)" prefix="$" />
+            <StatCard label="Cost Price" :value="formatCurrency(product.cost_price)" prefix="₦" />
+            <StatCard label="Selling Price" :value="formatCurrency(product.selling_price)" prefix="₦" />
             <StatCard label="Stock Level" :value="totalStock" />
             <StatCard label="Reorder Level" :value="product.reorder_level ?? '-'" />
         </div>
@@ -144,6 +144,6 @@ const totalStock = computed(() => {
 });
 
 const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
+    return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(value || 0);
 };
 </script>

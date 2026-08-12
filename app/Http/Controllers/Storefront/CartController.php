@@ -32,6 +32,7 @@ class CartController extends Controller
                     'line_total' => $lineTotal,
                     'category' => $product->category,
                     'brand' => $product->brand,
+                    'unit' => $product->unit,
                     'minimum_order_quantity' => $product->minimum_order_quantity ?? 1,
                     'maximum_order_quantity' => $product->maximum_order_quantity,
                 ];

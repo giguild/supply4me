@@ -138,6 +138,7 @@ class InvoiceController extends Controller
             'order',
             'items.product',
             'items.unit',
+            'payments',
             'statusHistory' => fn ($q) => $q->with('performedBy')->latest(),
             'createdBy',
         ]);

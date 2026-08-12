@@ -11,11 +11,11 @@
             </template>
         </PageHeader>
 
-        <div class="flex items-center gap-4 mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
             <div class="flex-1">
                 <SearchInput v-model="search" />
             </div>
-            <select v-model="statusFilter" class="form-input w-48" @change="fetchInvoices">
+            <select v-model="statusFilter" class="form-input w-full sm:w-48" @change="fetchInvoices">
                 <option value="">All Statuses</option>
                 <option value="draft">Draft</option>
                 <option value="sent">Sent</option>
@@ -156,6 +156,6 @@ const voidInvoice = (id) => {
 };
 
 const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount || 0);
+    return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount || 0);
 };
 </script>

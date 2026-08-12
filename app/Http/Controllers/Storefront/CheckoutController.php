@@ -9,6 +9,7 @@ use App\Models\Invoicing\InvoiceItem;
 use App\Models\Orders\Order;
 use App\Models\Orders\OrderItem;
 use App\Models\Payments\Payment;
+use App\Models\Payments\PaymentAllocation;
 use App\Models\Products\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -106,7 +107,6 @@ class CheckoutController extends Controller
 
             $order = Order::create([
                 'company_id' => $company->id,
-                'order_number' => Order::generateNumber(),
                 'customer_id' => $customer->id,
                 'status' => 'pending',
                 'payment_status' => 'unpaid',
@@ -124,25 +124,27 @@ class CheckoutController extends Controller
                     'product_id' => $line['product']->id,
                     'sku' => $line['product']->sku,
                     'name' => $line['product']->name,
+                    'unit_id' => $line['product']->unit_id,
                     'quantity' => $line['quantity'],
                     'unit_price' => $line['unit_price'],
+                    'tax_rate' => 7.5,
                     'tax_amount' => $line['tax_amount'],
-                    'total_amount' => $line['total'],
+                    'line_total' => $line['total'],
                 ]);
             }
 
             $invoice = Invoice::create([
                 'company_id' => $company->id,
-                'invoice_number' => Invoice::generateNumber(),
                 'customer_id' => $customer->id,
                 'order_id' => $order->id,
-                'type' => 'sales',
-                'status' => 'pending',
+                'invoice_type' => 'sales',
+                'status' => 'draft',
+                'invoice_date' => now(),
                 'subtotal' => $subtotal,
                 'tax_amount' => $taxAmount,
                 'total_amount' => $total,
-                'amount_paid' => 0,
-                'balance_due' => $total,
+                'paid_amount' => 0,
+                'due_amount' => $total,
                 'currency_code' => 'NGN',
                 'due_date' => now()->addDays(30),
             ]);
@@ -153,10 +155,12 @@ class CheckoutController extends Controller
                     'product_id' => $line['product']->id,
                     'sku' => $line['product']->sku,
                     'name' => $line['product']->name,
+                    'unit_id' => $line['product']->unit_id,
                     'quantity' => $line['quantity'],
                     'unit_price' => $line['unit_price'],
+                    'tax_rate' => 7.5,
                     'tax_amount' => $line['tax_amount'],
-                    'total_amount' => $line['total'],
+                    'line_total' => $line['total'],
                 ]);
             }
 
@@ -166,55 +170,59 @@ class CheckoutController extends Controller
         session()->forget('cart');
 
         return redirect()->route('storefront.payment', [
-            'order' => $result['order']->id,
+            'invoice' => $result['invoice']->id,
         ]);
     }
 
-    public function payment(string $orderId)
+    public function payment(string $invoiceId)
     {
         $customer = Auth::guard('customer')->user();
 
-        $order = Order::where('id', $orderId)
+        $invoice = Invoice::where('id', $invoiceId)
             ->where('customer_id', $customer->id)
-            ->with(['invoice', 'invoice.items'])
+            ->with(['items.product', 'order', 'payments'])
             ->firstOrFail();
 
+        $isPaid = $invoice->status === 'paid';
+
         return Inertia::render('Storefront/Payment', [
-            'order' => $order,
-            'invoice' => $order->invoice,
+            'invoice' => $invoice,
+            'isPaid' => $isPaid,
             'cartCount' => 0,
         ]);
     }
 
-    public function submitPayment(Request $request, string $orderId)
+    public function submitPayment(Request $request, string $invoiceId)
     {
         $customer = Auth::guard('customer')->user();
 
-        $order = Order::where('id', $orderId)
+        $invoice = Invoice::where('id', $invoiceId)
             ->where('customer_id', $customer->id)
             ->firstOrFail();
 
+        if ($invoice->status === 'paid') {
+            return back()->withErrors(['invoice' => 'This invoice is already fully paid.']);
+        }
+
         $request->validate([
             'receipt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0.01|max:' . $invoice->due_amount,
             'reference_number' => 'nullable|string|max:100',
         ]);
 
         $receiptPath = $request->file('receipt')->store('payment-receipts', 'public');
 
         $payment = Payment::create([
-            'company_id' => $order->company_id,
-            'payment_number' => Payment::generateNumber(),
+            'company_id' => $invoice->company_id,
             'customer_id' => $customer->id,
-            'order_id' => $order->id,
-            'invoice_id' => $order->invoice?->id,
-            'type' => 'customer_payment',
-            'method' => 'mobile_money',
+            'payment_type' => 'incoming',
+            'payment_method' => 'bank_transfer',
+            'reference_number' => $request->reference_number,
             'status' => 'pending',
             'amount' => $request->amount,
             'currency_code' => 'NGN',
             'payment_date' => now(),
-            'notes' => "Receipt uploaded by customer. Ref: {$request->reference_number}",
+            'notes' => "Receipt uploaded by customer for Invoice {$invoice->invoice_number}. Ref: {$request->reference_number}",
             'metadata' => json_encode([
                 'receipt_path' => $receiptPath,
                 'reference_number' => $request->reference_number,
@@ -222,7 +230,13 @@ class CheckoutController extends Controller
             ]),
         ]);
 
-        return redirect()->route('storefront.order confirmation', ['order' => $order->id]);
+        PaymentAllocation::create([
+            'payment_id' => $payment->id,
+            'invoice_id' => $invoice->id,
+            'amount' => $request->amount,
+        ]);
+
+        return redirect()->route('storefront.orderConfirmation', ['order' => $invoice->order_id]);
     }
 
     public function orderConfirmation(string $orderId)
@@ -231,11 +245,14 @@ class CheckoutController extends Controller
 
         $order = Order::where('id', $orderId)
             ->where('customer_id', $customer->id)
-            ->with(['invoice', 'payments'])
+            ->with(['invoice.payments'])
             ->firstOrFail();
+
+        $invoice = $order->invoice;
 
         return Inertia::render('Storefront/OrderConfirmation', [
             'order' => $order,
+            'invoice' => $invoice,
             'cartCount' => 0,
         ]);
     }

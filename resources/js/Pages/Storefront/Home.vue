@@ -60,7 +60,12 @@
             </div>
             <div class="flex items-center justify-between mt-4">
               <span class="text-lg font-bold text-accent">₦{{ Number(product.selling_price).toLocaleString() }}</span>
-              <span class="text-xs text-[var(--color-text-secondary)]">Min: {{ product.minimum_order_quantity || 1 }}</span>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-[var(--color-text-secondary)]">Min: {{ product.minimum_order_quantity || 1 }} {{ product.unit?.short_name || 'pc' }}</span>
+                <button v-if="$page.props.auth?.customer" @click.prevent="toggleWishlist(product.id)" class="p-1 rounded-full hover:bg-red-50 transition-colors dark:hover:bg-red-900/30">
+                  <svg class="h-5 w-5 transition-colors" :class="wishlistIds.includes(product.id) ? 'text-red-500 fill-red-500' : 'text-gray-400 hover:text-red-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                </button>
+              </div>
             </div>
           </div>
         </a>
@@ -87,7 +92,7 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import StorefrontLayout from '@/Components/Layout/StorefrontLayout.vue'
 
@@ -97,8 +102,11 @@ const props = defineProps({
   brands: Array,
   filters: Object,
   cartCount: { type: Number, default: 0 },
+  wishlistIds: { type: Array, default: () => [] },
   company: Object,
 })
+
+const wishlistIds = ref([...props.wishlistIds])
 
 const localFilters = reactive({
   search: props.filters?.search || '',
@@ -109,5 +117,25 @@ const localFilters = reactive({
 
 function applyFilters() {
   router.get('/', localFilters, { preserveState: true, replace: true })
+}
+
+function toggleWishlist(productId) {
+  fetch('/wishlist/toggle', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-XSRF-TOKEN': decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || ''),
+    },
+    body: JSON.stringify({ product_id: productId }),
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.added) {
+        wishlistIds.value.push(productId)
+      } else {
+        wishlistIds.value = wishlistIds.value.filter(id => id !== productId)
+      }
+    })
 }
 </script>

@@ -9,10 +9,6 @@
                     <input v-model="createForm.name" type="text" class="form-input" placeholder="Brand name" />
                     <p v-if="createForm.errors.name" class="text-red-500 text-xs mt-1">{{ createForm.errors.name }}</p>
                 </div>
-                <div class="flex-1 min-w-[160px]">
-                    <label class="form-label">Description</label>
-                    <input v-model="createForm.description" type="text" class="form-input" placeholder="Description" />
-                </div>
                 <div>
                     <label class="form-label">Status</label>
                     <select v-model="createForm.status" class="form-input w-36">
@@ -32,14 +28,13 @@
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Description</th>
                             <th>Status</th>
                             <th class="text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-if="brands.data.length === 0">
-                            <td colspan="4">
+                            <td colspan="3">
                                 <EmptyState title="No brands yet" description="Add brands above to organize your products.">
                                     <template #icon>
                                         <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
@@ -53,12 +48,6 @@
                                     <input v-model="editForm.name" type="text" class="form-input" />
                                 </template>
                                 <template v-else>{{ brand.name }}</template>
-                            </td>
-                            <td>
-                                <template v-if="editingId === brand.id">
-                                    <input v-model="editForm.description" type="text" class="form-input" />
-                                </template>
-                                <template v-else>{{ brand.description || '-' }}</template>
                             </td>
                             <td>
                                 <template v-if="editingId === brand.id">
@@ -119,14 +108,12 @@ const toast = useToast();
 
 const createForm = useForm({
     name: '',
-    description: '',
     status: 'active',
 });
 
 const editingId = ref(null);
 const editForm = useForm({
     name: '',
-    description: '',
     status: 'active',
 });
 
@@ -144,7 +131,6 @@ const createBrand = () => {
 const startEdit = (brand) => {
     editingId.value = brand.id;
     editForm.name = brand.name;
-    editForm.description = brand.description || '';
     editForm.status = brand.status || 'active';
 };
 

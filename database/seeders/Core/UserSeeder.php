@@ -16,7 +16,7 @@ class UserSeeder extends Seeder
             ['slug' => 'supply4me-demo'],
             [
                 'id' => \Illuminate\Support\Str::uuid(),
-                'name' => 'Supply4Me Demo Company',
+                'name' => 'Supply4Me',
                 'registration_number' => 'REG-001',
                 'tax_number' => 'TAX-001',
                 'email' => 'admin@supply4me.com',

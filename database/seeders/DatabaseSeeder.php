@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             Products\ProductUnitSeeder::class,
             Products\ProductCategorySeeder::class,
             Products\ProductBrandSeeder::class,
+            Products\ProductSeeder::class,
             Settings\SettingSeeder::class,
         ]);
     }

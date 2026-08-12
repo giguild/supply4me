@@ -4,28 +4,22 @@ namespace App\Enums\Payments;
 
 enum PaymentType: string
 {
-    case CustomerPayment = 'customer_payment';
-    case SupplierPayment = 'supplier_payment';
-    case Refund = 'refund';
-    case Adjustment = 'adjustment';
+    case Incoming = 'incoming';
+    case Outgoing = 'outgoing';
 
     public function label(): string
     {
         return match ($this) {
-            self::CustomerPayment => 'Customer Payment',
-            self::SupplierPayment => 'Supplier Payment',
-            self::Refund => 'Refund',
-            self::Adjustment => 'Adjustment',
+            self::Incoming => 'Incoming',
+            self::Outgoing => 'Outgoing',
         };
     }
 
     public function color(): string
     {
         return match ($this) {
-            self::CustomerPayment => 'success',
-            self::SupplierPayment => 'primary',
-            self::Refund => 'warning',
-            self::Adjustment => 'info',
+            self::Incoming => 'success',
+            self::Outgoing => 'primary',
         };
     }
 }

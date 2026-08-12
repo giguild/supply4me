@@ -12,7 +12,7 @@
                 <StatCard label="Total Items" :value="stats.total_items" />
                 <StatCard label="Low Stock" :value="stats.low_stock" />
                 <StatCard label="Out of Stock" :value="stats.out_of_stock" />
-                <StatCard label="Total Value" :value="stats.total_value" prefix="$" />
+                <StatCard label="Total Value" :value="stats.total_value" prefix="₦" />
             </div>
 
             <div class="card p-4 mb-6">

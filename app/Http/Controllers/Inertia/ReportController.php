@@ -29,7 +29,7 @@ class ReportController extends Controller
 
         $totalRevenue = Order::where('company_id', $companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->where('status', 'completed')
+            ->whereNotIn('status', ['cancelled', 'draft'])
             ->sum('total_amount');
 
         $totalInvoices = Invoice::where('company_id', $companyId)
@@ -47,9 +47,9 @@ class ReportController extends Controller
             ->groupBy('status')
             ->get();
 
-        $topCustomers = Order::where('company_id', $companyId)
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->where('status', 'completed')
+        $topCustomers = Order::where('orders.company_id', $companyId)
+            ->whereBetween('orders.created_at', [$startDate, $endDate])
+            ->whereNotIn('orders.status', ['cancelled', 'draft'])
             ->join('customers', 'orders.customer_id', '=', 'customers.id')
             ->select('customers.name', DB::raw('SUM(orders.total_amount) as total_spent'), DB::raw('COUNT(orders.id) as order_count'))
             ->groupBy('customers.id', 'customers.name')
@@ -61,22 +61,25 @@ class ReportController extends Controller
             $q->where('company_id', $companyId)->whereBetween('created_at', [$startDate, $endDate]);
         })
             ->join('products', 'order_items.product_id', '=', 'products.id')
-            ->select('products.name', DB::raw('SUM(order_items.quantity) as total_quantity'), DB::raw('SUM(order_items.total_amount) as total_revenue'))
+            ->select('products.name', DB::raw('SUM(order_items.quantity) as total_quantity'), DB::raw('SUM(order_items.line_total) as total_revenue'))
             ->groupBy('products.id', 'products.name')
             ->orderByDesc('total_revenue')
             ->limit(10)
             ->get();
 
+        $averageOrderValue = $totalOrders > 0 ? round($totalRevenue / $totalOrders, 2) : 0;
+
         return Inertia::render('Reports/Sales', [
-            'summary' => [
-                'total_orders' => $totalOrders,
+            'data' => [
                 'total_revenue' => $totalRevenue,
+                'orders_count' => $totalOrders,
+                'average_order_value' => $averageOrderValue,
                 'total_invoices' => $totalInvoices,
                 'total_payments' => $totalPayments,
+                'orders_by_status' => $ordersByStatus,
+                'top_customers' => $topCustomers,
+                'top_products' => $topProducts,
             ],
-            'ordersByStatus' => $ordersByStatus,
-            'topCustomers' => $topCustomers,
-            'topProducts' => $topProducts,
             'filters' => [
                 'start_date' => $startDate,
                 'end_date' => $endDate,
@@ -99,28 +102,39 @@ class ReportController extends Controller
             ->with(['product', 'warehouse'])
             ->get();
 
-        $stockByWarehouse = StockItem::where('company_id', $companyId)
+        $stockByWarehouse = StockItem::where('stock_items.company_id', $companyId)
             ->join('warehouses', 'stock_items.warehouse_id', '=', 'warehouses.id')
             ->select('warehouses.name', DB::raw('SUM(quantity_on_hand) as total_quantity'), DB::raw('SUM(quantity_on_hand * cost_price) as total_value'))
             ->groupBy('warehouses.id', 'warehouses.name')
             ->get();
 
-        $stockByCategory = StockItem::where('company_id', $companyId)
+        $stockByCategory = StockItem::where('stock_items.company_id', $companyId)
             ->join('products', 'stock_items.product_id', '=', 'products.id')
             ->join('product_categories', 'products.category_id', '=', 'product_categories.id')
             ->select('product_categories.name', DB::raw('SUM(stock_items.quantity_on_hand) as total_quantity'))
             ->groupBy('product_categories.id', 'product_categories.name')
             ->get();
 
+        $stockLevels = $lowStockItems->map(function ($item) {
+            return [
+                'id' => $item->product->id ?? $item->id,
+                'name' => $item->product->name ?? 'Unknown',
+                'sku' => $item->product->sku ?? '-',
+                'quantity' => $item->quantity_on_hand,
+                'min_stock_level' => $item->reorder_level,
+                'value' => round($item->quantity_on_hand * $item->cost_price, 2),
+            ];
+        });
+
         return Inertia::render('Reports/Inventory', [
-            'summary' => [
+            'data' => [
                 'total_products' => $totalProducts,
-                'total_stock_items' => $totalStockItems,
-                'total_stock_value' => $totalStockValue,
+                'low_stock_count' => $lowStockItems->count(),
+                'total_value' => $totalStockValue,
+                'stock_levels' => $stockLevels,
+                'stock_by_warehouse' => $stockByWarehouse,
+                'stock_by_category' => $stockByCategory,
             ],
-            'lowStockItems' => $lowStockItems,
-            'stockByWarehouse' => $stockByWarehouse,
-            'stockByCategory' => $stockByCategory,
         ]);
     }
 
@@ -132,7 +146,7 @@ class ReportController extends Controller
 
         $totalRevenue = Order::where('company_id', $companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->where('status', 'completed')
+            ->whereNotIn('status', ['cancelled', 'draft'])
             ->sum('total_amount');
 
         $totalInvoiced = Invoice::where('company_id', $companyId)
@@ -146,12 +160,14 @@ class ReportController extends Controller
 
         $totalOutstanding = Invoice::where('company_id', $companyId)
             ->where('status', '!=', 'paid')
-            ->where('status', '!=', 'voided')
-            ->sum('balance_due');
+            ->where('status', '!=', 'cancelled')
+            ->where('status', '!=', 'void')
+            ->sum('due_amount');
 
         $overdueInvoices = Invoice::where('company_id', $companyId)
             ->where('status', '!=', 'paid')
-            ->where('status', '!=', 'voided')
+            ->where('status', '!=', 'cancelled')
+            ->where('status', '!=', 'void')
             ->where('due_date', '<', now())
             ->with('customer')
             ->get();
@@ -159,12 +175,12 @@ class ReportController extends Controller
         $paymentsByMethod = Payment::where('company_id', $companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->where('status', 'completed')
-            ->select('method', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
-            ->groupBy('method')
+            ->select('payment_method', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
+            ->groupBy('payment_method')
             ->get();
 
         $revenueByMonth = Order::where('company_id', $companyId)
-            ->where('status', 'completed')
+            ->whereNotIn('status', ['cancelled', 'draft'])
             ->where('created_at', '>=', now()->subMonths(12)->startOfMonth())
             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month")
             ->selectRaw('SUM(total_amount) as revenue')
@@ -172,16 +188,27 @@ class ReportController extends Controller
             ->orderBy('month')
             ->get();
 
+        $monthlyBreakdown = $revenueByMonth->map(function ($item) {
+            return [
+                'name' => $item->month,
+                'revenue' => $item->revenue,
+                'expenses' => 0,
+                'profit' => $item->revenue,
+            ];
+        });
+
         return Inertia::render('Reports/Financial', [
-            'summary' => [
-                'total_revenue' => $totalRevenue,
+            'data' => [
+                'revenue' => $totalRevenue,
+                'expenses' => 0,
+                'profit' => $totalRevenue,
                 'total_invoiced' => $totalInvoiced,
                 'total_paid' => $totalPaid,
                 'total_outstanding' => $totalOutstanding,
+                'monthly_breakdown' => $monthlyBreakdown,
+                'overdue_invoices' => $overdueInvoices,
+                'payments_by_method' => $paymentsByMethod,
             ],
-            'overdueInvoices' => $overdueInvoices,
-            'paymentsByMethod' => $paymentsByMethod,
-            'revenueByMonth' => $revenueByMonth,
             'filters' => [
                 'start_date' => $startDate,
                 'end_date' => $endDate,

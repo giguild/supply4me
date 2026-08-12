@@ -102,6 +102,43 @@
             <p class="text-sm text-gray-700">{{ invoice.notes }}</p>
         </div>
 
+        <div v-if="invoice.payments?.length" class="card overflow-hidden mb-6">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="text-base font-semibold text-gray-900">Payment History</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Payment#</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Status</th>
+                            <th>Receipt</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="pmt in invoice.payments" :key="pmt.id">
+                            <td class="font-medium">
+                                <Link :href="route('payments.show', pmt.id)" class="text-accent hover:underline">
+                                    {{ pmt.payment_number }}
+                                </Link>
+                            </td>
+                            <td class="font-medium text-gray-900">{{ formatCurrency(pmt.amount) }}</td>
+                            <td class="text-gray-500">{{ formatMethod(pmt.payment_method) }}</td>
+                            <td><StatusBadge :value="pmt.status" /></td>
+                            <td>
+                                <a v-if="getReceiptPath(pmt)" :href="`/storage/${getReceiptPath(pmt)}`" target="_blank" class="text-accent hover:underline text-sm">View</a>
+                                <span v-else class="text-gray-400 text-sm">-</span>
+                            </td>
+                            <td class="text-gray-500">{{ pmt.payment_date }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <div class="flex justify-end gap-3">
             <button v-if="invoice.status === 'draft'" @click="sendInvoice" class="btn" style="background: #d4edda; color: #155724;">
                 Send Invoice
@@ -145,6 +182,17 @@ const voidInvoice = () => {
 };
 
 const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount || 0);
+    return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount || 0);
+};
+
+const formatMethod = (method) => {
+    const methods = { cash: 'Cash', bank_transfer: 'Bank Transfer', credit_card: 'Card', check: 'Cheque', mobile_money: 'Mobile Money', other: 'Other' };
+    return methods[method] || method;
+};
+
+const getReceiptPath = (pmt) => {
+    if (!pmt.metadata) return null;
+    const meta = typeof pmt.metadata === 'string' ? JSON.parse(pmt.metadata) : pmt.metadata;
+    return meta?.receipt_path || null;
 };
 </script>

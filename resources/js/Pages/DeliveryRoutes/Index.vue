@@ -11,7 +11,7 @@
             </template>
         </PageHeader>
 
-        <div class="flex items-center gap-4 mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
             <div class="flex-1 max-w-md">
                 <SearchInput v-model="search" />
             </div>

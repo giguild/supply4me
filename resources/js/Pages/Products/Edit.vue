@@ -8,7 +8,10 @@
                     <div class="space-y-4">
                         <div>
                             <label class="form-label">SKU</label>
-                            <input v-model="form.sku" type="text" class="form-input" />
+                            <div class="flex gap-2">
+                                <input v-model="form.sku" type="text" class="form-input flex-1" />
+                                <button type="button" @click="generateSku" class="px-4 py-2 text-sm font-semibold rounded-lg border border-accent text-accent hover:bg-accent hover:text-white transition-colors whitespace-nowrap">Generate</button>
+                            </div>
                             <p v-if="form.errors.sku" class="text-red-500 text-xs mt-1">{{ form.errors.sku }}</p>
                         </div>
                         <div>
@@ -190,5 +193,11 @@ const submit = () => {
         onSuccess: () => toast.success('Product updated successfully'),
         onError: () => toast.error('Failed to update product'),
     });
+};
+
+const generateSku = () => {
+    const prefix = form.name ? form.name.substring(0, 3).toUpperCase() : 'PRD';
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    form.sku = `${prefix}-${random}`;
 };
 </script>

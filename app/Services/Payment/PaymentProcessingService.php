@@ -23,20 +23,10 @@ class PaymentProcessingService
         }
 
         DB::transaction(function () use ($payment) {
-            $payment->update(['status' => PaymentStatus::Processing]);
+            $payment->update(['status' => PaymentStatus::Completed]);
 
-            try {
-                $payment->update([
-                    'status' => PaymentStatus::Completed,
-                    'cleared_date' => now()->toDateTimeString(),
-                ]);
-
-                if ($payment->customer_id && $payment->order_id) {
-                    $this->allocationService->autoAllocate($payment);
-                }
-            } catch (\Exception $e) {
-                $payment->update(['status' => PaymentStatus::Failed]);
-                throw $e;
+            if ($payment->customer_id) {
+                $this->allocationService->autoAllocate($payment);
             }
         });
 
@@ -56,7 +46,7 @@ class PaymentProcessingService
             throw new \InvalidArgumentException('Payment must be linked to a customer or supplier.');
         }
 
-        if (!$payment->method) {
+        if (!$payment->payment_method) {
             throw new \InvalidArgumentException('Payment method is required.');
         }
 
@@ -72,22 +62,20 @@ class PaymentProcessingService
      */
     public function generateReceipt(Payment $payment): array
     {
-        $amount = Money::from((float) $payment->amount, $payment->currency_code ?? 'USD');
-
         return [
             'payment_number' => $payment->payment_number,
             'date' => $payment->payment_date->format('Y-m-d'),
-            'amount' => $amount->format(),
-            'method' => $payment->method->label(),
+            'amount' => number_format($payment->amount, 2),
+            'method' => $payment->payment_method?->label() ?? $payment->payment_method,
             'status' => $payment->status->label(),
             'customer' => $payment->customer?->name,
             'supplier' => $payment->supplier?->name,
-            'reference' => $payment->reference,
+            'reference' => $payment->reference_number,
             'notes' => $payment->notes,
             'allocations' => $payment->allocations->map(function ($allocation) {
                 return [
                     'invoice_number' => $allocation->invoice?->invoice_number,
-                    'amount' => Money::from((float) $allocation->amount, 'USD')->format(),
+                    'amount' => number_format($allocation->amount, 2),
                 ];
             }),
         ];

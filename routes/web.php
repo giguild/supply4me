@@ -29,6 +29,7 @@ use App\Http\Controllers\Storefront\StorefrontController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\StorefrontAuthController;
 use App\Http\Controllers\Storefront\CheckoutController;
+use App\Http\Controllers\Storefront\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 // ── Storefront (public - landing page) ───────────────────────
@@ -50,10 +51,14 @@ Route::post('/store-logout', [StorefrontAuthController::class, 'logout'])->name(
 Route::middleware('auth:customer')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('storefront.checkout');
     Route::post('/checkout/place-order', [CheckoutController::class, 'placeOrder'])->name('storefront.placeOrder');
-    Route::get('/payment/{order}', [CheckoutController::class, 'payment'])->name('storefront.payment');
-    Route::post('/payment/{order}', [CheckoutController::class, 'submitPayment'])->name('storefront.submitPayment');
+    Route::get('/payment/{invoice}', [CheckoutController::class, 'payment'])->name('storefront.payment');
+    Route::post('/payment/{invoice}', [CheckoutController::class, 'submitPayment'])->name('storefront.submitPayment');
     Route::get('/order-confirmation/{order}', [CheckoutController::class, 'orderConfirmation'])->name('storefront.orderConfirmation');
     Route::get('/account', [CheckoutController::class, 'account'])->name('storefront.account');
+
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('storefront.wishlist');
+    Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('storefront.wishlist.toggle');
+    Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy'])->name('storefront.wishlist.destroy');
 });
 
 // ── Internal ERP Auth ────────────────────────────────────────
@@ -82,9 +87,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('suppliers', SupplierController::class);
 
     Route::resource('products', ProductController::class);
-    Route::resource('product-categories', ProductCategoryController::class)->except(['show', 'edit', 'update']);
-    Route::resource('product-brands', ProductBrandController::class)->except(['show', 'edit', 'update']);
-    Route::resource('product-units', ProductUnitController::class)->except(['show', 'edit', 'update']);
+    Route::resource('product-categories', ProductCategoryController::class)->except(['show', 'edit']);
+    Route::resource('product-brands', ProductBrandController::class)->except(['show', 'edit']);
+    Route::resource('product-units', ProductUnitController::class)->except(['show', 'edit']);
 
     Route::resource('orders', OrderController::class);
     Route::post('orders/{order}/confirm', [OrderController::class, 'confirm'])->name('orders.confirm');
@@ -97,6 +102,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('payments', PaymentController::class);
     Route::post('payments/{payment}/approve', [PaymentController::class, 'approve'])->name('payments.approve');
     Route::post('payments/{payment}/reject', [PaymentController::class, 'reject'])->name('payments.reject');
+    Route::post('payments/{payment}/mark-partial', [PaymentController::class, 'markPartial'])->name('payments.markPartial');
 
     Route::get('stock', [StockController::class, 'index'])->name('stock.index');
     Route::get('stock/adjustments', [StockController::class, 'adjustments'])->name('stock.adjustments');

@@ -26,20 +26,28 @@ class Invoice extends Model
         'invoice_number',
         'customer_id',
         'order_id',
-        'type',
+        'invoice_type',
         'status',
-        'subtotal',
-        'tax_amount',
-        'discount_amount',
-        'total_amount',
-        'amount_paid',
-        'balance_due',
-        'currency_code',
+        'invoice_date',
         'due_date',
-        'paid_at',
+        'currency_code',
+        'exchange_rate',
+        'subtotal',
+        'discount_amount',
+        'tax_amount',
+        'shipping_amount',
+        'total_amount',
+        'paid_amount',
+        'due_amount',
+        'payment_terms_days',
         'notes',
-        'terms',
+        'terms_conditions',
+        'sent_at',
+        'viewed_at',
+        'cancelled_at',
+        'cancellation_reason',
         'created_by',
+        'version',
         'metadata',
     ];
 
@@ -49,14 +57,18 @@ class Invoice extends Model
             'subtotal' => 'decimal:2',
             'tax_amount' => 'decimal:2',
             'discount_amount' => 'decimal:2',
+            'shipping_amount' => 'decimal:2',
             'total_amount' => 'decimal:2',
-            'amount_paid' => 'decimal:2',
-            'balance_due' => 'decimal:2',
+            'paid_amount' => 'decimal:2',
+            'due_amount' => 'decimal:2',
             'due_date' => 'date',
-            'paid_at' => 'datetime',
+            'invoice_date' => 'date',
+            'sent_at' => 'datetime',
+            'viewed_at' => 'datetime',
+            'cancelled_at' => 'datetime',
             'metadata' => 'array',
             'status' => InvoiceStatus::class,
-            'type' => InvoiceType::class,
+            'invoice_type' => InvoiceType::class,
         ];
     }
 
@@ -83,6 +95,23 @@ class Invoice extends Model
     public function items(): HasMany
     {
         return $this->hasMany(InvoiceItem::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasManyThrough(
+            \App\Models\Payments\Payment::class,
+            \App\Models\Payments\PaymentAllocation::class,
+            'invoice_id',
+            'id',
+            'id',
+            'payment_id'
+        );
+    }
+
+    public function allocations()
+    {
+        return $this->hasMany(\App\Models\Payments\PaymentAllocation::class);
     }
 
     public function statusHistory(): HasMany

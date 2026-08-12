@@ -17,6 +17,8 @@ class HandleInertiaRequests extends Middleware
 
     public function share(Request $request): array
     {
+        $customer = $request->user('customer');
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -24,6 +26,11 @@ class HandleInertiaRequests extends Middleware
                     'id' => $request->user()->id,
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
+                ] : null,
+                'customer' => $customer ? [
+                    'id' => $customer->id,
+                    'name' => $customer->name,
+                    'email' => $customer->email,
                 ] : null,
             ],
             'ziggy' => fn () => [

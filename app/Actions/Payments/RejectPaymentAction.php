@@ -18,7 +18,7 @@ class RejectPaymentAction
         }
 
         $payment->update([
-            'status' => PaymentStatus::Failed,
+            'status' => PaymentStatus::Rejected,
             'notes' => $reason ? ($payment->notes ? $payment->notes . "\n" . $reason : $reason) : $payment->notes,
         ]);
 
