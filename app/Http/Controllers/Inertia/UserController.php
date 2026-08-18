@@ -67,8 +67,11 @@ class UserController extends Controller
             'phone' => 'nullable|string|max:50',
             'job_title' => 'nullable|string|max:100',
             'department' => 'nullable|string|max:100',
+            'region' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
             'company_id' => 'required|exists:companies,id',
             'status' => 'nullable|string',
+            'role' => 'nullable|string|exists:roles,name',
             'roles' => 'nullable|array',
             'roles.*' => 'string|exists:roles,name',
             'branches' => 'nullable|array',
@@ -82,12 +85,15 @@ class UserController extends Controller
             'phone' => $validated['phone'] ?? null,
             'job_title' => $validated['job_title'] ?? null,
             'department' => $validated['department'] ?? null,
+            'region' => $validated['region'] ?? null,
+            'state' => $validated['state'] ?? null,
             'company_id' => $validated['company_id'],
             'status' => $validated['status'] ?? 'active',
         ]);
 
-        if (!empty($validated['roles'])) {
-            $user->syncRoles($validated['roles']);
+        $roles = $validated['roles'] ?? ($validated['role'] ? [$validated['role']] : []);
+        if (!empty($roles)) {
+            $user->syncRoles($roles);
         }
 
         if (!empty($validated['branches'])) {
@@ -131,8 +137,11 @@ class UserController extends Controller
             'phone' => 'nullable|string|max:50',
             'job_title' => 'nullable|string|max:100',
             'department' => 'nullable|string|max:100',
+            'region' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
             'company_id' => 'required|exists:companies,id',
             'status' => 'nullable|string',
+            'role' => 'nullable|string|exists:roles,name',
             'roles' => 'nullable|array',
             'roles.*' => 'string|exists:roles,name',
             'branches' => 'nullable|array',
@@ -145,6 +154,8 @@ class UserController extends Controller
             'phone' => $validated['phone'] ?? null,
             'job_title' => $validated['job_title'] ?? null,
             'department' => $validated['department'] ?? null,
+            'region' => $validated['region'] ?? null,
+            'state' => $validated['state'] ?? null,
             'company_id' => $validated['company_id'],
             'status' => $validated['status'] ?? $user->status,
         ];
@@ -155,7 +166,8 @@ class UserController extends Controller
 
         $user->update($updateData);
 
-        $user->syncRoles($validated['roles'] ?? []);
+        $roles = $validated['roles'] ?? ($validated['role'] ? [$validated['role']] : []);
+        $user->syncRoles($roles);
         $user->branches()->sync($validated['branches'] ?? []);
 
         return redirect()->route('users.index')->with('success', 'User updated successfully');

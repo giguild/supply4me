@@ -109,7 +109,7 @@
             <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ payment.notes }}</p>
         </div>
 
-        <div v-if="payment.status === 'pending'" class="card p-6">
+        <div v-if="payment.status === 'pending' && canApprovePayments" class="card p-6">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">Review Payment</h3>
             <div class="flex flex-wrap gap-3">
                 <button @click="markPaid" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors" style="background: #15803d;">
@@ -155,7 +155,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { router, Link } from '@inertiajs/vue3';
+import { router, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
 import PageHeader from '@/Components/UI/PageHeader.vue';
 import StatusBadge from '@/Components/UI/StatusBadge.vue';
@@ -163,9 +163,14 @@ import { useToast } from '@/composables/useToast';
 
 const props = defineProps({ payment: Object });
 const toast = useToast();
+const page = usePage();
 const showFullReceipt = ref(false);
 const showPartialModal = ref(false);
 const partialAmount = ref(null);
+
+const canApprovePayments = computed(() =>
+    (page.props.auth.user?.permissions || []).includes('payment.approve')
+);
 
 const receiptPath = computed(() => {
     if (!props.payment.metadata) return null;

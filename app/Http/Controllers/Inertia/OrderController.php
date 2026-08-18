@@ -14,10 +14,39 @@ use Inertia\Response;
 
 class OrderController extends Controller
 {
+    private function isSalesRep(Request $request): bool
+    {
+        return $request->user()->hasRole('sales_rep');
+    }
+
+    private function customerScope(Request $request)
+    {
+        return $this->isSalesRep($request)
+            ? fn ($q) => $q->where('customers.assigned_to', $request->user()->id)
+            : null;
+    }
+
+    private function authorizeOrderAccess(Request $request, Order $order): void
+    {
+        if (!$this->isSalesRep($request)) {
+            return;
+        }
+
+        $owned = $order->where('orders.id', $order->id)
+            ->whereHas('customer', fn ($q) => $q->where('customers.assigned_to', $request->user()->id))
+            ->exists();
+
+        abort_unless($owned, 403, 'You can only access orders for your assigned customers.');
+    }
+
     public function index(Request $request): Response
     {
-        $query = Order::where('company_id', $request->user()->company_id)
+        $query = Order::where('orders.company_id', $request->user()->company_id)
             ->with('customer');
+
+        if ($this->isSalesRep($request)) {
+            $query->whereHas('customer', $this->customerScope($request));
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -45,13 +74,18 @@ class OrderController extends Controller
 
     public function create(Request $request): Response
     {
-        $customers = Customer::where('company_id', $request->user()->company_id)->get();
+        $customers = Customer::where('company_id', $request->user()->company_id);
+
+        if ($this->isSalesRep($request)) {
+            $customers->where('assigned_to', $request->user()->id);
+        }
+
         $products = Product::where('company_id', $request->user()->company_id)
             ->where('is_sellable', true)
             ->get();
 
         return Inertia::render('Orders/Create', [
-            'customers' => $customers,
+            'customers' => $customers->get(),
             'products' => $products,
         ]);
     }
@@ -76,6 +110,17 @@ class OrderController extends Controller
 
         $companyId = $request->user()->company_id;
 
+        if ($this->isSalesRep($request)) {
+            $assigned = Customer::where('company_id', $companyId)
+                ->where('id', $validated['customer_id'])
+                ->where('assigned_to', $request->user()->id)
+                ->exists();
+
+            if (!$assigned) {
+                return back()->withErrors(['customer_id' => 'You can only place orders for your assigned customers.']);
+            }
+        }
+
         $subtotal = 0;
         $taxAmount = 0;
         $discountAmount = 0;
@@ -91,17 +136,18 @@ class OrderController extends Controller
         $order = Order::create([
             'company_id' => $companyId,
             'customer_id' => $validated['customer_id'],
-            'order_type' => $validated['order_type'] ?? null,
-            'status' => 'draft',
+            'order_type' => $validated['order_type'] ?? 'sales',
+            'status' => $this->isSalesRep($request) ? 'pending' : 'draft',
             'payment_status' => 'unpaid',
             'fulfillment_status' => 'unfulfilled',
             'priority' => $validated['priority'] ?? 'normal',
+            'order_date' => now()->toDateString(),
             'subtotal' => $subtotal,
             'tax_amount' => $taxAmount,
             'discount_amount' => $discountAmount,
             'shipping_amount' => 0,
             'total_amount' => $subtotal - $discountAmount + $taxAmount,
-            'payment_terms_days' => $validated['payment_terms_days'] ?? null,
+            'payment_terms_days' => $validated['payment_terms_days'] ?? 0,
             'due_date' => $validated['due_date'] ?? null,
             'notes' => $validated['notes'] ?? null,
             'internal_notes' => $validated['internal_notes'] ?? null,
@@ -118,28 +164,33 @@ class OrderController extends Controller
             OrderItem::create([
                 'order_id' => $order->id,
                 'product_id' => $item['product_id'],
+                'unit_id' => $product->unit_id,
                 'sku' => $product->sku,
                 'name' => $product->name,
                 'quantity' => $item['quantity'],
                 'unit_price' => $item['unit_price'],
                 'discount_percentage' => $item['discount_percentage'] ?? 0,
                 'tax_amount' => 0,
-                'total_amount' => $lineTotal,
+                'line_total' => $lineTotal,
             ]);
         }
 
         OrderStatusHistory::create([
             'order_id' => $order->id,
-            'status' => 'draft',
+            'status' => $order->status,
             'previous_status' => null,
             'performed_by' => $request->user()->id,
         ]);
+
+        app(\App\Services\Invoice\InvoiceGenerationService::class)->generateFromOrder($order);
 
         return redirect()->route('orders.index')->with('success', 'Order created successfully');
     }
 
     public function show(Request $request, Order $order): Response
     {
+        $this->authorizeOrderAccess($request, $order);
+
         $order->load([
             'customer',
             'items.product',
@@ -155,7 +206,14 @@ class OrderController extends Controller
 
     public function edit(Request $request, Order $order): Response
     {
-        $customers = Customer::where('company_id', $request->user()->company_id)->get();
+        $this->authorizeOrderAccess($request, $order);
+
+        $customers = Customer::where('company_id', $request->user()->company_id);
+
+        if ($this->isSalesRep($request)) {
+            $customers->where('assigned_to', $request->user()->id);
+        }
+
         $products = Product::where('company_id', $request->user()->company_id)
             ->where('is_sellable', true)
             ->get();
@@ -164,13 +222,15 @@ class OrderController extends Controller
 
         return Inertia::render('Orders/Edit', [
             'order' => $order,
-            'customers' => $customers,
+            'customers' => $customers->get(),
             'products' => $products,
         ]);
     }
 
     public function update(Request $request, Order $order): \Illuminate\Http\RedirectResponse
     {
+        $this->authorizeOrderAccess($request, $order);
+
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'order_type' => 'nullable|string|max:50',
@@ -226,13 +286,14 @@ class OrderController extends Controller
             OrderItem::create([
                 'order_id' => $order->id,
                 'product_id' => $item['product_id'],
+                'unit_id' => $product->unit_id,
                 'sku' => $product->sku,
                 'name' => $product->name,
                 'quantity' => $item['quantity'],
                 'unit_price' => $item['unit_price'],
                 'discount_percentage' => $item['discount_percentage'] ?? 0,
                 'tax_amount' => 0,
-                'total_amount' => $lineTotal,
+                'line_total' => $lineTotal,
             ]);
         }
 
@@ -241,6 +302,8 @@ class OrderController extends Controller
 
     public function destroy(Request $request, Order $order): \Illuminate\Http\RedirectResponse
     {
+        $this->authorizeOrderAccess($request, $order);
+
         $order->items()->delete();
         $order->statusHistory()->delete();
         $order->delete();
@@ -250,6 +313,8 @@ class OrderController extends Controller
 
     public function confirm(Request $request, Order $order): \Illuminate\Http\RedirectResponse
     {
+        $this->authorizeOrderAccess($request, $order);
+
         $previousStatus = $order->status->value;
         $order->update(['status' => 'confirmed']);
 
@@ -266,6 +331,8 @@ class OrderController extends Controller
 
     public function cancel(Request $request, Order $order): \Illuminate\Http\RedirectResponse
     {
+        $this->authorizeOrderAccess($request, $order);
+
         $previousStatus = $order->status->value;
         $order->update(['status' => 'cancelled']);
 

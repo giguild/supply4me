@@ -41,7 +41,6 @@ use App\Listeners\Inventory\NotifyLowStock;
 use App\Listeners\Invoicing\CheckOverdueInvoices;
 use App\Listeners\Invoicing\LogInvoiceActivity;
 use App\Listeners\Invoicing\SendInvoiceEmail;
-use App\Listeners\Orders\GenerateOrderInvoice;
 use App\Listeners\Orders\NotifyWarehouseOfOrder;
 use App\Listeners\Orders\ReserveStockForOrder;
 use App\Listeners\Orders\SendOrderConfirmation;
@@ -85,7 +84,6 @@ class EventServiceProvider extends ServiceProvider
             NotifyWarehouseOfOrder::class,
         ],
         OrderConfirmed::class => [
-            GenerateOrderInvoice::class,
             SendOrderConfirmation::class,
         ],
         OrderCancelled::class => [

@@ -25,10 +25,11 @@ class InvoiceGenerationService
                 'company_id' => $order->company_id,
                 'customer_id' => $order->customer_id,
                 'order_id' => $order->id,
-                'type' => InvoiceType::Sales,
+                'invoice_type' => InvoiceType::Sales,
                 'status' => InvoiceStatus::Draft,
-                'currency_code' => $order->currency_code ?? 'USD',
-                'due_date' => $order->due_date,
+                'invoice_date' => now()->toDateString(),
+                'currency_code' => $order->currency_code ?? 'NGN',
+                'due_date' => $order->due_date ?? now()->addDays((int) ($order->payment_terms_days ?? 0))->toDateString(),
                 'notes' => $order->notes,
                 'created_by' => auth()->id(),
             ]);
@@ -45,7 +46,7 @@ class InvoiceGenerationService
                     'unit_price' => $orderItem->unit_price,
                     'discount_percentage' => $orderItem->discount_percentage,
                     'tax_amount' => $orderItem->tax_amount,
-                    'total_amount' => $orderItem->total_amount,
+                    'line_total' => $orderItem->line_total,
                 ]);
             }
 
@@ -65,8 +66,9 @@ class InvoiceGenerationService
                 'company_id' => $originalInvoice->company_id,
                 'customer_id' => $originalInvoice->customer_id,
                 'order_id' => $originalInvoice->order_id,
-                'type' => InvoiceType::CreditNote,
+                'invoice_type' => InvoiceType::CreditNote,
                 'status' => InvoiceStatus::Draft,
+                'invoice_date' => now()->toDateString(),
                 'currency_code' => $originalInvoice->currency_code,
                 'due_date' => now(),
                 'notes' => "Credit note for invoice {$originalInvoice->invoice_number}",
@@ -85,7 +87,7 @@ class InvoiceGenerationService
                     'unit_price' => -$originalItem->unit_price,
                     'discount_percentage' => $originalItem->discount_percentage,
                     'tax_amount' => -$originalItem->tax_amount,
-                    'total_amount' => -$originalItem->total_amount,
+                    'line_total' => -$originalItem->line_total,
                 ]);
             }
 

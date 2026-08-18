@@ -25,6 +25,7 @@ use App\Http\Controllers\Inertia\UserController;
 use App\Http\Controllers\Inertia\CompanyController;
 use App\Http\Controllers\Inertia\BranchController;
 use App\Http\Controllers\Inertia\ReportController;
+use App\Http\Controllers\Inertia\SalesRepController;
 use App\Http\Controllers\Storefront\StorefrontController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\StorefrontAuthController;
@@ -100,9 +101,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('invoices/{invoice}/void', [InvoiceController::class, 'void'])->name('invoices.void');
 
     Route::resource('payments', PaymentController::class);
-    Route::post('payments/{payment}/approve', [PaymentController::class, 'approve'])->name('payments.approve');
-    Route::post('payments/{payment}/reject', [PaymentController::class, 'reject'])->name('payments.reject');
-    Route::post('payments/{payment}/mark-partial', [PaymentController::class, 'markPartial'])->name('payments.markPartial');
+    Route::post('payments/{payment}/approve', [PaymentController::class, 'approve'])->name('payments.approve')->middleware('permission:payment.approve');
+    Route::post('payments/{payment}/reject', [PaymentController::class, 'reject'])->name('payments.reject')->middleware('permission:payment.reject');
+    Route::post('payments/{payment}/mark-partial', [PaymentController::class, 'markPartial'])->name('payments.markPartial')->middleware('permission:payment.approve');
 
     Route::get('stock', [StockController::class, 'index'])->name('stock.index');
     Route::get('stock/adjustments', [StockController::class, 'adjustments'])->name('stock.adjustments');
@@ -127,4 +128,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
     Route::get('reports/inventory', [ReportController::class, 'inventory'])->name('reports.inventory');
     Route::get('reports/financial', [ReportController::class, 'financial'])->name('reports.financial');
+
+    Route::get('sales-rep', [SalesRepController::class, 'dashboard'])->name('sales-rep.dashboard');
+    Route::get('sales-rep/customers', [SalesRepController::class, 'index'])->name('sales-rep.customers');
+    Route::get('sales-reps', [SalesRepController::class, 'adminIndex'])->name('sales-reps.index');
 });

@@ -82,6 +82,9 @@ class CustomerController extends Controller
         ]);
 
         $validated['company_id'] = $request->user()->company_id;
+        $validated['credit_limit'] = $validated['credit_limit'] ?? 0;
+        $validated['payment_terms_days'] = $validated['payment_terms_days'] ?? 0;
+        $validated['discount_percentage'] = $validated['discount_percentage'] ?? 0;
 
         Customer::create($validated);
 
@@ -142,6 +145,10 @@ class CustomerController extends Controller
             'status' => 'nullable|string',
             'notes' => 'nullable|string',
         ]);
+
+        $validated['credit_limit'] = $validated['credit_limit'] ?? 0;
+        $validated['payment_terms_days'] = $validated['payment_terms_days'] ?? 0;
+        $validated['discount_percentage'] = $validated['discount_percentage'] ?? 0;
 
         $customer->update($validated);
 

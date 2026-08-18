@@ -55,8 +55,8 @@
             <template #actions="{ row }">
                 <div class="flex items-center justify-end gap-2">
                     <Link :href="route('payments.show', row.id)" class="text-sm text-accent hover:underline">View</Link>
-                    <button v-if="row.status === 'pending'" @click="approvePayment(row.id)" class="btn btn-sm" style="background: #d4edda; color: #155724;">Approve</button>
-                    <button v-if="row.status === 'pending'" @click="rejectPayment(row.id)" class="btn btn-sm btn-danger">Reject</button>
+                    <button v-if="row.status === 'pending' && canApprovePayments" @click="approvePayment(row.id)" class="btn btn-sm" style="background: #d4edda; color: #155724;">Approve</button>
+                    <button v-if="row.status === 'pending' && canApprovePayments" @click="rejectPayment(row.id)" class="btn btn-sm btn-danger">Reject</button>
                 </div>
             </template>
 
@@ -72,8 +72,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { router, Link } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { router, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
 import PageHeader from '@/Components/UI/PageHeader.vue';
 import DataTable from '@/Components/UI/DataTable.vue';
@@ -88,8 +88,13 @@ const props = defineProps({
 });
 
 const toast = useToast();
+const page = usePage();
 const search = ref(props.filters?.search || '');
 const statusFilter = ref(props.filters?.status || '');
+
+const canApprovePayments = computed(() =>
+    (page.props.auth.user?.permissions || []).includes('payment.approve')
+);
 
 const columns = [
     { key: 'payment_number', label: 'Payment#' },

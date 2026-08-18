@@ -26,6 +26,8 @@ class User extends Authenticatable
         'avatar',
         'job_title',
         'department',
+        'region',
+        'state',
         'status',
         'last_login_at',
         'last_login_ip',
@@ -68,6 +70,11 @@ class User extends Authenticatable
     public function deliveries(): HasMany
     {
         return $this->hasMany(\App\Models\Delivery\Delivery::class);
+    }
+
+    public function assignedCustomers(): HasMany
+    {
+        return $this->hasMany(\App\Models\Customers\Customer::class, 'assigned_to');
     }
 
     /**

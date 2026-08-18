@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Core\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
@@ -19,14 +20,24 @@ class HandleInertiaRequests extends Middleware
     {
         $customer = $request->user('customer');
 
+        $user = $request->user();
+
+        $userPayload = null;
+
+        if ($user instanceof User) {
+            $userPayload = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'roles' => $user->getRoleNames(),
+                'permissions' => $user->getAllPermissions()->pluck('name'),
+            ];
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user() ? [
-                    'id' => $request->user()->id,
-                    'name' => $request->user()->name,
-                    'email' => $request->user()->email,
-                ] : null,
+                'user' => $userPayload,
                 'customer' => $customer ? [
                     'id' => $customer->id,
                     'name' => $customer->name,

@@ -53,7 +53,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(InvoiceGenerationService::class, function ($app) {
-            return new InvoiceGenerationService();
+            return new InvoiceGenerationService($app->make(InvoiceCalculationService::class));
         });
 
         $this->app->singleton(InvoiceCalculationService::class, function ($app) {

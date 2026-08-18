@@ -47,7 +47,7 @@
                         <select v-model="form.role" class="form-input" :class="{ 'border-red-500': form.errors.role }">
                             <option value="">Select Role</option>
                             <option v-for="role in roles" :key="role.id" :value="role.name">
-                                {{ role.name }}
+                                {{ role.name.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
                             </option>
                         </select>
                         <p v-if="form.errors.role" class="mt-1 text-sm text-red-500">{{ form.errors.role }}</p>
@@ -81,6 +81,21 @@
                             <option value="pending">Pending</option>
                         </select>
                     </div>
+
+                    <div v-if="form.role === 'sales_rep'">
+                        <label class="form-label">Region</label>
+                        <input v-model="form.region" type="text" class="form-input" placeholder="e.g. South West, North Central" />
+                    </div>
+
+                    <div v-if="form.role === 'sales_rep'">
+                        <label class="form-label">State</label>
+                        <select v-model="form.state" class="form-input">
+                            <option value="">Select State</option>
+                            <option v-for="state in nigerianStates" :key="state" :value="state">
+                                {{ state }}
+                            </option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="mt-6 flex justify-end gap-3">
@@ -108,6 +123,14 @@ const props = defineProps({
 
 const toast = useToast();
 
+const nigerianStates = [
+    'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno',
+    'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe',
+    'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara',
+    'Lagos', 'Nassarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau',
+    'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara',
+];
+
 const form = useForm({
     name: '',
     email: '',
@@ -118,6 +141,8 @@ const form = useForm({
     company_id: '',
     branch_id: '',
     status: 'active',
+    region: '',
+    state: '',
 });
 
 const submit = () => {

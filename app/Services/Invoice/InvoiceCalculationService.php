@@ -61,7 +61,7 @@ class InvoiceCalculationService
     public function getAmountDue(Invoice $invoice): Money
     {
         $total = Money::from((float) $invoice->total_amount, $invoice->currency_code ?? 'USD');
-        $amountPaid = Money::from((float) $invoice->amount_paid, $invoice->currency_code ?? 'USD');
+        $amountPaid = Money::from((float) $invoice->paid_amount, $invoice->currency_code ?? 'USD');
 
         return $total->subtract($amountPaid);
     }
@@ -74,14 +74,14 @@ class InvoiceCalculationService
         $subtotal = $this->calculateSubtotal($invoice);
         $tax = $this->calculateTax($invoice);
         $total = $subtotal->add($tax);
-        $amountPaid = Money::from((float) $invoice->amount_paid, $invoice->currency_code ?? 'USD');
+        $amountPaid = Money::from((float) $invoice->paid_amount, $invoice->currency_code ?? 'USD');
         $balanceDue = $total->subtract($amountPaid);
 
         $invoice->update([
             'subtotal' => $subtotal->getAmount(),
             'tax_amount' => $tax->getAmount(),
             'total_amount' => $total->getAmount(),
-            'balance_due' => max(0, $balanceDue->getAmount()),
+            'due_amount' => max(0, $balanceDue->getAmount()),
         ]);
     }
 }
