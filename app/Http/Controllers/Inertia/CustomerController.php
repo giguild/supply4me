@@ -102,8 +102,17 @@ class CustomerController extends Controller
             'assignedTo',
         ]);
 
+        $stats = [
+            'total_orders' => $customer->orders()->count(),
+            'total_invoices' => $customer->invoices()->count(),
+            'outstanding_balance' => (float) $customer->invoices()
+                ->whereNotIn('status', ['paid', 'cancelled', 'void'])
+                ->sum('due_amount'),
+        ];
+
         return Inertia::render('Customers/Show', [
             'customer' => $customer,
+            'stats' => $stats,
         ]);
     }
 

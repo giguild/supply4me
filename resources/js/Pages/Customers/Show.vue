@@ -147,11 +147,14 @@
                     <template #cell-order_number="{ row }">
                         <Link :href="route('orders.show', row.id)" class="text-blue-600 font-medium text-sm">{{ row.order_number }}</Link>
                     </template>
+                    <template #cell-order_date="{ row }">
+                        <span class="text-sm">{{ formatDate(row.order_date) }}</span>
+                    </template>
                     <template #cell-status="{ row }">
                         <StatusBadge :value="row.status" />
                     </template>
-                    <template #cell-total="{ row }">
-                        <span class="font-medium text-sm">₦ {{ Number(row.total).toLocaleString() }}</span>
+                    <template #cell-total_amount="{ row }">
+                        <span class="font-medium text-sm">₦ {{ formatCurrency(row.total_amount) }}</span>
                     </template>
 
                     <template #empty>
@@ -166,11 +169,17 @@
                     <template #cell-invoice_number="{ row }">
                         <Link :href="route('invoices.show', row.id)" class="text-blue-600 font-medium text-sm">{{ row.invoice_number }}</Link>
                     </template>
+                    <template #cell-invoice_date="{ row }">
+                        <span class="text-sm">{{ formatDate(row.invoice_date) }}</span>
+                    </template>
+                    <template #cell-due_date="{ row }">
+                        <span class="text-sm">{{ formatDate(row.due_date) }}</span>
+                    </template>
                     <template #cell-status="{ row }">
                         <StatusBadge :value="row.status" />
                     </template>
-                    <template #cell-total="{ row }">
-                        <span class="font-medium text-sm">₦ {{ Number(row.total).toLocaleString() }}</span>
+                    <template #cell-total_amount="{ row }">
+                        <span class="font-medium text-sm">₦ {{ formatCurrency(row.total_amount) }}</span>
                     </template>
 
                     <template #empty>
@@ -218,7 +227,7 @@ const orderColumns = [
     { key: 'order_number', label: 'Order #' },
     { key: 'order_date', label: 'Date' },
     { key: 'status', label: 'Status' },
-    { key: 'total', label: 'Total' },
+    { key: 'total_amount', label: 'Total' },
 ];
 
 const invoiceColumns = [
@@ -226,10 +235,17 @@ const invoiceColumns = [
     { key: 'invoice_date', label: 'Date' },
     { key: 'due_date', label: 'Due Date' },
     { key: 'status', label: 'Status' },
-    { key: 'total', label: 'Total' },
+    { key: 'total_amount', label: 'Total' },
 ];
 
 const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value || 0);
+};
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('en-NG', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 </script>

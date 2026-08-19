@@ -52,7 +52,7 @@ class Payment extends Model
         return [
             'amount' => 'decimal:2',
             'exchange_rate' => 'decimal:6',
-            'payment_date' => 'date',
+            'payment_date' => 'date:Y-m-d',
             'approved_at' => 'datetime',
             'metadata' => 'array',
             'status' => PaymentStatus::class,
