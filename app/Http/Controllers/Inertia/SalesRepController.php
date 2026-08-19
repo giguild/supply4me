@@ -99,6 +99,80 @@ class SalesRepController extends Controller
         ]);
     }
 
+    public function show(Request $request, User $user): Response
+    {
+        $companyId = $request->user()->company_id;
+
+        $customerCounts = Customer::where('company_id', $companyId)
+            ->where('assigned_to', $user->id)
+            ->where('status', 'active')
+            ->count();
+
+        $totalCustomers = Customer::where('company_id', $companyId)
+            ->where('assigned_to', $user->id)
+            ->count();
+
+        $orderStats = Order::where('orders.company_id', $companyId)
+            ->whereHas('customer', fn ($q) => $q->where('assigned_to', $user->id))
+            ->whereNotIn('orders.status', ['cancelled', 'draft'])
+            ->select(
+                DB::raw('COUNT(orders.id) as total_orders'),
+                DB::raw('SUM(orders.total_amount) as total_revenue'),
+                DB::raw('AVG(orders.total_amount) as avg_order_value')
+            )
+            ->first();
+
+        $paymentStats = Payment::where('payments.company_id', $companyId)
+            ->whereNotNull('payments.customer_id')
+            ->join('customers', 'payments.customer_id', '=', 'customers.id')
+            ->where('customers.assigned_to', $user->id)
+            ->select(
+                DB::raw('COUNT(payments.id) as total_payments'),
+                DB::raw('SUM(CASE WHEN payments.status IN ("approved", "completed") THEN payments.amount ELSE 0 END) as collected_amount'),
+                DB::raw('SUM(CASE WHEN payments.status = "pending" THEN 1 ELSE 0 END) as pending_payments')
+            )
+            ->first();
+
+        $recentOrders = Order::where('orders.company_id', $companyId)
+            ->whereHas('customer', fn ($q) => $q->where('assigned_to', $user->id))
+            ->with('customer')
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        $customers = Customer::where('company_id', $companyId)
+            ->where('assigned_to', $user->id)
+            ->withCount(['orders' => fn ($q) => $q->whereNotIn('status', ['cancelled', 'draft'])])
+            ->withSum('orders', 'total_amount')
+            ->latest()
+            ->paginate(15);
+
+        return Inertia::render('SalesRep/Show', [
+            'rep' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'region' => $user->region,
+                'state' => $user->state,
+                'status' => $user->status,
+                'created_at' => $user->created_at,
+            ],
+            'stats' => [
+                'total_customers' => $totalCustomers,
+                'active_customers' => $customerCounts,
+                'total_orders' => $orderStats->total_orders ?? 0,
+                'total_revenue' => round($orderStats->total_revenue ?? 0, 2),
+                'avg_order_value' => round($orderStats->avg_order_value ?? 0, 2),
+                'total_payments' => $paymentStats->total_payments ?? 0,
+                'collected_amount' => round($paymentStats->collected_amount ?? 0, 2),
+                'pending_payments' => $paymentStats->pending_payments ?? 0,
+            ],
+            'recentOrders' => $recentOrders,
+            'customers' => $customers,
+        ]);
+    }
+
     public function index(Request $request): Response
     {
         $user = $request->user();

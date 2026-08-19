@@ -54,7 +54,7 @@
                             </td>
                         </tr>
                         <tr v-for="unit in units.data" :key="unit.id">
-                            <td class="font-medium text-gray-900">
+                            <td class="font-medium text-gray-900 dark:text-gray-100">
                                 <template v-if="editingId === unit.id">
                                     <input v-model="editForm.name" type="text" class="form-input" />
                                 </template>

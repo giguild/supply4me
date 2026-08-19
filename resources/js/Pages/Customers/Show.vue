@@ -10,7 +10,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <StatCard label="Total Orders" :value="stats.total_orders ?? 0" subtitle="all time" />
                 <StatCard label="Total Invoices" :value="stats.total_invoices ?? 0" subtitle="all time" />
-                <StatCard label="Outstanding Balance" :value="formatCurrency(stats.outstanding_balance ?? 0)" prefix="₦ " :format="false" subtitle="amount due" />
+                <StatCard label="Outstanding Balance" :value="formatCurrency(stats.outstanding_balance ?? 0)" :format="false" subtitle="amount due" />
             </div>
 
             <!-- Tabs -->

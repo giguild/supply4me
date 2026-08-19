@@ -99,8 +99,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('invoices', InvoiceController::class);
     Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send'])->name('invoices.send');
     Route::post('invoices/{invoice}/void', [InvoiceController::class, 'void'])->name('invoices.void');
+    Route::post('invoices/{invoice}/payments', [InvoiceController::class, 'storePayment'])->name('invoices.payments.store');
 
-    Route::resource('payments', PaymentController::class);
+    Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
+    Route::get('payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
     Route::post('payments/{payment}/approve', [PaymentController::class, 'approve'])->name('payments.approve')->middleware('permission:payment.approve');
     Route::post('payments/{payment}/reject', [PaymentController::class, 'reject'])->name('payments.reject')->middleware('permission:payment.reject');
     Route::post('payments/{payment}/mark-partial', [PaymentController::class, 'markPartial'])->name('payments.markPartial')->middleware('permission:payment.approve');
@@ -132,4 +134,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('sales-rep', [SalesRepController::class, 'dashboard'])->name('sales-rep.dashboard');
     Route::get('sales-rep/customers', [SalesRepController::class, 'index'])->name('sales-rep.customers');
     Route::get('sales-reps', [SalesRepController::class, 'adminIndex'])->name('sales-reps.index');
+    Route::get('sales-reps/{user}', [SalesRepController::class, 'show'])->name('sales-reps.show');
 });

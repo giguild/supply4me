@@ -92,7 +92,7 @@
             </EmptyState>
             <div v-for="product in products.data" :key="product.id" class="card p-4">
                 <div class="flex items-start justify-between mb-2">
-                    <Link :href="route('products.show', product.id)" class="font-semibold text-gray-900 hover:text-accent">
+                    <Link :href="route('products.show', product.id)" class="font-semibold text-gray-900 dark:text-gray-100 hover:text-accent">
                         {{ product.name }}
                     </Link>
                     <StatusBadge :value="product.status || 'active'" />
@@ -101,7 +101,7 @@
                 <p class="text-sm text-gray-500 mb-1">Category: {{ product.category?.name || '-' }}</p>
                 <p class="text-sm text-gray-500 mb-3">Brand: {{ product.brand?.name || '-' }}</p>
                 <div class="flex items-center justify-between">
-                    <span class="font-semibold text-gray-900">{{ formatCurrency(product.selling_price) }}</span>
+                    <span class="font-semibold text-gray-900 dark:text-gray-100">{{ formatCurrency(product.selling_price) }}</span>
                     <div class="flex gap-2">
                         <Link :href="route('products.edit', product.id)" class="btn btn-outline btn-sm">Edit</Link>
                         <button @click="deleteProduct(product.id)" class="btn btn-danger btn-sm">Delete</button>

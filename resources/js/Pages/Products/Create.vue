@@ -99,7 +99,7 @@
                                 <input v-model="form.maximum_order_quantity" type="number" min="1" class="form-input" :disabled="form.max_order_unlimited" placeholder="Leave empty for no limit" />
                                 <label class="flex items-center gap-1 text-sm whitespace-nowrap">
                                     <input v-model="form.max_order_unlimited" type="checkbox" class="rounded border-gray-300 text-accent focus:ring-accent" />
-                                    <span class="text-gray-700">Unlimited</span>
+                                    <span class="text-gray-700 dark:text-gray-300">Unlimited</span>
                                 </label>
                             </div>
                             <p class="text-xs text-gray-500 mt-1">Maximum units per order (leave empty or check Unlimited for no cap)</p>
@@ -110,15 +110,15 @@
                 <div class="flex flex-wrap items-center gap-6 mt-6 pt-6 border-t border-gray-100">
                     <label class="flex items-center gap-2 text-sm">
                         <input v-model="form.is_sellable" type="checkbox" class="rounded border-gray-300 text-accent focus:ring-accent" />
-                        <span class="text-gray-700">Sellable</span>
+                        <span class="text-gray-700 dark:text-gray-300">Sellable</span>
                     </label>
                     <label class="flex items-center gap-2 text-sm">
                         <input v-model="form.is_purchasable" type="checkbox" class="rounded border-gray-300 text-accent focus:ring-accent" />
-                        <span class="text-gray-700">Purchasable</span>
+                        <span class="text-gray-700 dark:text-gray-300">Purchasable</span>
                     </label>
                     <label class="flex items-center gap-2 text-sm">
                         <input v-model="form.is_stockable" type="checkbox" class="rounded border-gray-300 text-accent focus:ring-accent" />
-                        <span class="text-gray-700">Stockable</span>
+                        <span class="text-gray-700 dark:text-gray-300">Stockable</span>
                     </label>
                 </div>
 

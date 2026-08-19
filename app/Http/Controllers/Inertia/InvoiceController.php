@@ -8,6 +8,8 @@ use App\Models\Invoicing\Invoice;
 use App\Models\Invoicing\InvoiceItem;
 use App\Models\Invoicing\InvoiceStatusHistory;
 use App\Models\Orders\Order;
+use App\Models\Payments\Payment;
+use App\Models\Payments\PaymentAllocation;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -261,16 +263,77 @@ class InvoiceController extends Controller
     public function void(Request $request, Invoice $invoice): \Illuminate\Http\RedirectResponse
     {
         $previousStatus = $invoice->status->value;
-        $invoice->update(['status' => 'voided']);
+        $invoice->update(['status' => 'void']);
 
         InvoiceStatusHistory::create([
             'invoice_id' => $invoice->id,
-            'status' => 'voided',
+            'status' => 'void',
             'previous_status' => $previousStatus,
             'notes' => $request->get('notes'),
             'performed_by' => $request->user()->id,
         ]);
 
         return redirect()->route('invoices.show', $invoice)->with('success', 'Invoice voided successfully');
+    }
+
+    public function storePayment(Request $request, Invoice $invoice): \Illuminate\Http\RedirectResponse
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'payment_method' => 'required|string|max:50',
+            'payment_date' => 'required|date',
+            'reference_number' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
+        ]);
+
+        $remaining = (float) $invoice->due_amount;
+        if ($validated['amount'] > $remaining) {
+            return back()->withErrors(['amount' => "Payment amount cannot exceed the outstanding balance of ₦" . number_format($remaining, 2) . "."]);
+        }
+
+        $payment = Payment::create([
+            'company_id' => $request->user()->company_id,
+            'customer_id' => $invoice->customer_id,
+            'payment_type' => 'incoming',
+            'payment_method' => $validated['payment_method'],
+            'amount' => $validated['amount'],
+            'currency_code' => $invoice->currency_code ?? 'NGN',
+            'payment_date' => $validated['payment_date'],
+            'reference_number' => $validated['reference_number'] ?? null,
+            'notes' => $validated['notes'] ?? null,
+            'status' => 'completed',
+            'received_by' => $request->user()->id,
+            'approved_by' => $request->user()->id,
+            'approved_at' => now(),
+        ]);
+
+        PaymentAllocation::create([
+            'payment_id' => $payment->id,
+            'invoice_id' => $invoice->id,
+            'amount' => $validated['amount'],
+        ]);
+
+        $this->syncInvoicePayment($invoice);
+
+        return redirect()->route('invoices.show', $invoice)->with('success', 'Payment of ₦' . number_format($validated['amount'], 2) . ' recorded successfully');
+    }
+
+    private function syncInvoicePayment(Invoice $invoice): void
+    {
+        $totalPaid = $invoice->payments()
+            ->where('status', 'completed')
+            ->sum('payments.amount');
+
+        $invoice->update([
+            'paid_amount' => $totalPaid,
+            'due_amount' => $invoice->total_amount - $totalPaid,
+            'status' => $totalPaid >= $invoice->total_amount ? 'paid' : 'partial',
+        ]);
+
+        if ($invoice->order) {
+            $invoice->order->update([
+                'payment_status' => $totalPaid >= $invoice->total_amount ? 'paid' : 'partial',
+            ]);
+        }
     }
 }

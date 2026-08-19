@@ -16,7 +16,7 @@
 
             <div class="card p-6 mb-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Order Items</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Order Items</h3>
                     <button type="button" @click="addItem" class="btn btn-accent btn-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -52,7 +52,7 @@
                                 <td>
                                     <input v-model.number="item.unit_price" type="number" min="0" step="0.01" class="form-input w-28" required />
                                 </td>
-                                <td class="text-sm font-medium text-gray-900">
+                                <td class="text-sm font-medium text-gray-900 dark:text-gray-100">
                                     {{ formatCurrency(item.quantity * item.unit_price) }}
                                 </td>
                                 <td>
@@ -72,7 +72,7 @@
                 <div class="card p-6 w-80 space-y-3">
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500">Subtotal</span>
-                        <span class="font-medium text-gray-900">{{ formatCurrency(form.subtotal) }}</span>
+                        <span class="font-medium text-gray-900 dark:text-gray-100">{{ formatCurrency(form.subtotal) }}</span>
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500">Tax</span>
@@ -83,7 +83,7 @@
                         <input v-model.number="form.discount_amount" type="number" min="0" step="0.01" class="form-input w-24 text-right" />
                     </div>
                     <div class="border-t pt-3 flex justify-between">
-                        <span class="text-lg font-semibold text-gray-900">Total</span>
+                        <span class="text-lg font-semibold text-gray-900 dark:text-gray-100">Total</span>
                         <span class="text-lg font-bold text-accent">{{ formatCurrency(form.total_amount) }}</span>
                     </div>
                 </div>

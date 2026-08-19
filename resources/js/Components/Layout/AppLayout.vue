@@ -195,7 +195,6 @@ const adminNav = [
     { label: 'Products', route: 'products.index', icon: icons.products },
     { label: 'Orders', route: 'orders.index', icon: icons.orders },
     { label: 'Invoices', route: 'invoices.index', icon: icons.invoices },
-    { label: 'Payments', route: 'payments.index', icon: icons.payments },
     { label: 'Stock', route: 'stock.index', icon: icons.stock },
 ];
 

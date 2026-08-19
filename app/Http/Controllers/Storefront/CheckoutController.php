@@ -180,6 +180,7 @@ class CheckoutController extends Controller
 
         $invoice = Invoice::where('id', $invoiceId)
             ->where('customer_id', $customer->id)
+            ->whereNotIn('status', ['draft', 'void'])
             ->with(['items.product', 'order', 'payments'])
             ->firstOrFail();
 
@@ -198,6 +199,7 @@ class CheckoutController extends Controller
 
         $invoice = Invoice::where('id', $invoiceId)
             ->where('customer_id', $customer->id)
+            ->whereNotIn('status', ['draft', 'void'])
             ->firstOrFail();
 
         if ($invoice->status === 'paid') {

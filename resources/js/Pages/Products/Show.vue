@@ -7,50 +7,50 @@
         </PageHeader>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard label="Cost Price" :value="formatCurrency(product.cost_price)" prefix="₦" />
-            <StatCard label="Selling Price" :value="formatCurrency(product.selling_price)" prefix="₦" />
+            <StatCard label="Cost Price" :value="formatCurrency(product.cost_price)" />
+            <StatCard label="Selling Price" :value="formatCurrency(product.selling_price)" />
             <StatCard label="Stock Level" :value="totalStock" />
             <StatCard label="Reorder Level" :value="product.reorder_level ?? '-'" />
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <div class="card p-6 lg:col-span-2">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Product Information</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Product Information</h3>
                 <dl class="grid grid-cols-2 gap-4 text-sm">
                     <div>
                         <dt class="text-gray-500">SKU</dt>
-                        <dd class="font-medium text-gray-900">{{ product.sku || '-' }}</dd>
+                        <dd class="font-medium text-gray-900 dark:text-gray-100">{{ product.sku || '-' }}</dd>
                     </div>
                     <div>
                         <dt class="text-gray-500">Barcode</dt>
-                        <dd class="font-medium text-gray-900">{{ product.barcode || '-' }}</dd>
+                        <dd class="font-medium text-gray-900 dark:text-gray-100">{{ product.barcode || '-' }}</dd>
                     </div>
                     <div>
                         <dt class="text-gray-500">Category</dt>
-                        <dd class="font-medium text-gray-900">{{ product.category?.name || '-' }}</dd>
+                        <dd class="font-medium text-gray-900 dark:text-gray-100">{{ product.category?.name || '-' }}</dd>
                     </div>
                     <div>
                         <dt class="text-gray-500">Brand</dt>
-                        <dd class="font-medium text-gray-900">{{ product.brand?.name || '-' }}</dd>
+                        <dd class="font-medium text-gray-900 dark:text-gray-100">{{ product.brand?.name || '-' }}</dd>
                     </div>
                     <div>
                         <dt class="text-gray-500">Unit</dt>
-                        <dd class="font-medium text-gray-900">{{ product.unit ? `${product.unit.name} (${product.unit.short_name})` : '-' }}</dd>
+                        <dd class="font-medium text-gray-900 dark:text-gray-100">{{ product.unit ? `${product.unit.name} (${product.unit.short_name})` : '-' }}</dd>
                     </div>
                     <div>
                         <dt class="text-gray-500">Type</dt>
-                        <dd class="font-medium text-gray-900">{{ product.product_type || 'Standard' }}</dd>
+                        <dd class="font-medium text-gray-900 dark:text-gray-100">{{ product.product_type || 'Standard' }}</dd>
                     </div>
                     <div class="col-span-2">
                         <dt class="text-gray-500">Description</dt>
-                        <dd class="font-medium text-gray-900">{{ product.description || '-' }}</dd>
+                        <dd class="font-medium text-gray-900 dark:text-gray-100">{{ product.description || '-' }}</dd>
                     </div>
                 </dl>
             </div>
 
             <div class="space-y-6">
                 <div class="card p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Status</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Status</h3>
                     <StatusBadge :value="product.status || 'active'" />
                     <div class="mt-4 space-y-2 text-sm">
                         <div class="flex items-center gap-2">
@@ -66,23 +66,23 @@
                 </div>
 
                 <div class="card p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Pricing</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Pricing</h3>
                     <dl class="space-y-3 text-sm">
                         <div class="flex justify-between">
                             <dt class="text-gray-500">Cost Price</dt>
-                            <dd class="font-medium text-gray-900">{{ formatCurrency(product.cost_price) }}</dd>
+                            <dd class="font-medium text-gray-900 dark:text-gray-100">{{ formatCurrency(product.cost_price) }}</dd>
                         </div>
                         <div class="flex justify-between">
                             <dt class="text-gray-500">Selling Price</dt>
-                            <dd class="font-medium text-gray-900">{{ formatCurrency(product.selling_price) }}</dd>
+                            <dd class="font-medium text-gray-900 dark:text-gray-100">{{ formatCurrency(product.selling_price) }}</dd>
                         </div>
                         <div class="flex justify-between">
                             <dt class="text-gray-500">Minimum Price</dt>
-                            <dd class="font-medium text-gray-900">{{ product.minimum_price ? formatCurrency(product.minimum_price) : '-' }}</dd>
+                            <dd class="font-medium text-gray-900 dark:text-gray-100">{{ product.minimum_price ? formatCurrency(product.minimum_price) : '-' }}</dd>
                         </div>
                         <div class="flex justify-between">
                             <dt class="text-gray-500">Tax Rate</dt>
-                            <dd class="font-medium text-gray-900">{{ product.tax_rate ? product.tax_rate + '%' : '-' }}</dd>
+                            <dd class="font-medium text-gray-900 dark:text-gray-100">{{ product.tax_rate ? product.tax_rate + '%' : '-' }}</dd>
                         </div>
                     </dl>
                 </div>
@@ -91,7 +91,7 @@
 
         <div class="card overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100">
-                <h3 class="text-lg font-semibold text-gray-900">Stock Items</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Stock Items</h3>
             </div>
             <div class="overflow-x-auto">
                 <table class="data-table">
@@ -108,16 +108,16 @@
                             <td colspan="4">
                                 <div class="text-center py-8">
                                     <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-                                    <p class="text-sm font-medium text-gray-900 mb-1">No stock records</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">No stock records</p>
                                     <p class="text-sm text-gray-500">Stock records will appear here once this product is added to a warehouse.</p>
                                 </div>
                             </td>
                         </tr>
                         <tr v-for="item in product.stockItems" :key="item.id">
-                            <td class="font-medium text-gray-900">{{ item.warehouse?.name || '-' }}</td>
+                            <td class="font-medium text-gray-900 dark:text-gray-100">{{ item.warehouse?.name || '-' }}</td>
                             <td>{{ item.quantity }}</td>
                             <td>{{ item.reserved_quantity || 0 }}</td>
-                            <td class="font-medium text-gray-900">{{ item.quantity - (item.reserved_quantity || 0) }}</td>
+                            <td class="font-medium text-gray-900 dark:text-gray-100">{{ item.quantity - (item.reserved_quantity || 0) }}</td>
                         </tr>
                     </tbody>
                 </table>

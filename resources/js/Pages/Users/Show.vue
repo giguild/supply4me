@@ -37,11 +37,11 @@
                     </div>
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Branch</p>
-                        <p class="font-medium">{{ user.branch?.name || 'N/A' }}</p>
+                        <p class="font-medium">{{ user.branches?.map(b => b.name).join(', ') || 'N/A' }}</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Created At</p>
-                        <p class="font-medium">{{ user.created_at }}</p>
+                        <p class="font-medium">{{ new Date(user.created_at).toLocaleDateString('en-NG', { year: 'numeric', month: 'short', day: 'numeric' }) }}</p>
                     </div>
                 </div>
             </div>

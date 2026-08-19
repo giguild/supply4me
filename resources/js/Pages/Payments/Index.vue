@@ -61,11 +61,7 @@
             </template>
 
             <template #empty>
-                <EmptyState title="No payments found" description="Record your first payment to get started.">
-                    <template #action>
-                        <Link :href="route('payments.create')" class="btn btn-accent">New Payment</Link>
-                    </template>
-                </EmptyState>
+                <EmptyState title="No payments found" description="Payments are recorded from invoice pages." />
             </template>
         </DataTable>
     </AppLayout>

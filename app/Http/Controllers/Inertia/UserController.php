@@ -16,7 +16,7 @@ class UserController extends Controller
     public function index(Request $request): Response
     {
         $query = User::where('company_id', $request->user()->company_id)
-            ->with('company');
+            ->with(['company', 'roles']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -47,7 +47,7 @@ class UserController extends Controller
     {
         $companyId = $request->user()->company_id;
 
-        $roles = \Spatie\Permission\Models\Role::all();
+        $roles = \Spatie\Permission\Models\Role::where('name', '!=', 'super_admin')->get();
         $companies = Company::all();
         $branches = Branch::where('company_id', $companyId)->get();
 
@@ -92,6 +92,9 @@ class UserController extends Controller
         ]);
 
         $roles = $validated['roles'] ?? ($validated['role'] ? [$validated['role']] : []);
+        if (in_array('super_admin', $roles)) {
+            return back()->withErrors(['role' => 'Cannot assign the super_admin role.'])->withInput();
+        }
         if (!empty($roles)) {
             $user->syncRoles($roles);
         }
@@ -114,7 +117,7 @@ class UserController extends Controller
 
     public function edit(Request $request, User $user): Response
     {
-        $roles = \Spatie\Permission\Models\Role::all();
+        $roles = \Spatie\Permission\Models\Role::where('name', '!=', 'super_admin')->get();
         $companies = Company::all();
         $branches = Branch::where('company_id', $request->user()->company_id)->get();
 
@@ -175,6 +178,10 @@ class UserController extends Controller
 
     public function destroy(Request $request, User $user): \Illuminate\Http\RedirectResponse
     {
+        if ($user->hasRole('super_admin')) {
+            return back()->withErrors(['user' => 'The super admin account cannot be deleted.']);
+        }
+
         $user->delete();
 
         return redirect()->route('users.index')->with('success', 'User deleted successfully');

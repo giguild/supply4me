@@ -41,7 +41,7 @@
                 <div class="flex items-center gap-2">
                     <Link :href="route('users.show', row.id)" class="btn btn-outline btn-sm">View</Link>
                     <Link :href="route('users.edit', row.id)" class="btn btn-outline btn-sm">Edit</Link>
-                    <button class="btn btn-danger btn-sm" @click="confirmDelete(row)">Delete</button>
+                    <button v-if="!row.roles?.some(r => r.name === 'super_admin')" class="btn btn-danger btn-sm" @click="confirmDelete(row)">Delete</button>
                 </div>
             </template>
 

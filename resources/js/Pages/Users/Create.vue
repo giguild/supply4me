@@ -46,7 +46,7 @@
                         <label class="form-label">Role *</label>
                         <select v-model="form.role" class="form-input" :class="{ 'border-red-500': form.errors.role }">
                             <option value="">Select Role</option>
-                            <option v-for="role in roles" :key="role.id" :value="role.name">
+                            <option v-for="role in roles.filter(r => r.name !== 'super_admin')" :key="role.id" :value="role.name">
                                 {{ role.name.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
                             </option>
                         </select>
@@ -65,9 +65,9 @@
 
                     <div>
                         <label class="form-label">Branch</label>
-                        <select v-model="form.branch_id" class="form-input">
+                        <select v-model="form.branches" class="form-input">
                             <option value="">Select Branch</option>
-                            <option v-for="branch in branches" :key="branch.id" :value="branch.id">
+                            <option v-for="branch in branches" :key="branch.id" :value="[branch.id]">
                                 {{ branch.name }}
                             </option>
                         </select>
@@ -139,7 +139,7 @@ const form = useForm({
     phone: '',
     role: '',
     company_id: '',
-    branch_id: '',
+    branches: [],
     status: 'active',
     region: '',
     state: '',

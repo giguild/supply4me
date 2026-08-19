@@ -34,7 +34,7 @@
             </template>
 
             <template #cell-customer="{ row }">
-                <span class="text-sm text-gray-900">{{ row.customer?.name }}</span>
+                <span class="text-sm text-gray-900 dark:text-gray-100">{{ row.customer?.name }}</span>
             </template>
 
             <template #cell-order_date="{ row }">
@@ -42,7 +42,7 @@
             </template>
 
             <template #cell-total_amount="{ row }">
-                <span class="text-sm font-medium text-gray-900">{{ formatCurrency(row.total_amount) }}</span>
+                <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ formatCurrency(row.total_amount) }}</span>
             </template>
 
             <template #cell-status="{ row }">

@@ -48,7 +48,7 @@
                             </td>
                         </tr>
                         <tr v-for="category in categories.data" :key="category.id">
-                            <td class="font-medium text-gray-900">
+                            <td class="font-medium text-gray-900 dark:text-gray-100">
                                 <template v-if="editingId === category.id">
                                     <input v-model="editForm.name" type="text" class="form-input" />
                                 </template>
