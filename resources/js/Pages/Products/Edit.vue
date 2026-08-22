@@ -132,6 +132,46 @@
                         <option value="discontinued">Discontinued</option>
                     </select>
                 </div>
+
+                <div class="mt-6 pt-6 border-t border-gray-100">
+                    <label class="form-label">Product Images</label>
+                    <p class="text-xs text-gray-500 mb-3">Optional. Upload up to 10 images (JPEG, PNG, GIF, WebP). Max 5MB each.</p>
+
+                    <div v-if="existingImages.length" class="flex flex-wrap gap-3 mb-3">
+                        <div v-for="img in existingImages" :key="img.id" class="relative group">
+                            <img :src="img.original_url" class="w-20 h-20 object-cover rounded-lg border border-gray-200 dark:border-gray-600" />
+                            <button type="button" @click="markForRemoval(img.id)"
+                                class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-xs flex items-center justify-center transition-opacity"
+                                :class="removeImages.includes(img.id) ? 'bg-gray-400 text-white opacity-100' : 'bg-red-500 text-white opacity-0 group-hover:opacity-100'">
+                                {{ removeImages.includes(img.id) ? '\u21a9' : '\u00d7' }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div
+                        class="relative border-2 border-dashed rounded-lg p-6 text-center transition-colors"
+                        :class="isDragging ? 'border-accent bg-accent/5' : 'border-gray-300 dark:border-gray-600 hover:border-accent/50'"
+                        @dragover.prevent="isDragging = true"
+                        @dragleave.prevent="isDragging = false"
+                        @drop.prevent="handleDrop"
+                    >
+                        <input ref="fileInput" type="file" multiple accept="image/jpeg,image/png,image/gif,image/webp" class="hidden" @change="handleFiles" />
+                        <button type="button" @click="$refs.fileInput.click()" class="text-accent hover:text-accent/80 font-medium text-sm">
+                            Browse images
+                        </button>
+                        <p class="text-xs text-gray-400 mt-1">or drag and drop</p>
+                    </div>
+                    <p v-if="form.errors.images" class="text-red-500 text-xs mt-1">{{ form.errors.images }}</p>
+                    <div v-if="newImagePreviews.length" class="flex flex-wrap gap-3 mt-3">
+                        <div v-for="(preview, idx) in newImagePreviews" :key="idx" class="relative group">
+                            <img :src="preview" class="w-20 h-20 object-cover rounded-lg border border-gray-200 dark:border-gray-600" />
+                            <button type="button" @click="removeNewImage(idx)"
+                                class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                &times;
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="flex items-center justify-end gap-3 mt-6">
@@ -145,6 +185,7 @@
 </template>
 
 <script setup>
+import { ref, computed } from 'vue';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
 import PageHeader from '@/Components/UI/PageHeader.vue';
 import { Link, useForm } from '@inertiajs/vue3';
@@ -158,6 +199,13 @@ const props = defineProps({
 });
 
 const toast = useToast();
+const isDragging = ref(false);
+const newImagePreviews = ref([]);
+const removeImages = ref([]);
+
+const existingImages = computed(() => {
+    return props.product.media?.filter(m => m.collection_name === 'images') || [];
+});
 
 const form = useForm({
     name: props.product.name,
@@ -181,12 +229,49 @@ const form = useForm({
     is_sellable: props.product.is_sellable,
     is_purchasable: props.product.is_purchasable,
     is_stockable: props.product.is_stockable,
+    images: [],
 });
+
+const handleFiles = (e) => {
+    const files = Array.from(e.target.files);
+    addImages(files);
+    e.target.value = '';
+};
+
+const handleDrop = (e) => {
+    isDragging.value = false;
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    addImages(files);
+};
+
+const addImages = (files) => {
+    for (const file of files) {
+        if (form.images.length >= 10) break;
+        form.images.push(file);
+        newImagePreviews.value.push(URL.createObjectURL(file));
+    }
+};
+
+const removeNewImage = (idx) => {
+    form.images.splice(idx, 1);
+    URL.revokeObjectURL(newImagePreviews.value[idx]);
+    newImagePreviews.value.splice(idx, 1);
+};
+
+const markForRemoval = (mediaId) => {
+    const idx = removeImages.value.indexOf(mediaId);
+    if (idx >= 0) {
+        removeImages.value.splice(idx, 1);
+    } else {
+        removeImages.value.push(mediaId);
+    }
+};
 
 const submit = () => {
     const data = { ...form.data() }
     data.maximum_order_quantity = data.max_order_unlimited ? null : data.maximum_order_quantity
     delete data.max_order_unlimited
+    data.remove_images = removeImages.value
 
     form.put(route('products.update', props.product.id), {
         data,

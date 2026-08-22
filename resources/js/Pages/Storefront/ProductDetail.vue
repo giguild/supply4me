@@ -10,8 +10,22 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Product Image -->
-        <div class="bg-white rounded-2xl border border-[var(--color-border)] aspect-square flex items-center justify-center dark:bg-gray-800 dark:border-gray-700">
-          <span class="text-8xl font-bold text-accent/20">{{ product.name.charAt(0) }}</span>
+        <div>
+          <div class="bg-white rounded-2xl border border-[var(--color-border)] aspect-square flex items-center justify-center dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
+            <img v-if="selectedImage" :src="selectedImage" :alt="product.name" class="w-full h-full object-cover" />
+            <span v-else class="text-8xl font-bold text-accent/20">{{ product.name.charAt(0) }}</span>
+          </div>
+          <div v-if="productImages.length > 1" class="flex gap-2 mt-3">
+            <button
+              v-for="(img, idx) in productImages"
+              :key="idx"
+              @click="selectedImage = img"
+              class="w-16 h-16 rounded-lg border-2 overflow-hidden transition-colors"
+              :class="selectedImage === img ? 'border-accent' : 'border-gray-200 dark:border-gray-600 hover:border-accent/50'"
+            >
+              <img :src="img" class="w-full h-full object-cover" />
+            </button>
+          </div>
         </div>
 
         <!-- Product Info -->
@@ -83,7 +97,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import StorefrontLayout from '@/Components/Layout/StorefrontLayout.vue'
 
@@ -93,6 +107,12 @@ const props = defineProps({
   wishlistIds: { type: Array, default: () => [] },
   company: Object,
 })
+
+const productImages = computed(() => {
+  return props.product.media?.filter(m => m.collection_name === 'images').map(m => m.original_url) || []
+})
+
+const selectedImage = ref(productImages.value[0] || null)
 
 const quantity = ref(1)
 const adding = ref(false)

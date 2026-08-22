@@ -13,6 +13,22 @@
             <StatCard label="Reorder Level" :value="product.reorder_level ?? '-'" />
         </div>
 
+        <div v-if="productImages.length" class="card p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Product Images</h3>
+            <div class="flex flex-wrap gap-4">
+                <div v-for="img in productImages" :key="img.id" class="relative group cursor-pointer" @click="selectedImage = img">
+                    <img :src="img.original_url" :alt="img.name" class="w-32 h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-600 group-hover:ring-2 ring-accent transition-all" />
+                </div>
+            </div>
+        </div>
+
+        <div v-if="selectedImage" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70" @click.self="selectedImage = null">
+            <div class="relative max-w-3xl max-h-[90vh] p-2">
+                <img :src="selectedImage.original_url" :alt="selectedImage.name" class="max-w-full max-h-[85vh] rounded-lg object-contain" />
+                <button @click="selectedImage = null" class="absolute -top-2 -right-2 w-8 h-8 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-600">&times;</button>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <div class="card p-6 lg:col-span-2">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Product Information</h3>
@@ -127,7 +143,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
 import PageHeader from '@/Components/UI/PageHeader.vue';
 import StatCard from '@/Components/UI/StatCard.vue';
@@ -136,6 +152,12 @@ import { Link } from '@inertiajs/vue3';
 
 const props = defineProps({
     product: Object,
+});
+
+const selectedImage = ref(null);
+
+const productImages = computed(() => {
+    return props.product.media?.filter(m => m.collection_name === 'images') || [];
 });
 
 const totalStock = computed(() => {

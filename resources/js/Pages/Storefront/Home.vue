@@ -48,8 +48,9 @@
           :href="`/product/${product.slug}`"
           class="group bg-white rounded-2xl border border-[var(--color-border)] overflow-hidden hover:shadow-lg transition-all duration-300 dark:bg-gray-800 dark:border-gray-700"
         >
-          <div class="aspect-square bg-gradient-to-br from-accent-50 to-white flex items-center justify-center dark:from-gray-700 dark:to-gray-800">
-            <span class="text-5xl font-bold text-accent/30">{{ product.name.charAt(0) }}</span>
+          <div class="aspect-square bg-gradient-to-br from-accent-50 to-white flex items-center justify-center dark:from-gray-700 dark:to-gray-800 overflow-hidden">
+            <img v-if="getProductImage(product)" :src="getProductImage(product)" :alt="product.name" class="w-full h-full object-cover" />
+            <span v-else class="text-5xl font-bold text-accent/30">{{ product.name.charAt(0) }}</span>
           </div>
           <div class="p-4">
             <h3 class="font-semibold text-[var(--color-text)] group-hover:text-accent transition-colors line-clamp-2">{{ product.name }}</h3>
@@ -137,5 +138,10 @@ function toggleWishlist(productId) {
         wishlistIds.value = wishlistIds.value.filter(id => id !== productId)
       }
     })
+}
+
+function getProductImage(product) {
+  const images = product.media?.filter(m => m.collection_name === 'images')
+  return images?.length ? images[0].original_url : null
 }
 </script>

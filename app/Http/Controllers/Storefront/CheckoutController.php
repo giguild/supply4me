@@ -52,6 +52,9 @@ class CheckoutController extends Controller
         $taxAmount = $subtotal * ($taxRate / 100);
         $total = $subtotal + $taxAmount;
 
+        $addresses = $customer->shippingAddresses()->orderByDesc('is_default')->get();
+        $defaultAddress = $addresses->firstWhere('is_default', true);
+
         return Inertia::render('Storefront/Checkout', [
             'items' => $items,
             'subtotal' => $subtotal,
@@ -59,6 +62,8 @@ class CheckoutController extends Controller
             'taxAmount' => $taxAmount,
             'total' => $total,
             'customer' => $customer,
+            'addresses' => $addresses,
+            'defaultAddress' => $defaultAddress,
             'cartCount' => count($items),
         ]);
     }
@@ -67,10 +72,42 @@ class CheckoutController extends Controller
     {
         $customer = Auth::guard('customer')->user();
 
+        $hasDefaultAddress = $customer->shippingAddresses()->where('is_default', true)->exists();
+
         $request->validate([
+            'shipping_address_id' => $hasDefaultAddress ? 'nullable|string' : 'required|string',
             'shipping_address' => 'nullable|string|max:500',
             'notes' => 'nullable|string|max:1000',
         ]);
+
+        $shippingAddressText = '';
+        $shippingAddressId = null;
+
+        if (!empty($request->shipping_address_id)) {
+            $address = $customer->shippingAddresses()->where('id', $request->shipping_address_id)->first();
+            if ($address) {
+                $shippingAddressId = $address->id;
+                $shippingAddressText = collect([
+                    $address->address_line_1,
+                    $address->address_line_2,
+                    $address->city,
+                    $address->state,
+                    $address->postal_code,
+                    $address->country,
+                ])->filter()->implode(', ');
+            }
+        } elseif ($hasDefaultAddress) {
+            $default = $customer->shippingAddresses()->where('is_default', true)->first();
+            $shippingAddressId = $default->id;
+            $shippingAddressText = collect([
+                $default->address_line_1,
+                $default->address_line_2,
+                $default->city,
+                $default->state,
+                $default->postal_code,
+                $default->country,
+            ])->filter()->implode(', ');
+        }
 
         $cart = session()->get('cart', []);
 
@@ -80,7 +117,7 @@ class CheckoutController extends Controller
 
         $company = \App\Models\Companies\Company::firstOrFail();
 
-        $result = DB::transaction(function () use ($cart, $customer, $company, $request) {
+        $result = DB::transaction(function () use ($cart, $customer, $company, $request, $shippingAddressId) {
             $subtotal = 0;
             $taxAmount = 0;
             $lineItems = [];
@@ -114,6 +151,7 @@ class CheckoutController extends Controller
                 'subtotal' => $subtotal,
                 'tax_amount' => $taxAmount,
                 'total_amount' => $total,
+                'shipping_address_id' => $shippingAddressId,
                 'notes' => $request->notes,
                 'order_date' => now(),
             ]);
@@ -268,9 +306,12 @@ class CheckoutController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
+        $addresses = $customer->shippingAddresses()->orderByDesc('is_default')->get();
+
         return Inertia::render('Storefront/Account', [
             'customer' => $customer,
             'orders' => $orders,
+            'addresses' => $addresses,
             'cartCount' => 0,
         ]);
     }

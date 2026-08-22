@@ -29,8 +29,9 @@ use App\Http\Controllers\Inertia\SalesRepController;
 use App\Http\Controllers\Storefront\StorefrontController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\StorefrontAuthController;
-use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\WishlistController;
+use App\Http\Controllers\Storefront\CheckoutController;
+use App\Http\Controllers\Storefront\ShippingAddressController;
 use Illuminate\Support\Facades\Route;
 
 // ── Storefront (public - landing page) ───────────────────────
@@ -56,6 +57,10 @@ Route::middleware('auth:customer')->group(function () {
     Route::post('/payment/{invoice}', [CheckoutController::class, 'submitPayment'])->name('storefront.submitPayment');
     Route::get('/order-confirmation/{order}', [CheckoutController::class, 'orderConfirmation'])->name('storefront.orderConfirmation');
     Route::get('/account', [CheckoutController::class, 'account'])->name('storefront.account');
+
+    Route::post('/account/addresses', [ShippingAddressController::class, 'store'])->name('storefront.addresses.store');
+    Route::put('/account/addresses/{address}', [ShippingAddressController::class, 'update'])->name('storefront.addresses.update');
+    Route::delete('/account/addresses/{address}', [ShippingAddressController::class, 'destroy'])->name('storefront.addresses.destroy');
 
     Route::get('/wishlist', [WishlistController::class, 'index'])->name('storefront.wishlist');
     Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('storefront.wishlist.toggle');

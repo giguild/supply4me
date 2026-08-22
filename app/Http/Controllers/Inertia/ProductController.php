@@ -8,6 +8,7 @@ use App\Models\Products\ProductBrand;
 use App\Models\Products\ProductCategory;
 use App\Models\Products\ProductUnit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -41,6 +42,10 @@ class ProductController extends Controller
         }
 
         $products = $query->latest()->paginate($request->get('per_page', 15));
+
+        foreach ($products->items() as $product) {
+            $product->loadMedia('images');
+        }
 
         $categories = ProductCategory::where('company_id', $request->user()->company_id)->get();
         $brands = ProductBrand::where('company_id', $request->user()->company_id)->get();
@@ -94,11 +99,32 @@ class ProductController extends Controller
             'is_featured' => 'nullable|boolean',
             'tags' => 'nullable|array',
             'attributes' => 'nullable|array',
+            'images' => 'nullable|array|max:10',
+            'images.*' => 'file|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
+
+        $images = $request->file('images');
+        unset($validated['images']);
 
         $validated['company_id'] = $request->user()->company_id;
 
-        Product::create($validated);
+        foreach (['tax_rate', 'minimum_price', 'reorder_level', 'reorder_quantity', 'minimum_order_quantity', 'maximum_order_quantity', 'weight'] as $field) {
+            if (isset($validated[$field]) && $validated[$field] === '') {
+                $validated[$field] = 0;
+            }
+        }
+
+        $product = Product::create($validated);
+
+        if ($images) {
+            foreach ($images as $image) {
+                $ext = $image->getClientOriginalExtension();
+                $product->addMedia($image)
+                    ->usingName(pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME))
+                    ->usingFileName(Str::uuid() . '.' . $ext)
+                    ->toMediaCollection('images', 'public');
+            }
+        }
 
         return redirect()->route('products.index')->with('success', 'Product created successfully');
     }
@@ -113,6 +139,8 @@ class ProductController extends Controller
             'variants',
         ]);
 
+        $product->loadMedia('images');
+
         return Inertia::render('Products/Show', [
             'product' => $product,
         ]);
@@ -123,6 +151,8 @@ class ProductController extends Controller
         $categories = ProductCategory::where('company_id', $request->user()->company_id)->get();
         $brands = ProductBrand::where('company_id', $request->user()->company_id)->get();
         $units = ProductUnit::where('company_id', $request->user()->company_id)->get();
+
+        $product->loadMedia('images');
 
         return Inertia::render('Products/Edit', [
             'product' => $product,
@@ -160,9 +190,37 @@ class ProductController extends Controller
             'is_featured' => 'nullable|boolean',
             'tags' => 'nullable|array',
             'attributes' => 'nullable|array',
+            'images' => 'nullable|array|max:10',
+            'images.*' => 'file|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'remove_images' => 'nullable|array',
+            'remove_images.*' => 'string',
         ]);
 
+        $images = $request->file('images');
+        $removeImages = $validated['remove_images'] ?? [];
+        unset($validated['images'], $validated['remove_images']);
+
+        foreach (['tax_rate', 'minimum_price', 'reorder_level', 'reorder_quantity', 'minimum_order_quantity', 'maximum_order_quantity', 'weight'] as $field) {
+            if (isset($validated[$field]) && $validated[$field] === '') {
+                $validated[$field] = 0;
+            }
+        }
+
         $product->update($validated);
+
+        foreach ($removeImages as $mediaId) {
+            $product->media()->where('id', $mediaId)->first()?->delete();
+        }
+
+        if ($images) {
+            foreach ($images as $image) {
+                $ext = $image->getClientOriginalExtension();
+                $product->addMedia($image)
+                    ->usingName(pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME))
+                    ->usingFileName(Str::uuid() . '.' . $ext)
+                    ->toMediaCollection('images', 'public');
+            }
+        }
 
         return redirect()->route('products.index')->with('success', 'Product updated successfully');
     }

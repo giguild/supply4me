@@ -133,9 +133,11 @@
                             <h4 class="font-semibold text-sm">{{ address.label || 'Shipping Address' }}</h4>
                             <StatusBadge v-if="address.is_default" value="default" />
                         </div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ address.street }}</p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ address.city }}, {{ address.state }} {{ address.postal_code }}</p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ address.country }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ address.address_line_1 }}</p>
+                        <p v-if="address.address_line_2" class="text-sm text-gray-600 dark:text-gray-400">{{ address.address_line_2 }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ [address.city, address.state, address.postal_code].filter(Boolean).join(', ') }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ address.country || '-' }}</p>
+                        <p v-if="address.delivery_instructions" class="text-xs text-gray-500 dark:text-gray-500 mt-2 italic">"{{ address.delivery_instructions }}"</p>
                     </div>
                 </div>
                 <EmptyState v-if="!customer.shipping_addresses?.length" title="No addresses" description="No shipping addresses found." />

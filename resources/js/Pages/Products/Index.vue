@@ -44,7 +44,13 @@
         <div class="hidden md:block">
             <DataTable :columns="columns" :data="products.data" :meta="meta" @page="goToPage">
                 <template #cell-sku="{ row }">
-                    {{ row.sku || '-' }}
+                    <div class="flex items-center gap-3">
+                        <img v-if="getFirstImage(row)" :src="getFirstImage(row)" class="w-9 h-9 rounded-lg object-cover border border-gray-200 dark:border-gray-600 shrink-0" />
+                        <div v-else class="w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                        </div>
+                        <span>{{ row.sku || '-' }}</span>
+                    </div>
                 </template>
                 <template #cell-name="{ row }">
                     <Link :href="route('products.show', row.id)" class="font-medium text-accent hover:underline">
@@ -91,20 +97,28 @@
                 </template>
             </EmptyState>
             <div v-for="product in products.data" :key="product.id" class="card p-4">
-                <div class="flex items-start justify-between mb-2">
-                    <Link :href="route('products.show', product.id)" class="font-semibold text-gray-900 dark:text-gray-100 hover:text-accent">
-                        {{ product.name }}
-                    </Link>
-                    <StatusBadge :value="product.status || 'active'" />
-                </div>
-                <p class="text-sm text-gray-500 mb-1">SKU: {{ product.sku || '-' }}</p>
-                <p class="text-sm text-gray-500 mb-1">Category: {{ product.category?.name || '-' }}</p>
-                <p class="text-sm text-gray-500 mb-3">Brand: {{ product.brand?.name || '-' }}</p>
-                <div class="flex items-center justify-between">
-                    <span class="font-semibold text-gray-900 dark:text-gray-100">{{ formatCurrency(product.selling_price) }}</span>
-                    <div class="flex gap-2">
-                        <Link :href="route('products.edit', product.id)" class="btn btn-outline btn-sm">Edit</Link>
-                        <button @click="deleteProduct(product.id)" class="btn btn-danger btn-sm">Delete</button>
+                <div class="flex items-start gap-3">
+                    <img v-if="getFirstImage(product)" :src="getFirstImage(product)" class="w-12 h-12 rounded-lg object-cover border border-gray-200 dark:border-gray-600 shrink-0" />
+                    <div v-else class="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-start justify-between mb-1">
+                            <Link :href="route('products.show', product.id)" class="font-semibold text-gray-900 dark:text-gray-100 hover:text-accent truncate">
+                                {{ product.name }}
+                            </Link>
+                            <StatusBadge :value="product.status || 'active'" />
+                        </div>
+                        <p class="text-sm text-gray-500 mb-1">SKU: {{ product.sku || '-' }}</p>
+                        <p class="text-sm text-gray-500 mb-1">Category: {{ product.category?.name || '-' }}</p>
+                        <p class="text-sm text-gray-500 mb-2">Brand: {{ product.brand?.name || '-' }}</p>
+                        <div class="flex items-center justify-between">
+                            <span class="font-semibold text-gray-900 dark:text-gray-100">{{ formatCurrency(product.selling_price) }}</span>
+                            <div class="flex gap-2">
+                                <Link :href="route('products.edit', product.id)" class="btn btn-outline btn-sm">Edit</Link>
+                                <button @click="deleteProduct(product.id)" class="btn btn-danger btn-sm">Delete</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -201,5 +215,10 @@ const deleteProduct = (id) => {
 
 const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(value || 0);
+};
+
+const getFirstImage = (product) => {
+    const images = product.media?.filter(m => m.collection_name === 'images');
+    return images?.length ? images[0].original_url : null;
 };
 </script>
