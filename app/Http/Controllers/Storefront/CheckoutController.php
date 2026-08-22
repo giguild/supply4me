@@ -301,6 +301,8 @@ class CheckoutController extends Controller
     {
         $customer = Auth::guard('customer')->user();
 
+        $customer->load(['assignedTo', 'contacts']);
+
         $orders = Order::where('customer_id', $customer->id)
             ->with(['invoice'])
             ->orderBy('created_at', 'desc')
@@ -310,6 +312,8 @@ class CheckoutController extends Controller
 
         return Inertia::render('Storefront/Account', [
             'customer' => $customer,
+            'salesRep' => $customer->assignedTo,
+            'contacts' => $customer->contacts,
             'orders' => $orders,
             'addresses' => $addresses,
             'cartCount' => 0,

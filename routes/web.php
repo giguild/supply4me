@@ -32,6 +32,7 @@ use App\Http\Controllers\Storefront\StorefrontAuthController;
 use App\Http\Controllers\Storefront\WishlistController;
 use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\ShippingAddressController;
+use App\Http\Controllers\Storefront\CustomerContactController;
 use Illuminate\Support\Facades\Route;
 
 // ── Storefront (public - landing page) ───────────────────────
@@ -61,6 +62,10 @@ Route::middleware('auth:customer')->group(function () {
     Route::post('/account/addresses', [ShippingAddressController::class, 'store'])->name('storefront.addresses.store');
     Route::put('/account/addresses/{address}', [ShippingAddressController::class, 'update'])->name('storefront.addresses.update');
     Route::delete('/account/addresses/{address}', [ShippingAddressController::class, 'destroy'])->name('storefront.addresses.destroy');
+
+    Route::post('/account/contacts', [CustomerContactController::class, 'store'])->name('storefront.contacts.store');
+    Route::put('/account/contacts/{contact}', [CustomerContactController::class, 'update'])->name('storefront.contacts.update');
+    Route::delete('/account/contacts/{contact}', [CustomerContactController::class, 'destroy'])->name('storefront.contacts.destroy');
 
     Route::get('/wishlist', [WishlistController::class, 'index'])->name('storefront.wishlist');
     Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('storefront.wishlist.toggle');
