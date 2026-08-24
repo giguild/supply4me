@@ -8,6 +8,7 @@ use App\Models\Orders\Order;
 use App\Models\Orders\OrderItem;
 use App\Models\Orders\OrderStatusHistory;
 use App\Models\Products\Product;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -184,6 +185,8 @@ class OrderController extends Controller
 
         app(\App\Services\Invoice\InvoiceGenerationService::class)->generateFromOrder($order);
 
+        app(NotificationService::class)->orderPlaced($order);
+
         return redirect()->route('orders.index')->with('success', 'Order created successfully');
     }
 
@@ -343,6 +346,8 @@ class OrderController extends Controller
             'notes' => $request->get('notes'),
             'performed_by' => $request->user()->id,
         ]);
+
+        app(NotificationService::class)->orderCancelled($order);
 
         return redirect()->route('orders.show', $order)->with('success', 'Order cancelled successfully');
     }

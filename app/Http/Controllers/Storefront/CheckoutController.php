@@ -11,6 +11,7 @@ use App\Models\Orders\OrderItem;
 use App\Models\Payments\Payment;
 use App\Models\Payments\PaymentAllocation;
 use App\Models\Products\Product;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -176,7 +177,7 @@ class CheckoutController extends Controller
                 'customer_id' => $customer->id,
                 'order_id' => $order->id,
                 'invoice_type' => 'sales',
-                'status' => 'draft',
+                'status' => 'sent',
                 'invoice_date' => now(),
                 'subtotal' => $subtotal,
                 'tax_amount' => $taxAmount,
@@ -206,6 +207,8 @@ class CheckoutController extends Controller
         });
 
         session()->forget('cart');
+
+        app(NotificationService::class)->orderPlaced($result['order']);
 
         return redirect()->route('storefront.payment', [
             'invoice' => $result['invoice']->id,
@@ -275,6 +278,8 @@ class CheckoutController extends Controller
             'invoice_id' => $invoice->id,
             'amount' => $request->amount,
         ]);
+
+        app(NotificationService::class)->paymentReceived($payment);
 
         return redirect()->route('storefront.orderConfirmation', ['order' => $invoice->order_id]);
     }

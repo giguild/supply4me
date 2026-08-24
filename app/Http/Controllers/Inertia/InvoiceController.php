@@ -10,6 +10,7 @@ use App\Models\Invoicing\InvoiceStatusHistory;
 use App\Models\Orders\Order;
 use App\Models\Payments\Payment;
 use App\Models\Payments\PaymentAllocation;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -129,6 +130,8 @@ class InvoiceController extends Controller
             'previous_status' => null,
             'performed_by' => $request->user()->id,
         ]);
+
+        app(NotificationService::class)->invoiceCreated($invoice);
 
         return redirect()->route('invoices.index')->with('success', 'Invoice created successfully');
     }

@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Inertia\DashboardController;
 use App\Http\Controllers\Inertia\ProfileController;
 use App\Http\Controllers\Inertia\SettingsController;
+use App\Http\Controllers\Inertia\NotificationController;
 use App\Http\Controllers\Inertia\CustomerController;
 use App\Http\Controllers\Inertia\SupplierController;
 use App\Http\Controllers\Inertia\ProductController;
@@ -89,6 +90,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
     Route::post('profile/avatar', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar');
     Route::delete('profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::put('notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.mark-read');
+    Route::put('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+    Route::delete('notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index')->middleware('role:super_admin');
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update')->middleware('role:super_admin');

@@ -165,7 +165,6 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount (₦)</label>
                                 <div class="relative">
-                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">₦</span>
                                     <input v-model.number="paymentAmount" type="number" step="0.01" min="0.01" :max="invoice.due_amount" required
                                         class="form-input pl-8 w-full" placeholder="0.00" />
                                 </div>

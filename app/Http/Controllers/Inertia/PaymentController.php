@@ -8,6 +8,7 @@ use App\Models\Invoicing\Invoice;
 use App\Models\Payments\Payment;
 use App\Models\Payments\PaymentAllocation;
 use App\Models\Suppliers\Supplier;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -88,6 +89,8 @@ class PaymentController extends Controller
                 'amount' => $validated['amount'],
             ]);
         }
+
+        app(NotificationService::class)->paymentReceived($payment);
 
         return redirect()->route('payments.index')->with('success', 'Payment created successfully');
     }

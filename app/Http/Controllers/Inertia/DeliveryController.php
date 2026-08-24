@@ -9,6 +9,7 @@ use App\Models\Delivery\DeliveryItem;
 use App\Models\Delivery\Driver;
 use App\Models\Orders\Order;
 use App\Models\Shipping\Shipment;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -163,6 +164,10 @@ class DeliveryController extends Controller
         ]);
 
         $delivery->update($validated);
+
+        if (isset($validated['status']) && in_array($validated['status'], ['in_transit', 'delivered', 'failed'])) {
+            app(NotificationService::class)->deliveryUpdate($delivery, $validated['status']);
+        }
 
         return redirect()->route('deliveries.index')->with('success', 'Delivery updated successfully');
     }
