@@ -138,12 +138,12 @@
                     <p class="text-xs text-gray-500 mb-3">Optional. Upload up to 10 images (JPEG, PNG, GIF, WebP). Max 5MB each.</p>
 
                     <div v-if="existingImages.length" class="flex flex-wrap gap-3 mb-3">
-                        <div v-for="img in existingImages" :key="img.id" class="relative group">
-                            <img :src="img.original_url" class="w-20 h-20 object-cover rounded-lg border border-gray-200 dark:border-gray-600" />
-                            <button type="button" @click="markForRemoval(img.id)"
+                        <div v-for="(path, idx) in existingImages" :key="idx" class="relative group">
+                            <img :src="`/storage/${path}`" class="w-20 h-20 object-cover rounded-lg border border-gray-200 dark:border-gray-600" />
+                            <button type="button" @click="markForRemoval(idx)"
                                 class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-xs flex items-center justify-center transition-opacity"
-                                :class="removeImages.includes(img.id) ? 'bg-gray-400 text-white opacity-100' : 'bg-red-500 text-white opacity-0 group-hover:opacity-100'">
-                                {{ removeImages.includes(img.id) ? '\u21a9' : '\u00d7' }}
+                                :class="removeImages.includes(idx) ? 'bg-gray-400 text-white opacity-100' : 'bg-red-500 text-white opacity-0 group-hover:opacity-100'">
+                                {{ removeImages.includes(idx) ? '\u21a9' : '\u00d7' }}
                             </button>
                         </div>
                     </div>
@@ -204,7 +204,7 @@ const newImagePreviews = ref([]);
 const removeImages = ref([]);
 
 const existingImages = computed(() => {
-    return props.product.media?.filter(m => m.collection_name === 'images') || [];
+    return props.product.product_images || [];
 });
 
 const form = useForm({
@@ -258,12 +258,12 @@ const removeNewImage = (idx) => {
     newImagePreviews.value.splice(idx, 1);
 };
 
-const markForRemoval = (mediaId) => {
-    const idx = removeImages.value.indexOf(mediaId);
-    if (idx >= 0) {
-        removeImages.value.splice(idx, 1);
+const markForRemoval = (idx) => {
+    const i = removeImages.value.indexOf(idx);
+    if (i >= 0) {
+        removeImages.value.splice(i, 1);
     } else {
-        removeImages.value.push(mediaId);
+        removeImages.value.push(idx);
     }
 };
 

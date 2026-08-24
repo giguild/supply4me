@@ -4,22 +4,36 @@
       <!-- Customer Info -->
       <div class="bg-white rounded-2xl border border-[var(--color-border)] p-6 mb-6 dark:bg-gray-800 dark:border-gray-700">
         <h1 class="text-2xl font-bold text-[var(--color-text)] mb-4">My Account</h1>
-        <div class="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span class="text-[var(--color-text-secondary)]">Name</span>
-            <p class="font-medium text-[var(--color-text)]">{{ customer.name }}</p>
+        <div class="flex items-start gap-6">
+          <div class="relative group cursor-pointer shrink-0" @click="$refs.avatarInput.click()">
+            <div v-if="customerAvatar" class="w-20 h-20 rounded-full overflow-hidden border-2 border-[var(--color-border)]">
+              <img :src="customerAvatar" class="w-full h-full object-cover" alt="Avatar" />
+            </div>
+            <div v-else class="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-2xl border-2 border-[var(--color-border)]">
+              {{ customer.name?.charAt(0) || '?' }}
+            </div>
+            <div class="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            </div>
+            <input ref="avatarInput" type="file" accept="image/*" class="hidden" @change="uploadAvatar" />
           </div>
-          <div>
-            <span class="text-[var(--color-text-secondary)]">Email</span>
-            <p class="font-medium text-[var(--color-text)]">{{ customer.email }}</p>
-          </div>
-          <div>
-            <span class="text-[var(--color-text-secondary)]">Phone</span>
-            <p class="font-medium text-[var(--color-text)]">{{ customer.phone || 'N/A' }}</p>
-          </div>
-          <div>
-            <span class="text-[var(--color-text-secondary)]">Customer #</span>
-            <p class="font-medium text-[var(--color-text)]">{{ customer.customer_number }}</p>
+          <div class="grid grid-cols-2 gap-4 text-sm flex-1">
+            <div>
+              <span class="text-[var(--color-text-secondary)]">Name</span>
+              <p class="font-medium text-[var(--color-text)]">{{ customer.name }}</p>
+            </div>
+            <div>
+              <span class="text-[var(--color-text-secondary)]">Email</span>
+              <p class="font-medium text-[var(--color-text)]">{{ customer.email }}</p>
+            </div>
+            <div>
+              <span class="text-[var(--color-text-secondary)]">Phone</span>
+              <p class="font-medium text-[var(--color-text)]">{{ customer.phone || 'N/A' }}</p>
+            </div>
+            <div>
+              <span class="text-[var(--color-text-secondary)]">Customer #</span>
+              <p class="font-medium text-[var(--color-text)]">{{ customer.customer_number }}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -276,7 +290,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useForm, router } from '@inertiajs/vue3'
 import StorefrontLayout from '@/Components/Layout/StorefrontLayout.vue'
 
@@ -288,6 +302,21 @@ const props = defineProps({
   contacts: { type: Array, default: () => [] },
   cartCount: { type: Number, default: 0 },
 })
+
+const avatarInput = ref(null)
+
+const customerAvatar = computed(() => {
+  return props.customer?.avatar ? `/storage/${props.customer.avatar}` : null
+})
+
+function uploadAvatar(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  const form = useForm({ avatar: file })
+  form.post('/account/avatar', {
+    onFinish: () => { if (avatarInput.value) avatarInput.value.value = '' }
+  })
+}
 
 const showModal = ref(false)
 const editingAddress = ref(null)

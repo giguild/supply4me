@@ -67,4 +67,22 @@ class ProfileController extends Controller
 
         return redirect('/');
     }
+
+    public function uploadAvatar(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $validated = $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        ]);
+
+        $user = $request->user();
+
+        if ($user->avatar && \Storage::disk('public')->exists($user->avatar)) {
+            \Storage::disk('public')->delete($user->avatar);
+        }
+
+        $path = $request->file('avatar')->store('avatars', 'public');
+        $user->update(['avatar' => $path]);
+
+        return redirect()->route('profile.edit')->with('success', 'Avatar updated successfully');
+    }
 }

@@ -13,15 +13,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Str;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class Product extends Model implements HasMedia
+class Product extends Model
 {
-    use HasCompany, HasFactory, HasNumber, HasUuid, InteractsWithMedia, SoftDeletes;
+    use HasCompany, HasFactory, HasNumber, HasUuid, SoftDeletes;
 
     public const PREFIX = 'PRD';
 
@@ -42,6 +38,7 @@ class Product extends Model implements HasMedia
         'barcode',
         'name',
         'slug',
+        'product_images',
         'description',
         'short_description',
         'category_id',
@@ -83,6 +80,7 @@ class Product extends Model implements HasMedia
             'minimum_price' => 'decimal:2',
             'tax_rate' => 'decimal:2',
             'is_featured' => 'boolean',
+            'product_images' => 'array',
             'dimensions' => 'array',
             'tags' => 'array',
             'attributes' => 'array',
@@ -99,7 +97,7 @@ class Product extends Model implements HasMedia
 
     public function getNumberColumn(): string
     {
-        return 'sku';
+        return self::sku;
     }
 
     public function category(): BelongsTo
@@ -120,11 +118,6 @@ class Product extends Model implements HasMedia
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class);
-    }
-
-    public function images(): MorphMany
-    {
-        return $this->morphMany(Media::class, 'model');
     }
 
     public function stockItems(): HasMany

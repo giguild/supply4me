@@ -319,4 +319,22 @@ class CheckoutController extends Controller
             'cartCount' => 0,
         ]);
     }
+
+    public function uploadAvatar(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $customer = Auth::guard('customer')->user();
+
+        $validated = $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        ]);
+
+        if ($customer->avatar && \Storage::disk('public')->exists($customer->avatar)) {
+            \Storage::disk('public')->delete($customer->avatar);
+        }
+
+        $path = $request->file('avatar')->store('avatars', 'public');
+        $customer->update(['avatar' => $path]);
+
+        return redirect()->route('storefront.account')->with('success', 'Profile image updated successfully');
+    }
 }

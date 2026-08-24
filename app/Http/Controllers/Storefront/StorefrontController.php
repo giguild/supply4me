@@ -49,7 +49,7 @@ class StorefrontController extends Controller
         $products = $query->paginate(12)->withQueryString();
 
         foreach ($products->items() as $product) {
-            $product->loadMedia('images');
+            $product->load(['category', 'brand']);
         }
         $categories = ProductCategory::where('company_id', $company->id)->where('status', 'active')->get();
         $brands = ProductBrand::where('company_id', $company->id)->where('status', 'active')->get();
@@ -78,8 +78,6 @@ class StorefrontController extends Controller
             ->where('slug', $slug)
             ->with(['category', 'brand', 'unit', 'variants', 'stockItems.warehouse'])
             ->firstOrFail();
-
-        $product->loadMedia('images');
 
         $cartCount = $this->getCartCount();
         $wishlistIds = $this->getWishlistIds();

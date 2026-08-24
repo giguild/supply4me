@@ -62,7 +62,7 @@ class CustomerController extends Controller
             'customer_type' => 'nullable|string|max:50',
             'tax_number' => 'nullable|string|max:50',
             'registration_number' => 'nullable|string|max:50',
-            'email' => 'nullable|email|max:255',
+            'email' => 'required|email|max:255|unique:customers,email',
             'phone' => 'nullable|string|max:50',
             'mobile' => 'nullable|string|max:50',
             'fax' => 'nullable|string|max:50',
@@ -82,6 +82,7 @@ class CustomerController extends Controller
         ]);
 
         $validated['company_id'] = $request->user()->company_id;
+        $validated['country'] = $validated['country'] ?? 'Nigeria';
         $validated['credit_limit'] = $validated['credit_limit'] ?? 0;
         $validated['payment_terms_days'] = $validated['payment_terms_days'] ?? 0;
         $validated['discount_percentage'] = $validated['discount_percentage'] ?? 0;
@@ -136,7 +137,7 @@ class CustomerController extends Controller
             'customer_type' => 'nullable|string|max:50',
             'tax_number' => 'nullable|string|max:50',
             'registration_number' => 'nullable|string|max:50',
-            'email' => 'nullable|email|max:255',
+            'email' => 'required|email|max:255|unique:customers,email,' . $customer->id,
             'phone' => 'nullable|string|max:50',
             'mobile' => 'nullable|string|max:50',
             'fax' => 'nullable|string|max:50',

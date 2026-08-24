@@ -28,6 +28,7 @@ class Customer extends Authenticatable
         'company_id',
         'customer_number',
         'name',
+        'avatar',
         'trade_name',
         'customer_type',
         'tax_number',

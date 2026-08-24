@@ -109,7 +109,7 @@ const props = defineProps({
 })
 
 const productImages = computed(() => {
-  return props.product.media?.filter(m => m.collection_name === 'images').map(m => m.original_url) || []
+  return (props.product.product_images || []).map(p => `/storage/${p}`)
 })
 
 const selectedImage = ref(productImages.value[0] || null)

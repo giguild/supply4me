@@ -8,7 +8,6 @@ use App\Models\Products\ProductBrand;
 use App\Models\Products\ProductCategory;
 use App\Models\Products\ProductUnit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -42,10 +41,6 @@ class ProductController extends Controller
         }
 
         $products = $query->latest()->paginate($request->get('per_page', 15));
-
-        foreach ($products->items() as $product) {
-            $product->loadMedia('images');
-        }
 
         $categories = ProductCategory::where('company_id', $request->user()->company_id)->get();
         $brands = ProductBrand::where('company_id', $request->user()->company_id)->get();
@@ -117,13 +112,11 @@ class ProductController extends Controller
         $product = Product::create($validated);
 
         if ($images) {
+            $paths = [];
             foreach ($images as $image) {
-                $ext = $image->getClientOriginalExtension();
-                $product->addMedia($image)
-                    ->usingName(pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME))
-                    ->usingFileName(Str::uuid() . '.' . $ext)
-                    ->toMediaCollection('images', 'public');
+                $paths[] = $image->store('product-images', 'public');
             }
+            $product->update(['product_images' => $paths]);
         }
 
         return redirect()->route('products.index')->with('success', 'Product created successfully');
@@ -139,8 +132,6 @@ class ProductController extends Controller
             'variants',
         ]);
 
-        $product->loadMedia('images');
-
         return Inertia::render('Products/Show', [
             'product' => $product,
         ]);
@@ -151,8 +142,6 @@ class ProductController extends Controller
         $categories = ProductCategory::where('company_id', $request->user()->company_id)->get();
         $brands = ProductBrand::where('company_id', $request->user()->company_id)->get();
         $units = ProductUnit::where('company_id', $request->user()->company_id)->get();
-
-        $product->loadMedia('images');
 
         return Inertia::render('Products/Edit', [
             'product' => $product,
@@ -208,19 +197,25 @@ class ProductController extends Controller
 
         $product->update($validated);
 
-        foreach ($removeImages as $mediaId) {
-            $product->media()->where('id', $mediaId)->first()?->delete();
+        $existingImages = $product->product_images ?? [];
+        $newImages = [];
+        foreach ($existingImages as $idx => $path) {
+            if (!in_array($idx, $removeImages)) {
+                $newImages[] = $path;
+            } else {
+                if (\Storage::disk('public')->exists($path)) {
+                    \Storage::disk('public')->delete($path);
+                }
+            }
         }
 
         if ($images) {
             foreach ($images as $image) {
-                $ext = $image->getClientOriginalExtension();
-                $product->addMedia($image)
-                    ->usingName(pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME))
-                    ->usingFileName(Str::uuid() . '.' . $ext)
-                    ->toMediaCollection('images', 'public');
+                $newImages[] = $image->store('product-images', 'public');
             }
         }
+
+        $product->update(['product_images' => $newImages]);
 
         return redirect()->route('products.index')->with('success', 'Product updated successfully');
     }

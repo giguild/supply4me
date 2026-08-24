@@ -67,6 +67,8 @@ Route::middleware('auth:customer')->group(function () {
     Route::put('/account/contacts/{contact}', [CustomerContactController::class, 'update'])->name('storefront.contacts.update');
     Route::delete('/account/contacts/{contact}', [CustomerContactController::class, 'destroy'])->name('storefront.contacts.destroy');
 
+    Route::post('/account/avatar', [CheckoutController::class, 'uploadAvatar'])->name('storefront.avatar');
+
     Route::get('/wishlist', [WishlistController::class, 'index'])->name('storefront.wishlist');
     Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('storefront.wishlist.toggle');
     Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy'])->name('storefront.wishlist.destroy');
@@ -85,10 +87,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+    Route::post('profile/avatar', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar');
     Route::delete('profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
-    Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::get('settings', [SettingsController::class, 'index'])->name('settings.index')->middleware('role:super_admin');
+    Route::put('settings', [SettingsController::class, 'update'])->name('settings.update')->middleware('role:super_admin');
 
     Route::resource('customers', CustomerController::class);
     Route::post('customers/{customer}/contacts', [CustomerController::class, 'storeContact'])->name('customers.contacts.store');
@@ -134,6 +137,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('drivers', DriverController::class);
     Route::resource('delivery-routes', DeliveryRouteController::class);
     Route::resource('users', UserController::class);
+    Route::post('users/{user}/avatar', [UserController::class, 'uploadAvatar'])->name('users.avatar');
     Route::resource('companies', CompanyController::class)->only(['index', 'show', 'edit', 'update']);
     Route::resource('branches', BranchController::class);
 

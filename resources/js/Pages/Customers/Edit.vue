@@ -88,7 +88,10 @@
                         </div>
                         <div>
                             <label class="form-label">State</label>
-                            <input v-model="form.state" type="text" class="form-input" />
+                            <select v-model="form.state" class="form-input">
+                                <option value="">Select State</option>
+                                <option v-for="state in nigerianStates" :key="state" :value="state">{{ state }}</option>
+                            </select>
                         </div>
                         <div>
                             <label class="form-label">Postal Code</label>
@@ -96,7 +99,7 @@
                         </div>
                         <div>
                             <label class="form-label">Country</label>
-                            <input v-model="form.country" type="text" class="form-input" />
+                            <input type="text" class="form-input bg-gray-50 dark:bg-gray-700" value="Nigeria" disabled />
                         </div>
                     </div>
                 </div>
@@ -154,6 +157,14 @@ const props = defineProps({
 
 const toast = useToast();
 
+const nigerianStates = [
+    'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno',
+    'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo',
+    'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa',
+    'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba',
+    'Yobe', 'Zamfara',
+];
+
 const form = useForm({
     name: props.customer.name,
     trade_name: props.customer.trade_name || '',
@@ -167,7 +178,7 @@ const form = useForm({
     city: props.customer.city || '',
     state: props.customer.state || '',
     postal_code: props.customer.postal_code || '',
-    country: props.customer.country || '',
+    country: props.customer.country || 'Nigeria',
     credit_limit: props.customer.credit_limit || '',
     payment_terms_days: props.customer.payment_terms_days || '',
     discount_percentage: props.customer.discount_percentage || '',

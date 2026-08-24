@@ -47,7 +47,7 @@ class SupplierController extends Controller
             'name' => 'required|string|max:255',
             'contact_person' => 'nullable|string|max:255',
             'tax_number' => 'nullable|string|max:50',
-            'email' => 'nullable|email|max:255',
+            'email' => 'required|email|max:255|unique:suppliers,email',
             'phone' => 'nullable|string|max:50',
             'mobile' => 'nullable|string|max:50',
             'website' => 'nullable|url|max:255',
@@ -71,6 +71,8 @@ class SupplierController extends Controller
         ]);
 
         $validated['company_id'] = $request->user()->company_id;
+        $validated['country'] = $validated['country'] ?? 'Nigeria';
+        $validated['payment_terms_days'] = $validated['payment_terms_days'] ?? 0;
 
         Supplier::create($validated);
 
@@ -99,7 +101,7 @@ class SupplierController extends Controller
             'name' => 'required|string|max:255',
             'contact_person' => 'nullable|string|max:255',
             'tax_number' => 'nullable|string|max:50',
-            'email' => 'nullable|email|max:255',
+            'email' => 'required|email|max:255|unique:suppliers,email,' . $supplier->id,
             'phone' => 'nullable|string|max:50',
             'mobile' => 'nullable|string|max:50',
             'website' => 'nullable|url|max:255',

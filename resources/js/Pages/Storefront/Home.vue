@@ -141,7 +141,7 @@ function toggleWishlist(productId) {
 }
 
 function getProductImage(product) {
-  const images = product.media?.filter(m => m.collection_name === 'images')
-  return images?.length ? images[0].original_url : null
+  const images = product.product_images
+  return images?.length ? `/storage/${images[0]}` : null
 }
 </script>

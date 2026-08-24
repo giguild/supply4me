@@ -78,15 +78,22 @@
                         </div>
                         <div>
                             <label class="form-label">State</label>
-                            <input v-model="form.state" type="text" class="form-input" />
+                            <select v-if="statesForCountry.length" v-model="form.state" class="form-input">
+                                <option value="">Select State</option>
+                                <option v-for="s in statesForCountry" :key="s" :value="s">{{ s }}</option>
+                            </select>
+                            <input v-else v-model="form.state" type="text" class="form-input" placeholder="State / Province / Region" />
                         </div>
                         <div>
                             <label class="form-label">Postal Code</label>
                             <input v-model="form.postal_code" type="text" class="form-input" />
                         </div>
                         <div>
-                            <label class="form-label">Country</label>
-                            <input v-model="form.country" type="text" class="form-input" />
+                            <label class="form-label">Country *</label>
+                            <select v-model="form.country" class="form-input" required>
+                                <option value="">Select Country</option>
+                                <option v-for="c in countries" :key="c.code" :value="c.name">{{ c.name }}</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -119,12 +126,54 @@
 </template>
 
 <script setup>
+import { ref, computed } from 'vue';
 import { Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
 import PageHeader from '@/Components/UI/PageHeader.vue';
 import { useToast } from '@/composables/useToast';
 
 const toast = useToast();
+
+const countries = [
+    { code: 'NG', name: 'Nigeria' },
+    { code: 'GH', name: 'Ghana' },
+    { code: 'KE', name: 'Kenya' },
+    { code: 'ZA', name: 'South Africa' },
+    { code: 'EG', name: 'Egypt' },
+    { code: 'ET', name: 'Ethiopia' },
+    { code: 'TZ', name: 'Tanzania' },
+    { code: 'UG', name: 'Uganda' },
+    { code: 'SN', name: 'Senegal' },
+    { code: 'CI', name: "Côte d'Ivoire" },
+    { code: 'CM', name: 'Cameroon' },
+    { code: 'US', name: 'United States' },
+    { code: 'GB', name: 'United Kingdom' },
+    { code: 'CN', name: 'China' },
+    { code: 'IN', name: 'India' },
+    { code: 'AE', name: 'United Arab Emirates' },
+];
+
+const statesByCountry = {
+    Nigeria: [
+        'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno',
+        'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo',
+        'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa',
+        'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba',
+        'Yobe', 'Zamfara',
+    ],
+    Ghana: [
+        'Greater Accra', 'Ashanti', 'Western', 'Central', 'Eastern', 'Northern',
+        'Volta', 'Brong-Ahafo', 'Upper East', 'Upper West',
+    ],
+    'South Africa': [
+        'Gauteng', 'Western Cape', 'KwaZulu-Natal', 'Eastern Cape', 'Free State',
+        'Limpopo', 'Mpumalanga', 'North West', 'Northern Cape',
+    ],
+    Kenya: [
+        'Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Kiambu', 'Nyeri', 'Machakos',
+        'Uasin Gishu', 'Kilifi', 'Kajiado',
+    ],
+};
 
 const form = useForm({
     name: '',
@@ -138,11 +187,13 @@ const form = useForm({
     city: '',
     state: '',
     postal_code: '',
-    country: '',
+    country: 'Nigeria',
     payment_terms_days: '',
     status: 'active',
     notes: '',
 });
+
+const statesForCountry = computed(() => statesByCountry[form.country] || []);
 
 const submit = () => {
     form.post(route('suppliers.store'), {

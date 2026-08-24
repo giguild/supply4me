@@ -8,6 +8,7 @@ use App\Models\Companies\Company;
 use App\Models\Core\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,7 +17,10 @@ class UserController extends Controller
     public function index(Request $request): Response
     {
         $query = User::where('company_id', $request->user()->company_id)
-            ->with(['company', 'roles']);
+            ->with(['company', 'roles'])
+            ->whereDoesntHave('roles', function ($q) {
+                $q->where('name', 'super_admin');
+            });
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -185,5 +189,21 @@ class UserController extends Controller
         $user->delete();
 
         return redirect()->route('users.index')->with('success', 'User deleted successfully');
+    }
+
+    public function uploadAvatar(Request $request, User $user): \Illuminate\Http\RedirectResponse
+    {
+        $validated = $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        ]);
+
+        if ($user->avatar && \Storage::disk('public')->exists($user->avatar)) {
+            \Storage::disk('public')->delete($user->avatar);
+        }
+
+        $path = $request->file('avatar')->store('avatars', 'public');
+        $user->update(['avatar' => $path]);
+
+        return redirect()->route('users.show', $user->id)->with('success', 'Avatar updated successfully');
     }
 }
