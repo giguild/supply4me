@@ -1,8 +1,8 @@
 <template>
-    <div class="min-h-screen flex" :class="theme === 'dark' ? 'bg-gray-900' : ''" style="background: linear-gradient(135deg, #f5f0eb 0%, #faf8f6 50%, #f5f0eb 100%)" :style="theme === 'dark' ? { background: 'linear-gradient(135deg, #111827 0%, #1a1f2e 50%, #111827 100%)' } : {}">
+    <div class="min-h-screen flex overflow-x-hidden" :class="theme === 'dark' ? 'bg-gray-900' : ''" style="background: linear-gradient(135deg, #f5f0eb 0%, #faf8f6 50%, #f5f0eb 100%)" :style="theme === 'dark' ? { background: 'linear-gradient(135deg, #111827 0%, #1a1f2e 50%, #111827 100%)' } : {}">
         <!-- Sidebar -->
         <aside
-            class="sticky top-0 h-screen flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-300 z-40 shrink-0"
+            class="sticky top-0 h-screen hidden lg:flex flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-300 z-40 shrink-0"
             :class="sidebarCollapsed ? 'w-[68px]' : 'w-60'"
         >
             <!-- Sidebar Header -->
@@ -76,6 +76,14 @@
                     <span v-if="!sidebarCollapsed" class="truncate">Settings</span>
                 </Link>
 
+                <Link v-if="isSuperAdmin" :href="route('settings.payment-info')" title="Payment Info"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                    :class="isActive('settings.payment-info') ? 'bg-accent/10 text-accent' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'"
+                >
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    <span v-if="!sidebarCollapsed" class="truncate">Payment Info</span>
+                </Link>
+
                 <button @click="sidebarCollapsed = !sidebarCollapsed"
                     class="flex items-center justify-center w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300"
                 >
@@ -92,7 +100,7 @@
             <!-- Top Header Bar -->
             <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
                 <div class="px-4 sm:px-6 lg:px-8">
-                    <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center justify-between h-14 sm:h-16">
                         <div class="flex items-center gap-3">
                             <button @click="mobileMenuOpen = !mobileMenuOpen" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,7 +109,7 @@
                             </button>
                         </div>
 
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1 sm:gap-2">
                             <button @click="toggleTheme" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" :title="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
                                 <svg v-if="theme === 'dark'" class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                                 <svg v-else class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
@@ -128,6 +136,7 @@
                             <div v-if="showUserMenu" class="absolute right-4 top-14 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                                 <Link :href="route('profile.edit')" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Profile</Link>
                                 <Link v-if="isSuperAdmin" :href="route('settings.index')" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Settings</Link>
+                                <Link v-if="isSuperAdmin" :href="route('settings.payment-info')" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Payment Info</Link>
                                 <hr class="my-1 border-gray-200 dark:border-gray-700" />
                                 <button @click="logout" class="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700">Logout</button>
                             </div>
@@ -165,12 +174,17 @@
                             <span v-html="icons.settings" class="w-4 h-4" />
                             Settings
                         </Link>
+                        <Link v-if="isSuperAdmin" :href="route('settings.payment-info')" @click="mobileMenuOpen = false"
+                            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                            Payment Info
+                        </Link>
                     </div>
                 </div>
             </header>
 
             <!-- Page Content -->
-            <main class="flex-1 px-4 sm:px-6 lg:px-8 py-6">
+            <main class="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-6 overflow-x-hidden">
                 <slot />
             </main>
         </div>
@@ -198,7 +212,12 @@ const { theme, toggleTheme } = useTheme();
 
 const userRole = computed(() => props.user?.roles?.[0] || 'User');
 const isSalesRep = computed(() => props.user?.roles?.includes('sales_rep'));
-const isSuperAdmin = computed(() => props.user?.roles?.some(r => r.name === 'super_admin'));
+const isSuperAdmin = computed(() => props.user?.roles?.includes('super_admin'));
+
+const hasPermission = (permission) => {
+    if (isSuperAdmin.value) return true;
+    return props.user?.permissions?.includes(permission) || false;
+};
 
 const toggleGroup = (label) => {
     const idx = expandedGroups.value.indexOf(label);
@@ -230,17 +249,19 @@ const icons = {
     users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.354a4 4 0 110 7.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>',
     reports: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>',
     settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>',
+    warehouse: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 7v1a3 3 0 006 0V7m0 1a3 3 0 006 0V7m0 1a3 3 0 006 0V7H3l2-4h14l2 4M5 21V10.87M19 21V10.87"/></svg>',
 };
 
-const adminNav = [
+const adminNav = computed(() => [
     { label: 'Dashboard', route: 'dashboard', icon: icons.dashboard },
-    { label: 'Customers', route: 'customers.index', icon: icons.customers },
-    { label: 'Suppliers', route: 'suppliers.index', icon: icons.suppliers },
-    { label: 'Products', route: 'products.index', icon: icons.products },
-    { label: 'Orders', route: 'orders.index', icon: icons.orders },
-    { label: 'Invoices', route: 'invoices.index', icon: icons.invoices },
-    { label: 'Stock', route: 'stock.index', icon: icons.stock },
-];
+    { label: 'Customers', route: 'customers.index', icon: icons.customers, permission: 'customer.view' },
+    { label: 'Suppliers', route: 'suppliers.index', icon: icons.suppliers, permission: 'supplier.view' },
+    { label: 'Products', route: 'products.index', icon: icons.products, permission: 'product.view' },
+    { label: 'Orders', route: 'orders.index', icon: icons.orders, permission: 'order.view' },
+    { label: 'Invoices', route: 'invoices.index', icon: icons.invoices, permission: 'invoice.view' },
+    { label: 'Stock', route: 'stock.index', icon: icons.stock, permission: 'stock.view' },
+    { label: 'Warehouses', route: 'warehouses.index', icon: icons.warehouse, permission: 'stock.view' },
+].filter(item => !item.permission || hasPermission(item.permission)));
 
 const salesRepNav = [
     { label: 'My Dashboard', route: 'sales-rep.dashboard', icon: icons.dashboard },
@@ -248,56 +269,51 @@ const salesRepNav = [
     { label: 'Orders', route: 'orders.index', icon: icons.orders },
 ];
 
-const mainNav = computed(() => isSalesRep.value ? salesRepNav : adminNav);
+const mainNav = computed(() => isSalesRep.value ? salesRepNav : adminNav.value);
 
-const adminMoreNavGroups = [
+const adminMoreNavGroups = computed(() => [
     {
         label: 'Receiving',
         items: [
-            { label: 'GRN', route: 'grn.index', icon: icons.grn },
-            { label: 'Pick Lists', route: 'pick-lists.index', icon: icons.picklist },
-            { label: 'Packing Lists', route: 'packing-lists.index', icon: icons.picklist },
+            { label: 'GRN', route: 'grn.index', icon: icons.grn, permission: 'grn.view' },
+            { label: 'Pick Lists', route: 'pick-lists.index', icon: icons.picklist, permission: 'picklist.view' },
+            { label: 'Packing Lists', route: 'packing-lists.index', icon: icons.picklist, permission: 'packinglist.view' },
         ],
     },
     {
         label: 'Shipping',
         items: [
-            { label: 'Shipments', route: 'shipments.index', icon: icons.shipments },
-            { label: 'Deliveries', route: 'deliveries.index', icon: icons.deliveries },
-            { label: 'Drivers', route: 'drivers.index', icon: icons.drivers },
-            { label: 'Delivery Routes', route: 'delivery-routes.index', icon: icons.routes },
+            { label: 'Shipments', route: 'shipments.index', icon: icons.shipments, permission: 'shipment.view' },
+            { label: 'Deliveries', route: 'deliveries.index', icon: icons.deliveries, permission: 'delivery.view' },
+            { label: 'Drivers', route: 'drivers.index', icon: icons.drivers, permission: 'delivery.view' },
+            { label: 'Delivery Routes', route: 'delivery-routes.index', icon: icons.routes, permission: 'delivery.view-routes' },
         ],
     },
     {
         label: 'Administration',
         items: [
-            { label: 'Users', route: 'users.index', icon: icons.users },
-            { label: 'Sales Reps', route: 'sales-reps.index', icon: icons.users },
-            { label: 'Branches', route: 'branches.index', icon: icons.users },
+            { label: 'Users', route: 'users.index', icon: icons.users, permission: 'user.view' },
+            { label: 'Roles', route: 'roles.index', icon: icons.users, permission: 'role.view' },
+            { label: 'Sales Reps', route: 'sales-reps.index', icon: icons.users, permission: 'customer.view' },
+            { label: 'Branches', route: 'branches.index', icon: icons.users, permission: 'branch.view' },
         ],
     },
     {
         label: 'Reports',
         items: [
-            { label: 'Sales Report', route: 'reports.sales', icon: icons.reports },
-            { label: 'Inventory Report', route: 'reports.inventory', icon: icons.reports },
-            { label: 'Financial Report', route: 'reports.financial', icon: icons.reports },
+            { label: 'Sales Report', route: 'reports.sales', icon: icons.reports, permission: 'report.view-sales' },
+            { label: 'Inventory Report', route: 'reports.inventory', icon: icons.reports, permission: 'report.view-inventory' },
+            { label: 'Financial Report', route: 'reports.financial', icon: icons.reports, permission: 'report.view-financial' },
         ],
     },
-];
+].map(group => ({
+    ...group,
+    items: group.items.filter(item => !item.permission || hasPermission(item.permission)),
+})).filter(group => group.items.length > 0));
 
-const salesRepMoreGroups = [
-    {
-        label: 'Sales',
-        items: [
-            { label: 'My Dashboard', route: 'sales-rep.dashboard', icon: icons.dashboard },
-            { label: 'My Customers', route: 'sales-rep.customers', icon: icons.customers },
-            { label: 'Orders', route: 'orders.index', icon: icons.orders },
-        ],
-    },
-];
+const salesRepMoreGroups = [];
 
-const moreNavGroups = computed(() => isSalesRep.value ? salesRepMoreGroups : adminMoreNavGroups);
+const moreNavGroups = computed(() => isSalesRep.value ? salesRepMoreGroups : adminMoreNavGroups.value);
 
 const logout = () => router.post(route('logout'));
 </script>

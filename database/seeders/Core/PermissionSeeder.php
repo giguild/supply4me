@@ -146,6 +146,20 @@ class PermissionSeeder extends Seeder
                 'setting.update',
                 'setting.manage',
             ],
+            'role' => [
+                'role.view',
+                'role.create',
+                'role.update',
+                'role.delete',
+                'role.manage',
+            ],
+            'permission' => [
+                'permission.view',
+                'permission.create',
+                'permission.update',
+                'permission.delete',
+                'permission.manage',
+            ],
         ];
 
         foreach ($permissions as $group => $items) {

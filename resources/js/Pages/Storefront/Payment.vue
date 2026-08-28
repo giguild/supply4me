@@ -30,6 +30,25 @@
         </div>
       </div>
 
+      <!-- Bank Account Details -->
+      <div v-if="company?.bank_name" class="bg-white rounded-2xl border border-[var(--color-border)] p-6 mb-6 dark:bg-gray-800 dark:border-gray-700">
+        <h2 class="text-lg font-bold text-[var(--color-text)] mb-4">Make Payment To</h2>
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-[var(--color-text-secondary)]">Bank Name</span>
+            <span class="font-medium text-[var(--color-text)]">{{ company.bank_name }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-[var(--color-text-secondary)]">Account Name</span>
+            <span class="font-medium text-[var(--color-text)]">{{ company.bank_account_name }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-[var(--color-text-secondary)]">Account Number</span>
+            <span class="font-medium text-[var(--color-text)]">{{ company.bank_account_number }}</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Payment History -->
       <div v-if="invoice.payments?.length" class="bg-white rounded-2xl border border-[var(--color-border)] p-6 mb-6 dark:bg-gray-800 dark:border-gray-700">
         <h2 class="text-lg font-bold text-[var(--color-text)] mb-4">Payment History</h2>
@@ -106,6 +125,7 @@ import StorefrontLayout from '@/Components/Layout/StorefrontLayout.vue'
 const props = defineProps({
   invoice: Object,
   isPaid: Boolean,
+  company: Object,
   cartCount: { type: Number, default: 0 },
 })
 

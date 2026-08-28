@@ -49,77 +49,55 @@
         </div>
 
         <!-- Sales Reps Table -->
-        <div class="card rounded-2xl overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Sales Rep</th>
-                            <th>Region</th>
-                            <th>Customers</th>
-                            <th>Orders</th>
-                            <th>Revenue</th>
-                            <th>Avg Order</th>
-                            <th>Collected</th>
-                            <th>Payment Rate</th>
-                            <th>Pending</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="rep in filteredReps" :key="rep.id">
-                            <td>
-                                <div class="flex items-center gap-3">
-                                    <Link :href="route('sales-reps.show', rep.id)" class="btn btn-outline btn-sm">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                    </Link>
-                                    <div>
-                                        <Link :href="route('sales-reps.show', rep.id)" class="font-medium text-gray-900 dark:text-gray-100 hover:text-accent">{{ rep.name }}</Link>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ rep.email }}</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ rep.region || rep.state || '-' }}</span>
-                                <span v-if="rep.state" class="block text-xs text-gray-400 dark:text-gray-500">{{ rep.state }}</span>
-                            </td>
-                            <td>
-                                <p class="font-medium text-gray-900 dark:text-gray-100">{{ rep.total_customers }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ rep.active_customers }} active</p>
-                            </td>
-                            <td class="text-sm text-gray-600 dark:text-gray-400">{{ rep.total_orders }}</td>
-                            <td class="font-medium text-gray-900 dark:text-gray-100">₦{{ formatCurrency(rep.total_revenue) }}</td>
-                            <td class="text-sm text-gray-600 dark:text-gray-400">₦{{ formatCurrency(rep.avg_order_value) }}</td>
-                            <td class="font-medium text-green-600 dark:text-green-400">₦{{ formatCurrency(rep.collected_amount) }}</td>
-                            <td>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-16 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                        <div class="h-full bg-green-500 rounded-full" :style="{ width: Math.min(rep.payment_completion_rate, 100) + '%' }"></div>
-                                    </div>
-                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ rep.payment_completion_rate }}%</span>
-                                </div>
-                            </td>
-                            <td>
-                                <span v-if="rep.pending_payments > 0" class="text-sm font-medium text-yellow-600 dark:text-yellow-400">{{ rep.pending_payments }}</span>
-                                <span v-else class="text-sm text-gray-400 dark:text-gray-500">0</span>
-                            </td>
-                            <td>
-                                <StatusBadge :value="rep.status" />
-                            </td>
-                        </tr>
-                        <tr v-if="!filteredReps.length">
-                            <td colspan="10">
-                                <div class="text-center py-8">
-                                    <svg class="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">No sales reps found</p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">Create a user with the "Sales Rep" role to see them here.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <DataTable :columns="columns" :data="filteredReps" :mobileColumns="mobileColumns">
+            <template #cell-name="{ row }">
+                <div class="flex items-center gap-3">
+                    <Link :href="route('sales-reps.show', row.id)" class="btn btn-outline btn-sm hidden sm:inline-flex">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    </Link>
+                    <div>
+                        <Link :href="route('sales-reps.show', row.id)" class="font-medium text-gray-900 dark:text-gray-100 hover:text-accent">{{ row.name }}</Link>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ row.email }}</p>
+                    </div>
+                </div>
+            </template>
+            <template #cell-region="{ row }">
+                <span class="text-sm text-gray-600 dark:text-gray-400">{{ row.region || row.state || '-' }}</span>
+                <span v-if="row.state" class="block text-xs text-gray-400 dark:text-gray-500">{{ row.state }}</span>
+            </template>
+            <template #cell-customers="{ row }">
+                <p class="font-medium text-gray-900 dark:text-gray-100">{{ row.total_customers }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ row.active_customers }} active</p>
+            </template>
+            <template #cell-total_revenue="{ row }">
+                <span class="font-medium text-gray-900 dark:text-gray-100">₦{{ formatCurrency(row.total_revenue) }}</span>
+            </template>
+            <template #cell-collected_amount="{ row }">
+                <span class="font-medium text-green-600 dark:text-green-400">₦{{ formatCurrency(row.collected_amount) }}</span>
+            </template>
+            <template #cell-payment_completion_rate="{ row }">
+                <div class="flex items-center gap-2">
+                    <div class="w-16 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div class="h-full bg-green-500 rounded-full" :style="{ width: Math.min(row.payment_completion_rate, 100) + '%' }"></div>
+                    </div>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ row.payment_completion_rate }}%</span>
+                </div>
+            </template>
+            <template #cell-pending_payments="{ row }">
+                <span v-if="row.pending_payments > 0" class="text-sm font-medium text-yellow-600 dark:text-yellow-400">{{ row.pending_payments }}</span>
+                <span v-else class="text-sm text-gray-400 dark:text-gray-500">0</span>
+            </template>
+            <template #cell-status="{ row }">
+                <StatusBadge :value="row.status" />
+            </template>
+            <template #empty>
+                <div class="text-center py-8">
+                    <svg class="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">No sales reps found</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Create a user with the "Sales Rep" role to see them here.</p>
+                </div>
+            </template>
+        </DataTable>
     </AppLayout>
 </template>
 
@@ -129,12 +107,33 @@ import { router, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
 import PageHeader from '@/Components/UI/PageHeader.vue';
 import StatCard from '@/Components/UI/StatCard.vue';
+import DataTable from '@/Components/UI/DataTable.vue';
 import StatusBadge from '@/Components/UI/StatusBadge.vue';
 
 const props = defineProps({
     salesReps: Array,
     filters: Object,
 });
+
+const columns = [
+    { key: 'name', label: 'Sales Rep' },
+    { key: 'region', label: 'Region' },
+    { key: 'customers', label: 'Customers' },
+    { key: 'total_orders', label: 'Orders' },
+    { key: 'total_revenue', label: 'Revenue' },
+    { key: 'avg_order_value', label: 'Avg Order' },
+    { key: 'collected_amount', label: 'Collected' },
+    { key: 'payment_completion_rate', label: 'Payment Rate' },
+    { key: 'pending_payments', label: 'Pending' },
+    { key: 'status', label: 'Status' },
+];
+
+const mobileColumns = [
+    { key: 'name', label: 'Sales Rep' },
+    { key: 'total_orders', label: 'Orders' },
+    { key: 'total_revenue', label: 'Revenue' },
+    { key: 'status', label: 'Status' },
+];
 
 const filters = reactive({
     search: props.filters?.search || '',

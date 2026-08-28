@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Inertia;
 
+use App\Actions\Inventory\AdjustStockAction;
+use App\Actions\Inventory\TransferStockAction;
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\StockAdjustment;
-use App\Models\Inventory\StockAdjustmentItem;
 use App\Models\Inventory\StockItem;
 use App\Models\Inventory\StockTransfer;
-use App\Models\Inventory\StockTransferItem;
 use App\Models\Inventory\Warehouse;
 use App\Models\Products\Product;
 use Illuminate\Http\Request;
@@ -18,7 +18,9 @@ class StockController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = StockItem::where('company_id', $request->user()->company_id)
+        $companyId = $request->user()->company_id;
+
+        $query = StockItem::where('company_id', $companyId)
             ->with(['warehouse', 'product']);
 
         if ($request->filled('warehouse_id')) {
@@ -35,18 +37,29 @@ class StockController extends Controller
         }
 
         $stockItems = $query->latest()->paginate($request->get('per_page', 15));
-        $warehouses = Warehouse::where('company_id', $request->user()->company_id)->get();
+        $warehouses = Warehouse::where('company_id', $companyId)->get();
 
-        return Inertia::render('Inventory/StockLevels', [
+        $allStock = StockItem::where('company_id', $companyId)->get();
+        $stats = [
+            'total_items' => $allStock->sum('quantity_on_hand'),
+            'low_stock' => $allStock->filter(fn ($s) => $s->quantity_on_hand > 0 && $s->quantity_on_hand < $s->reorder_level)->count(),
+            'out_of_stock' => $allStock->filter(fn ($s) => $s->quantity_on_hand <= 0)->count(),
+            'total_value' => $allStock->sum(fn ($s) => $s->quantity_on_hand * ($s->cost_price ?? 0)),
+        ];
+
+        return Inertia::render('Stock/Index', [
             'stockItems' => $stockItems,
             'warehouses' => $warehouses,
+            'stats' => $stats,
             'filters' => $request->only(['warehouse_id', 'product_id', 'search']),
         ]);
     }
 
     public function adjustments(Request $request): Response
     {
-        $query = StockAdjustment::where('company_id', $request->user()->company_id)
+        $companyId = $request->user()->company_id;
+
+        $query = StockAdjustment::where('company_id', $companyId)
             ->with(['warehouse', 'performedBy']);
 
         if ($request->filled('search')) {
@@ -55,9 +68,9 @@ class StockController extends Controller
         }
 
         $adjustments = $query->latest()->paginate($request->get('per_page', 15));
-        $warehouses = Warehouse::where('company_id', $request->user()->company_id)->get();
+        $warehouses = Warehouse::where('company_id', $companyId)->get();
 
-        return Inertia::render('Inventory/Adjustments', [
+        return Inertia::render('Stock/Adjustments', [
             'adjustments' => $adjustments,
             'warehouses' => $warehouses,
             'filters' => $request->only(['search']),
@@ -73,40 +86,42 @@ class StockController extends Controller
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity_before' => 'required|numeric|min:0',
             'items.*.quantity_after' => 'required|numeric|min:0',
             'items.*.reason' => 'nullable|string|max:500',
         ]);
 
         $companyId = $request->user()->company_id;
 
-        $adjustment = StockAdjustment::create([
+        $items = collect($validated['items'])->map(function ($item) use ($companyId) {
+            $stockItem = StockItem::where('product_id', $item['product_id'])
+                ->where('company_id', $companyId)
+                ->first();
+
+            return [
+                'product_id' => $item['product_id'],
+                'quantity_before' => $stockItem->quantity_on_hand ?? 0,
+                'quantity_after' => $item['quantity_after'],
+                'reason' => $item['reason'] ?? null,
+            ];
+        })->toArray();
+
+        app(AdjustStockAction::class)->execute([
             'company_id' => $companyId,
             'warehouse_id' => $validated['warehouse_id'],
             'type' => $validated['type'],
-            'reason' => $validated['reason'] ?? null,
-            'status' => 'pending',
-            'performed_by' => $request->user()->id,
+            'reason' => $validated['reason'] ?? 'Stock adjustment',
             'notes' => $validated['notes'] ?? null,
-        ]);
-
-        foreach ($validated['items'] as $item) {
-            StockAdjustmentItem::create([
-                'adjustment_id' => $adjustment->id,
-                'product_id' => $item['product_id'],
-                'quantity_before' => $item['quantity_before'],
-                'quantity_after' => $item['quantity_after'],
-                'difference' => $item['quantity_after'] - $item['quantity_before'],
-                'reason' => $item['reason'] ?? null,
-            ]);
-        }
+            'items' => $items,
+        ], $request->user());
 
         return redirect()->route('stock.adjustments')->with('success', 'Stock adjustment created successfully');
     }
 
     public function transfers(Request $request): Response
     {
-        $query = StockTransfer::where('company_id', $request->user()->company_id)
+        $companyId = $request->user()->company_id;
+
+        $query = StockTransfer::where('company_id', $companyId)
             ->with(['fromWarehouse', 'toWarehouse', 'shippedBy']);
 
         if ($request->filled('search')) {
@@ -115,9 +130,9 @@ class StockController extends Controller
         }
 
         $transfers = $query->latest()->paginate($request->get('per_page', 15));
-        $warehouses = Warehouse::where('company_id', $request->user()->company_id)->get();
+        $warehouses = Warehouse::where('company_id', $companyId)->get();
 
-        return Inertia::render('Inventory/Transfers', [
+        return Inertia::render('Stock/Transfers', [
             'transfers' => $transfers,
             'warehouses' => $warehouses,
             'filters' => $request->only(['search']),
@@ -137,23 +152,13 @@ class StockController extends Controller
 
         $companyId = $request->user()->company_id;
 
-        $transfer = StockTransfer::create([
+        app(TransferStockAction::class)->execute([
             'company_id' => $companyId,
             'from_warehouse_id' => $validated['from_warehouse_id'],
             'to_warehouse_id' => $validated['to_warehouse_id'],
-            'status' => 'pending',
-            'shipped_by' => $request->user()->id,
             'notes' => $validated['notes'] ?? null,
-        ]);
-
-        foreach ($validated['items'] as $item) {
-            StockTransferItem::create([
-                'transfer_id' => $transfer->id,
-                'product_id' => $item['product_id'],
-                'quantity' => $item['quantity'],
-                'quantity_received' => 0,
-            ]);
-        }
+            'items' => $validated['items'],
+        ], $request->user());
 
         return redirect()->route('stock.transfers')->with('success', 'Stock transfer created successfully');
     }

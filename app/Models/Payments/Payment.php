@@ -41,6 +41,7 @@ class Payment extends Model
         'approved_at',
         'rejection_reason',
         'notes',
+        'receipt_path',
         'branch_id',
         'received_by',
         'version',

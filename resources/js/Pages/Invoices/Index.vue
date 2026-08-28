@@ -28,7 +28,7 @@
             </select>
         </div>
 
-        <DataTable :columns="columns" :data="invoices.data" :meta="meta" @page="goToPage">
+        <DataTable :columns="columns" :data="invoices.data" :meta="meta" :mobileColumns="mobileColumns" @page="goToPage">
             <template #cell-invoice_number="{ row }">
                 <Link :href="route('invoices.show', row.id)" class="text-sm font-medium text-accent hover:underline">
                     {{ row.invoice_number }}
@@ -79,7 +79,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { router, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
 import PageHeader from '@/Components/UI/PageHeader.vue';
@@ -108,13 +108,20 @@ const columns = [
     { key: 'status', label: 'Status' },
 ];
 
-const meta = {
+const mobileColumns = [
+    { key: 'invoice_number', label: 'Invoice#' },
+    { key: 'customer', label: 'Customer' },
+    { key: 'total_amount', label: 'Total' },
+    { key: 'status', label: 'Status' },
+];
+
+const meta = computed(() => ({
     current_page: props.invoices.current_page,
     last_page: props.invoices.last_page,
     from: props.invoices.from,
     to: props.invoices.to,
     total: props.invoices.total,
-};
+}));
 
 let debounceTimer = null;
 const debouncedFetch = () => {

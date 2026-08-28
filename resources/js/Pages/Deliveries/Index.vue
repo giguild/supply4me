@@ -27,6 +27,7 @@
 
         <DataTable
             :columns="columns"
+            :mobileColumns="mobileColumns"
             :data="deliveries.data"
             :meta="deliveries.meta"
             @page="goToPage"
@@ -81,6 +82,12 @@ const columns = [
     { key: 'driver_name', label: 'Driver' },
     { key: 'status', label: 'Status' },
     { key: 'scheduled_date', label: 'Date' },
+];
+
+const mobileColumns = [
+    { key: 'delivery_number', label: 'Delivery#' },
+    { key: 'order', label: 'Order' },
+    { key: 'status', label: 'Status' },
 ];
 
 let searchTimeout = null;

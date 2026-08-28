@@ -9,6 +9,7 @@
 
             <DataTable
                 :columns="columns"
+                :mobileColumns="mobileColumns"
                 :data="transfers.data"
                 :meta="transfers"
                 @page="(p) => router.get(route('stock.transfers.index'), { page: p }, { preserveState: true, replace: true })"
@@ -65,6 +66,13 @@ const columns = [
     { key: 'from_warehouse', label: 'From Warehouse' },
     { key: 'to_warehouse', label: 'To Warehouse' },
     { key: 'quantity', label: 'Quantity' },
+    { key: 'status', label: 'Status' },
+];
+
+const mobileColumns = [
+    { key: 'date', label: 'Date' },
+    { key: 'product', label: 'Product' },
+    { key: 'quantity', label: 'Qty' },
     { key: 'status', label: 'Status' },
 ];
 </script>

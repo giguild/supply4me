@@ -74,4 +74,26 @@ class SettingsController extends Controller
 
         return redirect()->route('settings.company')->with('success', 'Company settings updated successfully');
     }
+
+    public function paymentInfo(Request $request): Response
+    {
+        $company = $request->user()->company;
+
+        return Inertia::render('Settings/PaymentInfo', [
+            'company' => $company,
+        ]);
+    }
+
+    public function updatePaymentInfo(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $validated = $request->validate([
+            'bank_name' => 'nullable|string|max:255',
+            'bank_account_name' => 'nullable|string|max:255',
+            'bank_account_number' => 'nullable|string|max:50',
+        ]);
+
+        $request->user()->company()->update($validated);
+
+        return redirect()->route('settings.payment-info')->with('success', 'Payment information updated successfully');
+    }
 }

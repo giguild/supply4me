@@ -27,6 +27,7 @@
 
         <DataTable
             :columns="columns"
+            :mobileColumns="mobileColumns"
             :data="shipments.data"
             :meta="shipments.meta"
             @page="goToPage"
@@ -82,6 +83,12 @@ const columns = [
     { key: 'status', label: 'Status' },
     { key: 'tracking_number', label: 'Tracking' },
     { key: 'ship_date', label: 'Ship Date' },
+];
+
+const mobileColumns = [
+    { key: 'shipment_number', label: 'Shipment#' },
+    { key: 'carrier', label: 'Carrier' },
+    { key: 'status', label: 'Status' },
 ];
 
 let searchTimeout = null;

@@ -26,7 +26,7 @@ class GoodsReceivedNote extends Model
         'supplier_id',
         'warehouse_id',
         'status',
-        'received_date',
+        'receiving_date',
         'notes',
         'received_by',
         'checked_by',
@@ -36,9 +36,8 @@ class GoodsReceivedNote extends Model
     protected function casts(): array
     {
         return [
-            'received_date' => 'date',
+            'receiving_date' => 'date',
             'metadata' => 'array',
-            'status' => GRNStatus::class,
         ];
     }
 
@@ -69,7 +68,7 @@ class GoodsReceivedNote extends Model
 
     public function items(): HasMany
     {
-        return $this->hasMany(GoodsReceivedNoteItem::class);
+        return $this->hasMany(GoodsReceivedNoteItem::class, 'grn_id');
     }
 
     public function receivedBy(): BelongsTo

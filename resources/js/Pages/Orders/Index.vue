@@ -26,7 +26,7 @@
             </select>
         </div>
 
-        <DataTable :columns="columns" :data="orders.data" :meta="meta" @page="goToPage">
+        <DataTable :columns="columns" :data="orders.data" :meta="meta" :mobileColumns="mobileColumns" @page="goToPage">
             <template #cell-order_number="{ row }">
                 <Link :href="route('orders.show', row.id)" class="text-sm font-medium text-accent hover:underline">
                     {{ row.order_number }}
@@ -86,7 +86,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { router, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
 import PageHeader from '@/Components/UI/PageHeader.vue';
@@ -115,13 +115,20 @@ const columns = [
     { key: 'fulfillment_status', label: 'Fulfillment' },
 ];
 
-const meta = {
+const mobileColumns = [
+    { key: 'order_number', label: 'Order#' },
+    { key: 'customer', label: 'Customer' },
+    { key: 'total_amount', label: 'Total' },
+    { key: 'status', label: 'Status' },
+];
+
+const meta = computed(() => ({
     current_page: props.orders.current_page,
     last_page: props.orders.last_page,
     from: props.orders.from,
     to: props.orders.to,
     total: props.orders.total,
-};
+}));
 
 let debounceTimer = null;
 const debouncedFetch = () => {

@@ -69,6 +69,14 @@
                         <label class="form-label">Reference Number</label>
                         <input v-model="form.reference_number" type="text" class="form-input" placeholder="Transaction reference" />
                     </div>
+
+                    <div class="md:col-span-2">
+                        <label class="form-label">Payment Receipt <span class="text-red-500">*</span></label>
+                        <input type="file" accept="image/*,.pdf" required @change="handleReceipt"
+                            class="form-input w-full text-sm text-gray-600 dark:text-gray-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent/10 file:text-accent hover:file:bg-accent/20" />
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Required — upload image or PDF (max 5MB)</p>
+                        <p v-if="form.errors.receipt" class="text-red-500 text-xs mt-1">{{ form.errors.receipt }}</p>
+                    </div>
                 </div>
             </div>
 
@@ -143,7 +151,12 @@ const form = useForm({
     reference_number: '',
     notes: '',
     allocations: [],
+    receipt: null,
 });
+
+const handleReceipt = (e) => {
+    form.receipt = e.target.files[0] || null;
+};
 
 const filteredInvoices = computed(() => {
     if (form.payment_type === 'incoming' && form.customer_id) {
@@ -170,6 +183,7 @@ const submit = () => {
         .map(id => ({ invoice_id: id, amount: allocations.value[id] }));
 
     form.post(route('payments.store'), {
+        forceFormData: true,
         onSuccess: () => toast.success('Payment created successfully'),
         onError: () => toast.error('Failed to create payment'),
     });

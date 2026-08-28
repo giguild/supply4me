@@ -227,9 +227,12 @@ class CheckoutController extends Controller
 
         $isPaid = $invoice->status === 'paid';
 
+        $company = $invoice->order->company ?? $customer->company;
+
         return Inertia::render('Storefront/Payment', [
             'invoice' => $invoice,
             'isPaid' => $isPaid,
+            'company' => $company,
             'cartCount' => 0,
         ]);
     }
@@ -295,9 +298,12 @@ class CheckoutController extends Controller
 
         $invoice = $order->invoice;
 
+        $company = $order->company ?? $customer->company;
+
         return Inertia::render('Storefront/OrderConfirmation', [
             'order' => $order,
             'invoice' => $invoice,
+            'company' => $company,
             'cartCount' => 0,
         ]);
     }
@@ -308,19 +314,104 @@ class CheckoutController extends Controller
 
         $customer->load(['assignedTo', 'contacts']);
 
-        $orders = Order::where('customer_id', $customer->id)
-            ->with(['invoice'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-
         $addresses = $customer->shippingAddresses()->orderByDesc('is_default')->get();
 
         return Inertia::render('Storefront/Account', [
             'customer' => $customer,
             'salesRep' => $customer->assignedTo,
             'contacts' => $customer->contacts,
-            'orders' => $orders,
             'addresses' => $addresses,
+            'cartCount' => 0,
+        ]);
+    }
+
+    public function orders(Request $request)
+    {
+        $customer = Auth::guard('customer')->user();
+
+        $query = Order::where('customer_id', $customer->id)
+            ->with(['invoice'])
+            ->orderBy('created_at', 'desc');
+
+        if ($request->filled('search')) {
+            $query->where('order_number', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $orders = $query->paginate(10)->withQueryString();
+
+        return Inertia::render('Storefront/Orders/Index', [
+            'orders' => $orders,
+            'customer' => $customer,
+            'filters' => $request->only(['search', 'status']),
+            'cartCount' => 0,
+        ]);
+    }
+
+    public function invoices(Request $request)
+    {
+        $customer = Auth::guard('customer')->user();
+
+        $query = Invoice::where('customer_id', $customer->id)
+            ->whereNotIn('status', ['draft', 'void'])
+            ->orderBy('created_at', 'desc');
+
+        if ($request->filled('search')) {
+            $query->where('invoice_number', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $invoices = $query->paginate(10)->withQueryString();
+
+        $summary = [
+            'total' => (clone $query)->sum('total_amount'),
+            'paid' => (clone $query)->sum('paid_amount'),
+            'due' => (clone $query)->sum('due_amount'),
+        ];
+
+        return Inertia::render('Storefront/Invoices/Index', [
+            'invoices' => $invoices,
+            'summary' => $summary,
+            'customer' => $customer,
+            'filters' => $request->only(['search', 'status']),
+            'cartCount' => 0,
+        ]);
+    }
+
+    public function payments(Request $request)
+    {
+        $customer = Auth::guard('customer')->user();
+
+        $query = Payment::where('customer_id', $customer->id)
+            ->orderBy('created_at', 'desc');
+
+        if ($request->filled('search')) {
+            $query->where('payment_number', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $payments = $query->paginate(10)->withQueryString();
+
+        $summary = [
+            'total' => (clone $query)->sum('amount'),
+            'completed' => (clone $query)->where('status', 'completed')->sum('amount'),
+            'pending' => (clone $query)->where('status', 'pending')->sum('amount'),
+        ];
+
+        return Inertia::render('Storefront/Payments/Index', [
+            'payments' => $payments,
+            'summary' => $summary,
+            'customer' => $customer,
+            'filters' => $request->only(['search', 'status']),
             'cartCount' => 0,
         ]);
     }

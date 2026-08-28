@@ -3,7 +3,6 @@
 namespace App\Actions\Receiving;
 
 use App\Enums\Inventory\MovementType;
-use App\Enums\Receiving\GRNStatus;
 use App\Events\Receiving\GoodsReceived;
 use App\Models\Inventory\StockItem;
 use App\Models\Inventory\StockMovement;
@@ -21,9 +20,9 @@ class ReceiveGoodsAction
             $quantityRejected = $data['quantity_rejected'] ?? 0;
 
             $grnItem->update([
-                'quantity_received' => $quantityReceived,
-                'quantity_accepted' => $quantityAccepted,
-                'quantity_rejected' => $quantityRejected,
+                'received_quantity' => $quantityReceived,
+                'accepted_quantity' => $quantityAccepted,
+                'rejected_quantity' => $quantityRejected,
                 'condition' => $data['condition'] ?? $grnItem->condition,
                 'notes' => $data['notes'] ?? $grnItem->notes,
             ]);
@@ -67,9 +66,9 @@ class ReceiveGoodsAction
                 ]);
             }
 
-            if ($grn->status === GRNStatus::Draft) {
+            if ($grn->status === 'draft') {
                 $grn->update([
-                    'status' => GRNStatus::InProgress,
+                    'status' => 'inspecting',
                 ]);
             }
 

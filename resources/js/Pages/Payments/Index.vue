@@ -25,7 +25,7 @@
             </select>
         </div>
 
-        <DataTable :columns="columns" :data="payments.data" :meta="meta" @page="goToPage">
+        <DataTable :columns="columns" :mobileColumns="mobileColumns" :data="payments.data" :meta="meta" @page="goToPage">
             <template #cell-payment_number="{ row }">
                 <Link :href="route('payments.show', row.id)" class="text-sm font-medium text-accent hover:underline">
                     {{ row.payment_number }}
@@ -101,13 +101,20 @@ const columns = [
     { key: 'status', label: 'Status' },
 ];
 
-const meta = {
+const mobileColumns = [
+    { key: 'payment_number', label: 'Payment#' },
+    { key: 'payable', label: 'Customer/Supplier' },
+    { key: 'amount', label: 'Amount' },
+    { key: 'status', label: 'Status' },
+];
+
+const meta = computed(() => ({
     current_page: props.payments.current_page,
     last_page: props.payments.last_page,
     from: props.payments.from,
     to: props.payments.to,
     total: props.payments.total,
-};
+}));
 
 let debounceTimer = null;
 const debouncedFetch = () => {

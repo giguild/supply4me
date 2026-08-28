@@ -9,39 +9,43 @@
         </PageHeader>
 
         <!-- Filters -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-[var(--color-border)] p-4 mb-4 flex flex-wrap gap-3 items-center">
-            <div class="flex-1 min-w-[200px]">
-                <div class="relative">
-                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                    <input
-                        v-model="searchQuery"
-                        @input="debouncedSearch"
-                        type="text"
-                        placeholder="Search notifications..."
-                        class="w-full pl-10 pr-4 py-2 rounded-xl border border-[var(--color-border)] bg-white text-[var(--color-text)] text-sm focus:ring-2 focus:ring-accent focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    />
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-[var(--color-border)] p-3 sm:p-4 mb-4">
+            <div class="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:items-center">
+                <div class="flex-1 min-w-0 sm:min-w-[200px]">
+                    <div class="relative">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        <input
+                            v-model="searchQuery"
+                            @input="debouncedSearch"
+                            type="text"
+                            placeholder="Search notifications..."
+                            class="w-full pl-10 pr-4 py-2 rounded-xl border border-[var(--color-border)] bg-white text-[var(--color-text)] text-sm focus:ring-2 focus:ring-accent focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        />
+                    </div>
                 </div>
+                <div class="flex gap-3">
+                    <select
+                        v-model="filterType"
+                        @change="applyFilters"
+                        class="flex-1 sm:flex-none px-3 py-2 rounded-xl border border-[var(--color-border)] bg-white text-sm text-[var(--color-text)] focus:ring-2 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    >
+                        <option value="">All types</option>
+                        <option v-for="t in types" :key="t" :value="t">{{ formatType(t) }}</option>
+                    </select>
+                    <select
+                        v-model="filterStatus"
+                        @change="applyFilters"
+                        class="flex-1 sm:flex-none px-3 py-2 rounded-xl border border-[var(--color-border)] bg-white text-sm text-[var(--color-text)] focus:ring-2 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    >
+                        <option value="">All</option>
+                        <option value="unread">Unread</option>
+                        <option value="read">Read</option>
+                    </select>
+                </div>
+                <button v-if="hasActiveFilters" @click="clearFilters" class="text-sm text-accent hover:text-accent/80 font-medium">
+                    Clear filters
+                </button>
             </div>
-            <select
-                v-model="filterType"
-                @change="applyFilters"
-                class="px-3 py-2 rounded-xl border border-[var(--color-border)] bg-white text-sm text-[var(--color-text)] focus:ring-2 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            >
-                <option value="">All types</option>
-                <option v-for="t in types" :key="t" :value="t">{{ formatType(t) }}</option>
-            </select>
-            <select
-                v-model="filterStatus"
-                @change="applyFilters"
-                class="px-3 py-2 rounded-xl border border-[var(--color-border)] bg-white text-sm text-[var(--color-text)] focus:ring-2 focus:ring-accent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            >
-                <option value="">All</option>
-                <option value="unread">Unread</option>
-                <option value="read">Read</option>
-            </select>
-            <button v-if="hasActiveFilters" @click="clearFilters" class="text-sm text-accent hover:text-accent/80 font-medium">
-                Clear filters
-            </button>
         </div>
 
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-[var(--color-border)] overflow-hidden">
@@ -59,26 +63,26 @@
                 <div
                     v-for="notification in notifications.data"
                     :key="notification.id"
-                    class="flex items-start gap-4 px-6 py-4 border-b border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+                    class="flex items-start gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
                     :class="{ 'bg-accent/5': !isRead(notification) }"
                 >
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 mt-0.5"
                         :class="iconClass(notification.icon)">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="iconPath(notification.icon)" />
                         </svg>
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2">
-                            <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
                                 {{ notification.title }}
                             </h4>
                             <span v-if="!isRead(notification)" class="w-2 h-2 rounded-full bg-accent shrink-0"></span>
                         </div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5 line-clamp-2">
                             {{ notification.message }}
                         </p>
-                        <div class="flex items-center gap-3 mt-2">
+                        <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-2">
                             <span class="text-xs text-gray-400 dark:text-gray-500">{{ timeAgo(notification.created_at) }}</span>
                             <Link
                                 v-if="notification.action_url"
@@ -96,7 +100,7 @@
                             </button>
                             <button
                                 @click="deleteNotification(notification.id)"
-                                class="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                                class="text-xs text-gray-400 hover:text-red-500 transition-colors ml-auto"
                             >
                                 Delete
                             </button>
@@ -105,7 +109,7 @@
                 </div>
 
                 <!-- Pagination -->
-                <div v-if="notifications.last_page > 1" class="flex items-center justify-between px-6 py-4">
+                <div v-if="notifications.last_page > 1" class="flex flex-col sm:flex-row items-center justify-between px-4 sm:px-6 py-4 gap-3">
                     <p class="text-sm text-gray-500 dark:text-gray-400">
                         Showing {{ notifications.from }}-{{ notifications.to }} of {{ notifications.total }}
                     </p>

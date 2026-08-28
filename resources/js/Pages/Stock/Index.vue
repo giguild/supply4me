@@ -3,8 +3,8 @@
         <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
             <PageHeader title="Stock Overview">
                 <template #actions>
-                    <Link :href="route('stock.adjustments.index')" class="btn btn-outline btn-sm">Adjustments</Link>
-                    <Link :href="route('stock.transfers.index')" class="btn btn-accent btn-sm">Transfers</Link>
+                    <Link :href="route('stock.adjustments')" class="btn btn-outline btn-sm">Adjustments</Link>
+                    <Link :href="route('stock.transfers')" class="btn btn-accent btn-sm">Transfers</Link>
                 </template>
             </PageHeader>
 
@@ -32,6 +32,7 @@
                 :columns="columns"
                 :data="stockItems.data"
                 :meta="stockItems"
+                :mobileColumns="mobileColumns"
                 @page="(p) => router.get(route('stock.index'), { ...filters, page: p }, { preserveState: true, replace: true })"
             >
                 <template #cell-product="{ row }">
@@ -110,6 +111,13 @@ const columns = [
     { key: 'reorder_level', label: 'Reorder Level' },
     { key: 'status', label: 'Status' },
     { key: 'last_counted_at', label: 'Last Counted' },
+];
+
+const mobileColumns = [
+    { key: 'product', label: 'Product' },
+    { key: 'warehouse', label: 'Warehouse' },
+    { key: 'quantity_on_hand', label: 'Qty' },
+    { key: 'status', label: 'Status' },
 ];
 
 let debounceTimer = null;

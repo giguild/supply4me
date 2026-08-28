@@ -83,7 +83,7 @@
             </div>
 
             <div class="flex justify-end mb-6">
-                <div class="card p-6 w-80 space-y-3">
+                <div class="card p-6 w-full sm:w-80 space-y-3">
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500">Subtotal</span>
                         <span class="font-medium text-gray-900 dark:text-gray-100">{{ formatCurrency(form.subtotal) }}</span>

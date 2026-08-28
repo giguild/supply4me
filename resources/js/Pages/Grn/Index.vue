@@ -9,6 +9,7 @@
 
             <DataTable
                 :columns="columns"
+                :mobileColumns="mobileColumns"
                 :data="grns.data"
                 :meta="grns"
                 @rowClick="(row) => router.get(route('grn.show', row.id))"
@@ -63,5 +64,11 @@ const columns = [
     { key: 'created_at', label: 'Date' },
     { key: 'status', label: 'Status' },
     { key: 'items_count', label: 'Items Count' },
+];
+
+const mobileColumns = [
+    { key: 'grn_number', label: 'GRN#' },
+    { key: 'supplier', label: 'Supplier' },
+    { key: 'status', label: 'Status' },
 ];
 </script>

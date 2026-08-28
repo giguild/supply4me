@@ -1,0 +1,153 @@
+<template>
+    <AppLayout :user="$page.props.auth.user">
+        <div class="max-w-5xl mx-auto py-6 sm:px-6 lg:px-8">
+            <PageHeader title="Receive Goods">
+                <template #actions>
+                    <Link :href="route('grn.index')" class="btn btn-outline btn-sm">Back</Link>
+                </template>
+            </PageHeader>
+
+            <form @submit.prevent="submit">
+                <div class="card p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4">GRN Details</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="form-label">Supplier *</label>
+                            <select v-model="form.supplier_id" class="form-input" required>
+                                <option value="">Select Supplier</option>
+                                <option v-for="s in suppliers" :key="s.id" :value="s.id">{{ s.name }}</option>
+                            </select>
+                            <p v-if="form.errors.supplier_id" class="mt-1 text-sm text-red-600">{{ form.errors.supplier_id }}</p>
+                        </div>
+
+                        <div>
+                            <label class="form-label">Warehouse *</label>
+                            <select v-model="form.warehouse_id" class="form-input" required>
+                                <option value="">Select Warehouse</option>
+                                <option v-for="wh in warehouses" :key="wh.id" :value="wh.id">{{ wh.name }}</option>
+                            </select>
+                            <p v-if="form.errors.warehouse_id" class="mt-1 text-sm text-red-600">{{ form.errors.warehouse_id }}</p>
+                        </div>
+
+                        <div>
+                            <label class="form-label">Received Date *</label>
+                            <input v-model="form.receiving_date" type="date" class="form-input" required />
+                            <p v-if="form.errors.receiving_date" class="mt-1 text-sm text-red-600">{{ form.errors.receiving_date }}</p>
+                        </div>
+
+                        <div>
+                            <label class="form-label">Notes</label>
+                            <textarea v-model="form.notes" rows="3" class="form-input"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">Items</h3>
+                        <button type="button" @click="addItem" class="btn btn-outline btn-sm">+ Add Item</button>
+                    </div>
+
+                    <EmptyState
+                        v-if="form.items.length === 0"
+                        title="No items added yet"
+                        description='Click "+ Add Item" to begin adding received items.'
+                    />
+
+                    <div v-for="(item, index) in form.items" :key="index" class="mb-6 pb-6 border-b border-gray-100 dark:border-gray-700 last:border-b-0 last:pb-0 last:mb-0">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Item {{ index + 1 }}</span>
+                            <button type="button" @click="removeItem(index)" class="btn btn-danger btn-sm">Remove</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="md:col-span-3">
+                                <label class="form-label">Product *</label>
+                                <select v-model="item.product_id" class="form-input" required>
+                                    <option value="">Select Product</option>
+                                    <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }}</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Quantity Ordered</label>
+                                <input v-model.number="item.expected_quantity" type="number" min="0" class="form-input" />
+                            </div>
+                            <div>
+                                <label class="form-label">Quantity Received *</label>
+                                <input v-model.number="item.received_quantity" type="number" min="0" class="form-input" required />
+                            </div>
+                            <div>
+                                <label class="form-label">Quantity Accepted *</label>
+                                <input v-model.number="item.accepted_quantity" type="number" min="0" class="form-input" required />
+                            </div>
+                            <div>
+                                <label class="form-label">Quantity Rejected</label>
+                                <input v-model.number="item.rejected_quantity" type="number" min="0" class="form-input" />
+                            </div>
+                            <div>
+                                <label class="form-label">Condition</label>
+                                <input v-model="item.condition" type="text" class="form-input" placeholder="e.g. Good, Damaged" />
+                            </div>
+                            <div>
+                                <label class="form-label">Notes</label>
+                                <input v-model="item.notes" type="text" class="form-input" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <p v-if="form.errors.items" class="mt-1 text-sm text-red-600">{{ form.errors.items }}</p>
+                </div>
+
+                <div class="flex items-center justify-end gap-3">
+                    <Link :href="route('grn.index')" class="btn btn-outline">Cancel</Link>
+                    <button type="submit" :disabled="form.processing" class="btn btn-accent">
+                        {{ form.processing ? 'Saving...' : 'Create GRN' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </AppLayout>
+</template>
+
+<script setup>
+import { Link, useForm } from '@inertiajs/vue3';
+import AppLayout from '@/Components/Layout/AppLayout.vue';
+import PageHeader from '@/Components/UI/PageHeader.vue';
+import EmptyState from '@/Components/UI/EmptyState.vue';
+
+const props = defineProps({
+    suppliers: { type: Array, default: () => [] },
+    warehouses: { type: Array, default: () => [] },
+    products: { type: Array, default: () => [] },
+    purchaseOrders: { type: Array, default: () => [] },
+});
+
+const today = new Date().toISOString().split('T')[0];
+
+const form = useForm({
+    supplier_id: '',
+    warehouse_id: '',
+    receiving_date: today,
+    notes: '',
+    items: [],
+});
+
+const addItem = () => {
+    form.items.push({
+        product_id: '',
+        expected_quantity: 0,
+        received_quantity: 0,
+        accepted_quantity: 0,
+        rejected_quantity: 0,
+        condition: '',
+        notes: '',
+    });
+};
+
+const removeItem = (index) => {
+    form.items.splice(index, 1);
+};
+
+const submit = () => {
+    form.post(route('grn.store'));
+};
+</script>

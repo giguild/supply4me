@@ -80,6 +80,25 @@
           </div>
         </div>
 
+        <!-- Bank Account Details -->
+        <div v-if="company?.bank_name" class="border-t border-[var(--color-border)] pt-4 mt-2">
+          <h4 class="font-medium text-[var(--color-text)] mb-3">Make Payment To</h4>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="text-[var(--color-text-secondary)]">Bank Name</span>
+              <span class="font-medium text-[var(--color-text)]">{{ company.bank_name }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--color-text-secondary)]">Account Name</span>
+              <span class="font-medium text-[var(--color-text)]">{{ company.bank_account_name }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-[var(--color-text-secondary)]">Account Number</span>
+              <span class="font-medium text-[var(--color-text)]">{{ company.bank_account_number }}</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Upload Link -->
         <div v-if="invoice.status !== 'paid'" class="border-t border-[var(--color-border)] pt-4 mt-2">
           <p class="text-sm text-[var(--color-text-secondary)]">
@@ -106,6 +125,7 @@ import StorefrontLayout from '@/Components/Layout/StorefrontLayout.vue'
 const props = defineProps({
   order: Object,
   invoice: Object,
+  company: Object,
   cartCount: { type: Number, default: 0 },
 })
 </script>

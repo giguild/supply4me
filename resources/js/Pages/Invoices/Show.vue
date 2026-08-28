@@ -69,7 +69,7 @@
         </div>
 
         <div class="flex justify-end mb-6">
-            <div class="card p-6 w-80 space-y-3">
+            <div class="card p-6 w-full sm:w-80 space-y-3">
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">Subtotal</span>
                     <span class="font-medium text-gray-900 dark:text-gray-100">{{ formatCurrency(invoice.subtotal) }}</span>
@@ -199,11 +199,19 @@
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
                                 <textarea v-model="paymentNotes" rows="2" class="form-input w-full" placeholder="Optional notes"></textarea>
                             </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Receipt <span class="text-red-500">*</span></label>
+                                <input type="file" ref="receiptInput" accept="image/*,.pdf" required @change="handleReceiptChange"
+                                    class="form-input w-full text-sm text-gray-600 dark:text-gray-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent/10 file:text-accent hover:file:bg-accent/20" />
+                                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Required — upload image or PDF (max 5MB)</p>
+                                <p v-if="receiptError" class="text-xs text-red-500 mt-1">{{ receiptError }}</p>
+                            </div>
                         </div>
 
                         <div class="flex justify-end gap-3 mt-6">
                             <button type="button" @click="showPaymentModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Cancel</button>
-                            <button type="submit" :disabled="!paymentAmount || paymentAmount <= 0 || paymentAmount > invoice.due_amount || !paymentMethod" class="btn btn-accent disabled:opacity-50">
+                            <button type="submit" :disabled="!paymentAmount || paymentAmount <= 0 || paymentAmount > invoice.due_amount || !paymentMethod || !receiptFile" class="btn btn-accent disabled:opacity-50">
                                 Record Payment
                             </button>
                         </div>
@@ -225,6 +233,9 @@ import { useToast } from '@/composables/useToast';
 const props = defineProps({ invoice: Object });
 const toast = useToast();
 const showPaymentModal = ref(false);
+const receiptInput = ref(null);
+const receiptFile = ref(null);
+const receiptError = ref('');
 
 const today = new Date().toISOString().split('T')[0];
 const paymentAmount = ref(props.invoice.due_amount || 0);
@@ -233,14 +244,26 @@ const paymentDate = ref(today);
 const paymentRef = ref('');
 const paymentNotes = ref('');
 
+const handleReceiptChange = (e) => {
+    receiptFile.value = e.target.files[0] || null;
+    receiptError.value = '';
+};
+
 const submitPayment = () => {
-    router.post(route('invoices.payments.store', props.invoice.id), {
-        amount: Number(paymentAmount.value),
-        payment_method: paymentMethod.value,
-        payment_date: paymentDate.value,
-        reference_number: paymentRef.value,
-        notes: paymentNotes.value,
-    }, {
+    if (!receiptFile.value) {
+        receiptError.value = 'Payment receipt is required';
+        return;
+    }
+    const formData = new FormData();
+    formData.append('amount', Number(paymentAmount.value));
+    formData.append('payment_method', paymentMethod.value);
+    formData.append('payment_date', paymentDate.value);
+    formData.append('reference_number', paymentRef.value);
+    formData.append('notes', paymentNotes.value);
+    formData.append('receipt', receiptFile.value);
+
+    router.post(route('invoices.payments.store', props.invoice.id), formData, {
+        forceFormData: true,
         onSuccess: () => {
             showPaymentModal.value = false;
             paymentAmount.value = props.invoice.due_amount || 0;
@@ -248,10 +271,13 @@ const submitPayment = () => {
             paymentDate.value = today;
             paymentRef.value = '';
             paymentNotes.value = '';
+            receiptFile.value = null;
+            receiptError.value = '';
+            if (receiptInput.value) receiptInput.value.value = '';
             toast.success('Payment recorded successfully');
         },
         onError: (errors) => {
-            const msg = errors.amount || errors.payment_method || 'Failed to record payment';
+            const msg = errors.amount || errors.payment_method || errors.receipt || 'Failed to record payment';
             toast.error(msg);
         },
     });

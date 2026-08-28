@@ -42,7 +42,7 @@
         </div>
 
         <div class="hidden md:block">
-            <DataTable :columns="columns" :data="products.data" :meta="meta" @page="goToPage">
+            <DataTable :columns="columns" :mobileColumns="mobileColumns" :data="products.data" :meta="meta" @page="goToPage">
                 <template #cell-sku="{ row }">
                     <div class="flex items-center gap-3">
                         <img v-if="getFirstImage(row)" :src="getFirstImage(row)" class="w-9 h-9 rounded-lg object-cover border border-gray-200 dark:border-gray-600 shrink-0" />
@@ -166,6 +166,13 @@ const columns = [
     { key: 'category', label: 'Category' },
     { key: 'brand', label: 'Brand' },
     { key: 'selling_price', label: 'Selling Price' },
+    { key: 'status', label: 'Status' },
+];
+
+const mobileColumns = [
+    { key: 'sku', label: 'SKU' },
+    { key: 'name', label: 'Name' },
+    { key: 'selling_price', label: 'Price' },
     { key: 'status', label: 'Status' },
 ];
 

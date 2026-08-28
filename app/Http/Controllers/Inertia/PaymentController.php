@@ -72,6 +72,7 @@ class PaymentController extends Controller
             'reference_number' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'payment_date' => 'required|date',
+            'receipt' => 'required|file|image|max:5120',
         ]);
 
         $companyId = $request->user()->company_id;
@@ -79,6 +80,12 @@ class PaymentController extends Controller
         $validated['company_id'] = $companyId;
         $validated['status'] = 'pending';
         $validated['received_by'] = $request->user()->id;
+
+        if ($request->hasFile('receipt')) {
+            $validated['receipt_path'] = $request->file('receipt')->store('payment-receipts', 'public');
+        }
+
+        unset($validated['receipt']);
 
         $payment = Payment::create($validated);
 
@@ -141,7 +148,14 @@ class PaymentController extends Controller
             'reference_number' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'payment_date' => 'required|date',
+            'receipt' => 'nullable|file|image|max:5120',
         ]);
+
+        if ($request->hasFile('receipt')) {
+            $validated['receipt_path'] = $request->file('receipt')->store('payment-receipts', 'public');
+        }
+
+        unset($validated['receipt']);
 
         $payment->update($validated);
 

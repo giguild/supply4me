@@ -43,6 +43,11 @@
     --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
 }
 
+html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+}
+
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: linear-gradient(135deg, #f5f0eb 0%, #faf8f6 50%, #f5f0eb 100%);

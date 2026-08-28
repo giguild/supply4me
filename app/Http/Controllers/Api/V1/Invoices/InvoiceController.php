@@ -23,11 +23,11 @@ class InvoiceController extends Controller
     {
         $invoices = Invoice::query()
             ->with(['customer', 'items'])
-            ->when($request->search, fn ($q, $s) => $q->where('invoice_number', 'like', "%{$s}%"))
-            ->when($request->customer_id, fn ($q, $c) => $q->where('customer_id', $c))
-            ->when($request->status, fn ($q, $s) => $q->where('status', $s))
-            ->when($request->date_from, fn ($q, $d) => $q->where('invoice_date', '>=', $d))
-            ->when($request->date_to, fn ($q, $d) => $q->where('invoice_date', '<=', $d))
+            ->when($request->search, fn($q, $s) => $q->where('invoice_number', 'like', "%{$s}%"))
+            ->when($request->customer_id, fn($q, $c) => $q->where('customer_id', $c))
+            ->when($request->status, fn($q, $s) => $q->where('status', $s))
+            ->when($request->date_from, fn($q, $d) => $q->where('invoice_date', '>=', $d))
+            ->when($request->date_to, fn($q, $d) => $q->where('invoice_date', '<=', $d))
             ->latest()
             ->paginate($request->get('per_page', 15));
 

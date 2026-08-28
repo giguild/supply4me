@@ -9,6 +9,7 @@
 
             <DataTable
                 :columns="columns"
+                :mobileColumns="mobileColumns"
                 :data="pickLists.data"
                 :meta="pickLists"
                 @rowClick="(row) => router.get(route('pick-lists.show', row.id))"
@@ -63,5 +64,11 @@ const columns = [
     { key: 'status', label: 'Status' },
     { key: 'assigned_to', label: 'Assigned To' },
     { key: 'created_at', label: 'Created' },
+];
+
+const mobileColumns = [
+    { key: 'pick_list_number', label: 'PL#' },
+    { key: 'order', label: 'Order' },
+    { key: 'status', label: 'Status' },
 ];
 </script>

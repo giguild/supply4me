@@ -17,7 +17,7 @@
             leave-from-class="transform opacity-100 scale-100"
             leave-to-class="transform opacity-0 scale-95"
         >
-            <div v-if="open" class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+            <div v-if="open" class="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-[20rem] bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-50">
                 <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                     <h3 class="font-semibold text-sm text-gray-900 dark:text-gray-100">Notifications</h3>
                     <button v-if="unreadCount > 0" @click="markAllRead" class="text-xs text-accent hover:text-accent/80 font-medium">

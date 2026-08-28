@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             Core\UserSeeder::class,
             Companies\CompanySeeder::class,
             Branches\BranchSeeder::class,
+            Branches\WarehouseSeeder::class,
             Products\ProductUnitSeeder::class,
             Products\ProductCategorySeeder::class,
             Products\ProductBrandSeeder::class,

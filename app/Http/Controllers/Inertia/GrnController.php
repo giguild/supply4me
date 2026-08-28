@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Inertia;
 
+use App\Actions\Receiving\ReceiveGoodsAction;
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\Warehouse;
+use App\Models\Products\Product;
 use App\Models\PurchaseOrders\PurchaseOrder;
 use App\Models\Receiving\GoodsReceivedNote;
 use App\Models\Receiving\GoodsReceivedNoteItem;
@@ -17,6 +19,7 @@ class GrnController extends Controller
     public function index(Request $request): Response
     {
         $query = GoodsReceivedNote::where('company_id', $request->user()->company_id)
+            ->withCount('items')
             ->with(['supplier', 'warehouse', 'purchaseOrder', 'receivedBy']);
 
         if ($request->filled('search')) {
@@ -38,6 +41,7 @@ class GrnController extends Controller
 
         $suppliers = Supplier::where('company_id', $companyId)->get();
         $warehouses = Warehouse::where('company_id', $companyId)->get();
+        $products = Product::where('company_id', $companyId)->get();
         $purchaseOrders = PurchaseOrder::where('company_id', $companyId)
             ->whereNotIn('status', ['completed', 'cancelled'])
             ->with('supplier')
@@ -46,6 +50,7 @@ class GrnController extends Controller
         return Inertia::render('Receiving/Create', [
             'suppliers' => $suppliers,
             'warehouses' => $warehouses,
+            'products' => $products,
             'purchaseOrders' => $purchaseOrders,
         ]);
     }
@@ -56,15 +61,15 @@ class GrnController extends Controller
             'purchase_order_id' => 'nullable|exists:purchase_orders,id',
             'supplier_id' => 'required|exists:suppliers,id',
             'warehouse_id' => 'required|exists:warehouses,id',
-            'received_date' => 'required|date',
+            'receiving_date' => 'required|date',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity_ordered' => 'nullable|numeric|min:0',
-            'items.*.quantity_received' => 'required|numeric|min:0',
-            'items.*.quantity_accepted' => 'required|numeric|min:0',
-            'items.*.quantity_rejected' => 'nullable|numeric|min:0',
-            'items.*.condition' => 'nullable|string|max:50',
+            'items.*.expected_quantity' => 'nullable|numeric|min:0',
+            'items.*.received_quantity' => 'required|numeric|min:0',
+            'items.*.accepted_quantity' => 'required|numeric|min:0',
+            'items.*.rejected_quantity' => 'nullable|numeric|min:0',
+            'items.*.condition' => 'nullable|in:good,damaged,expired,wrong_item',
             'items.*.notes' => 'nullable|string',
         ]);
 
@@ -75,26 +80,36 @@ class GrnController extends Controller
             'purchase_order_id' => $validated['purchase_order_id'] ?? null,
             'supplier_id' => $validated['supplier_id'],
             'warehouse_id' => $validated['warehouse_id'],
-            'status' => 'received',
-            'received_date' => $validated['received_date'],
+            'status' => 'accepted',
+            'receiving_date' => $validated['receiving_date'],
             'notes' => $validated['notes'] ?? null,
             'received_by' => $request->user()->id,
         ]);
 
+        $receiveGoods = app(ReceiveGoodsAction::class);
+
         foreach ($validated['items'] as $item) {
-            GoodsReceivedNoteItem::create([
+            $grnItem = GoodsReceivedNoteItem::create([
                 'grn_id' => $grn->id,
                 'product_id' => $item['product_id'],
-                'quantity_ordered' => $item['quantity_ordered'] ?? 0,
-                'quantity_received' => $item['quantity_received'],
-                'quantity_accepted' => $item['quantity_accepted'],
-                'quantity_rejected' => $item['quantity_rejected'] ?? 0,
+                'expected_quantity' => $item['expected_quantity'] ?? 0,
+                'received_quantity' => $item['received_quantity'],
+                'accepted_quantity' => $item['accepted_quantity'],
+                'rejected_quantity' => $item['rejected_quantity'] ?? 0,
+                'condition' => $item['condition'] ?? 'good',
+                'notes' => $item['notes'] ?? null,
+            ]);
+
+            $receiveGoods->execute($grn, $grnItem, [
+                'quantity_received' => $item['received_quantity'],
+                'quantity_accepted' => $item['accepted_quantity'],
+                'quantity_rejected' => $item['rejected_quantity'] ?? 0,
                 'condition' => $item['condition'] ?? null,
                 'notes' => $item['notes'] ?? null,
             ]);
         }
 
-        return redirect()->route('grn.index')->with('success', 'GRN created successfully');
+        return redirect()->route('grn.index')->with('success', 'GRN created and stock updated successfully');
     }
 
     public function show(Request $request, GoodsReceivedNote $grn): Response
@@ -136,16 +151,19 @@ class GrnController extends Controller
         }
 
         if ($request->filled('items')) {
+            $receiveGoods = app(ReceiveGoodsAction::class);
+
             foreach ($validated['items'] as $item) {
-                GoodsReceivedNoteItem::where('id', $item['id'])->update(
-                    array_filter([
-                        'quantity_received' => $item['quantity_received'] ?? null,
-                        'quantity_accepted' => $item['quantity_accepted'] ?? null,
-                        'quantity_rejected' => $item['quantity_rejected'] ?? null,
+                $grnItem = GoodsReceivedNoteItem::find($item['id']);
+                if ($grnItem) {
+                    $receiveGoods->execute($grn, $grnItem, [
+                        'quantity_received' => $item['quantity_received'] ?? $grnItem->quantity_received,
+                        'quantity_accepted' => $item['quantity_accepted'] ?? $grnItem->quantity_accepted,
+                        'quantity_rejected' => $item['quantity_rejected'] ?? $grnItem->quantity_rejected,
                         'condition' => $item['condition'] ?? null,
                         'notes' => $item['notes'] ?? null,
-                    ], fn ($v) => $v !== null)
-                );
+                    ]);
+                }
             }
         }
 

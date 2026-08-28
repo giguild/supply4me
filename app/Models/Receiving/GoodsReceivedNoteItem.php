@@ -18,10 +18,14 @@ class GoodsReceivedNoteItem extends Model
         'product_id',
         'variant_id',
         'bin_id',
-        'quantity_ordered',
-        'quantity_received',
-        'quantity_accepted',
-        'quantity_rejected',
+        'expected_quantity',
+        'received_quantity',
+        'accepted_quantity',
+        'rejected_quantity',
+        'rejection_reason',
+        'batch_number',
+        'serial_number',
+        'expiry_date',
         'condition',
         'notes',
     ];
@@ -29,10 +33,11 @@ class GoodsReceivedNoteItem extends Model
     protected function casts(): array
     {
         return [
-            'quantity_ordered' => 'decimal:2',
-            'quantity_received' => 'decimal:2',
-            'quantity_accepted' => 'decimal:2',
-            'quantity_rejected' => 'decimal:2',
+            'expected_quantity' => 'decimal:2',
+            'received_quantity' => 'decimal:2',
+            'accepted_quantity' => 'decimal:2',
+            'rejected_quantity' => 'decimal:2',
+            'expiry_date' => 'date',
         ];
     }
 

@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Inertia;
 
+use App\Actions\Inventory\ReleaseStockAction;
+use App\Actions\Inventory\ReserveStockAction;
 use App\Http\Controllers\Controller;
 use App\Models\Customers\Customer;
+use App\Models\Inventory\StockItem;
 use App\Models\Orders\Order;
 use App\Models\Orders\OrderItem;
 use App\Models\Orders\OrderStatusHistory;
@@ -329,7 +332,27 @@ class OrderController extends Controller
             'performed_by' => $request->user()->id,
         ]);
 
-        return redirect()->route('orders.show', $order)->with('success', 'Order confirmed successfully');
+        $reserveStock = app(ReserveStockAction::class);
+        $companyId = $request->user()->company_id;
+
+        foreach ($order->items as $item) {
+            if (! $item->product_id) continue;
+
+            $stockItem = StockItem::where('company_id', $companyId)
+                ->where('product_id', $item->product_id)
+                ->first();
+
+            if ($stockItem && $item->quantity > 0) {
+                try {
+                    $reserveStock->execute($stockItem, $order, $item->quantity);
+                } catch (\Exception $e) {
+                    return redirect()->route('orders.show', $order)
+                        ->with('error', "Could not reserve stock for {$item->product?->name}: {$e->getMessage()}");
+                }
+            }
+        }
+
+        return redirect()->route('orders.show', $order)->with('success', 'Order confirmed and stock reserved');
     }
 
     public function cancel(Request $request, Order $order): \Illuminate\Http\RedirectResponse
@@ -347,8 +370,27 @@ class OrderController extends Controller
             'performed_by' => $request->user()->id,
         ]);
 
+        $releaseStock = app(ReleaseStockAction::class);
+        $companyId = $request->user()->company_id;
+
+        foreach ($order->items as $item) {
+            if (! $item->product_id) continue;
+
+            $stockItem = StockItem::where('company_id', $companyId)
+                ->where('product_id', $item->product_id)
+                ->first();
+
+            if ($stockItem && $item->quantity > 0 && $stockItem->quantity_reserved > 0) {
+                try {
+                    $releaseStock->execute($stockItem, $order, $item->quantity);
+                } catch (\Exception $e) {
+                    // Stock may have already been released
+                }
+            }
+        }
+
         app(NotificationService::class)->orderCancelled($order);
 
-        return redirect()->route('orders.show', $order)->with('success', 'Order cancelled successfully');
+        return redirect()->route('orders.show', $order)->with('success', 'Order cancelled and stock released');
     }
 }
