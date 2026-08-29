@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RoleController extends Controller
 {
@@ -52,6 +53,8 @@ class RoleController extends Controller
         ]);
 
         $role->syncPermissions($validated['permissions']);
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         return redirect()->route('roles.index')->with('success', 'Role created successfully');
     }
@@ -101,6 +104,8 @@ class RoleController extends Controller
 
         $role->syncPermissions($validated['permissions']);
 
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
         return redirect()->route('roles.index')->with('success', 'Role updated successfully');
     }
 
@@ -111,6 +116,8 @@ class RoleController extends Controller
         }
 
         $role->delete();
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         return redirect()->route('roles.index')->with('success', 'Role deleted successfully');
     }

@@ -112,81 +112,100 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('roles', RoleController::class)->middleware('role:super_admin');
 
     // Customers
-    Route::resource('customers', CustomerController::class)->middleware([
-        'index' => 'permission:customer.view',
-        'create' => 'permission:customer.create',
-        'store' => 'permission:customer.create',
-        'show' => 'permission:customer.view',
-        'edit' => 'permission:customer.update',
-        'update' => 'permission:customer.update',
-        'destroy' => 'permission:customer.delete',
+    Route::resource('customers', CustomerController::class, [
+        'middleware_for' => [
+            'index' => ['permission:customer.view'],
+            'create' => ['permission:customer.create'],
+            'store' => ['permission:customer.create'],
+            'show' => ['permission:customer.view'],
+            'edit' => ['permission:customer.update'],
+            'update' => ['permission:customer.update'],
+            'destroy' => ['permission:customer.delete'],
+        ],
     ]);
     Route::post('customers/{customer}/contacts', [CustomerController::class, 'storeContact'])->name('customers.contacts.store')->middleware('permission:customer.create');
     Route::put('customers/{customer}/contacts/{contact}', [CustomerController::class, 'updateContact'])->name('customers.contacts.update')->middleware('permission:customer.update');
     Route::delete('customers/{customer}/contacts/{contact}', [CustomerController::class, 'destroyContact'])->name('customers.contacts.destroy')->middleware('permission:customer.delete');
 
     // Suppliers
-    Route::resource('suppliers', SupplierController::class)->middleware([
-        'index' => 'permission:supplier.view',
-        'create' => 'permission:supplier.create',
-        'store' => 'permission:supplier.create',
-        'show' => 'permission:supplier.view',
-        'edit' => 'permission:supplier.update',
-        'update' => 'permission:supplier.update',
-        'destroy' => 'permission:supplier.delete',
+    Route::resource('suppliers', SupplierController::class, [
+        'middleware_for' => [
+            'index' => ['permission:supplier.view'],
+            'create' => ['permission:supplier.create'],
+            'store' => ['permission:supplier.create'],
+            'show' => ['permission:supplier.view'],
+            'edit' => ['permission:supplier.update'],
+            'update' => ['permission:supplier.update'],
+            'destroy' => ['permission:supplier.delete'],
+        ],
     ]);
 
     // Products
-    Route::resource('products', ProductController::class)->middleware([
-        'index' => 'permission:product.view',
-        'create' => 'permission:product.create',
-        'store' => 'permission:product.create',
-        'show' => 'permission:product.view',
-        'edit' => 'permission:product.update',
-        'update' => 'permission:product.update',
-        'destroy' => 'permission:product.delete',
+    Route::resource('products', ProductController::class, [
+        'middleware_for' => [
+            'index' => ['permission:product.view'],
+            'create' => ['permission:product.create'],
+            'store' => ['permission:product.create'],
+            'show' => ['permission:product.view'],
+            'edit' => ['permission:product.update'],
+            'update' => ['permission:product.update'],
+            'destroy' => ['permission:product.delete'],
+        ],
     ]);
-    Route::resource('product-categories', ProductCategoryController::class)->except(['show', 'edit'])->middleware([
-        'index' => 'permission:product.view-category',
-        'store' => 'permission:product.manage-category',
-        'update' => 'permission:product.manage-category',
-        'destroy' => 'permission:product.manage-category',
+    Route::resource('product-categories', ProductCategoryController::class, [
+        'except' => ['show', 'edit'],
+        'middleware_for' => [
+            'index' => ['permission:product.view-category'],
+            'store' => ['permission:product.manage-category'],
+            'update' => ['permission:product.manage-category'],
+            'destroy' => ['permission:product.manage-category'],
+        ],
     ]);
-    Route::resource('product-brands', ProductBrandController::class)->except(['show', 'edit'])->middleware([
-        'index' => 'permission:product.view-brand',
-        'store' => 'permission:product.manage-brand',
-        'update' => 'permission:product.manage-brand',
-        'destroy' => 'permission:product.manage-brand',
+    Route::resource('product-brands', ProductBrandController::class, [
+        'except' => ['show', 'edit'],
+        'middleware_for' => [
+            'index' => ['permission:product.view-brand'],
+            'store' => ['permission:product.manage-brand'],
+            'update' => ['permission:product.manage-brand'],
+            'destroy' => ['permission:product.manage-brand'],
+        ],
     ]);
-    Route::resource('product-units', ProductUnitController::class)->except(['show', 'edit'])->middleware([
-        'index' => 'permission:product.view',
-        'store' => 'permission:product.create',
-        'update' => 'permission:product.update',
-        'destroy' => 'permission:product.delete',
+    Route::resource('product-units', ProductUnitController::class, [
+        'except' => ['show', 'edit'],
+        'middleware_for' => [
+            'index' => ['permission:product.view'],
+            'store' => ['permission:product.create'],
+            'update' => ['permission:product.update'],
+            'destroy' => ['permission:product.delete'],
+        ],
     ]);
 
     // Orders
-    Route::resource('orders', OrderController::class)->middleware([
-        'index' => 'permission:order.view',
-        'create' => 'permission:order.create',
-        'store' => 'permission:order.create',
-        'show' => 'permission:order.view',
-        'edit' => 'permission:order.update',
-        'update' => 'permission:order.update',
-        'destroy' => 'permission:order.delete',
+    Route::resource('orders', OrderController::class, [
+        'middleware_for' => [
+            'index' => ['permission:order.view'],
+            'create' => ['permission:order.create'],
+            'store' => ['permission:order.create'],
+            'show' => ['permission:order.view'],
+            'edit' => ['permission:order.update'],
+            'update' => ['permission:order.update'],
+            'destroy' => ['permission:order.delete'],
+        ],
     ]);
     Route::post('orders/{order}/confirm', [OrderController::class, 'confirm'])->name('orders.confirm')->middleware('permission:order.confirm');
     Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel')->middleware('permission:order.cancel');
 
     // Invoices
-    Route::resource('invoices', InvoiceController::class)->middleware([
-        'index' => 'permission:invoice.view',
-        'create' => 'permission:invoice.create',
-        'store' => 'permission:invoice.create',
-        'show' => 'permission:invoice.view',
-        'edit' => 'permission:invoice.update',
-        'update' => 'permission:invoice.update',
-        'destroy' => 'permission:invoice.delete',
+    Route::resource('invoices', InvoiceController::class, [
+        'middleware_for' => [
+            'index' => ['permission:invoice.view'],
+            'create' => ['permission:invoice.create'],
+            'store' => ['permission:invoice.create'],
+            'show' => ['permission:invoice.view'],
+            'edit' => ['permission:invoice.update'],
+            'update' => ['permission:invoice.update'],
+            'destroy' => ['permission:invoice.delete'],
+        ],
     ]);
     Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send'])->name('invoices.send')->middleware('permission:invoice.send');
     Route::post('invoices/{invoice}/void', [InvoiceController::class, 'void'])->name('invoices.void')->middleware('permission:invoice.void');
@@ -210,123 +229,146 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('stock/transfers', [StockController::class, 'storeTransfer'])->name('stock.transfers.store')->middleware('permission:stock.transfer');
 
     // Warehouses
-    Route::resource('warehouses', WarehouseController::class)->middleware([
-        'index' => 'permission:stock.view',
-        'create' => 'permission:stock.manage',
-        'store' => 'permission:stock.manage',
-        'show' => 'permission:stock.view',
-        'edit' => 'permission:stock.manage',
-        'update' => 'permission:stock.manage',
-        'destroy' => 'permission:stock.manage',
+    Route::resource('warehouses', WarehouseController::class, [
+        'middleware_for' => [
+            'index' => ['permission:stock.view'],
+            'create' => ['permission:stock.manage'],
+            'store' => ['permission:stock.manage'],
+            'show' => ['permission:stock.view'],
+            'edit' => ['permission:stock.manage'],
+            'update' => ['permission:stock.manage'],
+            'destroy' => ['permission:stock.manage'],
+        ],
     ]);
 
     // GRN
-    Route::resource('grn', GrnController::class)->middleware([
-        'index' => 'permission:grn.view',
-        'create' => 'permission:grn.create',
-        'store' => 'permission:grn.create',
-        'show' => 'permission:grn.view',
-        'edit' => 'permission:grn.update',
-        'update' => 'permission:grn.update',
-        'destroy' => 'permission:grn.manage',
+    Route::resource('grn', GrnController::class, [
+        'middleware_for' => [
+            'index' => ['permission:grn.view'],
+            'create' => ['permission:grn.create'],
+            'store' => ['permission:grn.create'],
+            'show' => ['permission:grn.view'],
+            'edit' => ['permission:grn.update'],
+            'update' => ['permission:grn.update'],
+            'destroy' => ['permission:grn.manage'],
+        ],
     ]);
 
     // Pick Lists
-    Route::resource('pick-lists', PickListController::class)->middleware([
-        'index' => 'permission:picklist.view',
-        'create' => 'permission:picklist.create',
-        'store' => 'permission:picklist.create',
-        'show' => 'permission:picklist.view',
-        'edit' => 'permission:picklist.update',
-        'update' => 'permission:picklist.update',
-        'destroy' => 'permission:picklist.manage',
+    Route::resource('pick-lists', PickListController::class, [
+        'middleware_for' => [
+            'index' => ['permission:picklist.view'],
+            'create' => ['permission:picklist.create'],
+            'store' => ['permission:picklist.create'],
+            'show' => ['permission:picklist.view'],
+            'edit' => ['permission:picklist.update'],
+            'update' => ['permission:picklist.update'],
+            'destroy' => ['permission:picklist.manage'],
+        ],
     ]);
 
     // Packing Lists
-    Route::resource('packing-lists', PackingListController::class)->middleware([
-        'index' => 'permission:packinglist.view',
-        'create' => 'permission:packinglist.create',
-        'store' => 'permission:packinglist.create',
-        'show' => 'permission:packinglist.view',
-        'edit' => 'permission:packinglist.update',
-        'update' => 'permission:packinglist.update',
-        'destroy' => 'permission:packinglist.manage',
+    Route::resource('packing-lists', PackingListController::class, [
+        'middleware_for' => [
+            'index' => ['permission:packinglist.view'],
+            'create' => ['permission:packinglist.create'],
+            'store' => ['permission:packinglist.create'],
+            'show' => ['permission:packinglist.view'],
+            'edit' => ['permission:packinglist.update'],
+            'update' => ['permission:packinglist.update'],
+            'destroy' => ['permission:packinglist.manage'],
+        ],
     ]);
 
     // Shipments
-    Route::resource('shipments', ShipmentController::class)->middleware([
-        'index' => 'permission:shipment.view',
-        'create' => 'permission:shipment.create',
-        'store' => 'permission:shipment.create',
-        'show' => 'permission:shipment.view',
-        'edit' => 'permission:shipment.update',
-        'update' => 'permission:shipment.update',
-        'destroy' => 'permission:shipment.manage',
+    Route::resource('shipments', ShipmentController::class, [
+        'middleware_for' => [
+            'index' => ['permission:shipment.view'],
+            'create' => ['permission:shipment.create'],
+            'store' => ['permission:shipment.create'],
+            'show' => ['permission:shipment.view'],
+            'edit' => ['permission:shipment.update'],
+            'update' => ['permission:shipment.update'],
+            'destroy' => ['permission:shipment.manage'],
+        ],
     ]);
     Route::get('shipments/{shipment}/track', [ShipmentController::class, 'track'])->name('shipments.track')->middleware('permission:shipment.track');
 
     // Deliveries
-    Route::resource('deliveries', DeliveryController::class)->middleware([
-        'index' => 'permission:delivery.view',
-        'create' => 'permission:delivery.create',
-        'store' => 'permission:delivery.create',
-        'show' => 'permission:delivery.view',
-        'edit' => 'permission:delivery.update',
-        'update' => 'permission:delivery.update',
-        'destroy' => 'permission:delivery.manage',
+    Route::resource('deliveries', DeliveryController::class, [
+        'middleware_for' => [
+            'index' => ['permission:delivery.view'],
+            'create' => ['permission:delivery.create'],
+            'store' => ['permission:delivery.create'],
+            'show' => ['permission:delivery.view'],
+            'edit' => ['permission:delivery.update'],
+            'update' => ['permission:delivery.update'],
+            'destroy' => ['permission:delivery.manage'],
+        ],
     ]);
 
     // Drivers
-    Route::resource('drivers', DriverController::class)->middleware([
-        'index' => 'permission:delivery.view',
-        'create' => 'permission:delivery.create',
-        'store' => 'permission:delivery.create',
-        'show' => 'permission:delivery.view',
-        'edit' => 'permission:delivery.update',
-        'update' => 'permission:delivery.update',
-        'destroy' => 'permission:delivery.manage',
+    Route::resource('drivers', DriverController::class, [
+        'middleware_for' => [
+            'index' => ['permission:delivery.view'],
+            'create' => ['permission:delivery.create'],
+            'store' => ['permission:delivery.create'],
+            'show' => ['permission:delivery.view'],
+            'edit' => ['permission:delivery.update'],
+            'update' => ['permission:delivery.update'],
+            'destroy' => ['permission:delivery.manage'],
+        ],
     ]);
 
     // Delivery Routes
-    Route::resource('delivery-routes', DeliveryRouteController::class)->middleware([
-        'index' => 'permission:delivery.view-routes',
-        'create' => 'permission:delivery.manage-routes',
-        'store' => 'permission:delivery.manage-routes',
-        'show' => 'permission:delivery.view-routes',
-        'edit' => 'permission:delivery.manage-routes',
-        'update' => 'permission:delivery.manage-routes',
-        'destroy' => 'permission:delivery.manage-routes',
+    Route::resource('delivery-routes', DeliveryRouteController::class, [
+        'middleware_for' => [
+            'index' => ['permission:delivery.view-routes'],
+            'create' => ['permission:delivery.manage-routes'],
+            'store' => ['permission:delivery.manage-routes'],
+            'show' => ['permission:delivery.view-routes'],
+            'edit' => ['permission:delivery.manage-routes'],
+            'update' => ['permission:delivery.manage-routes'],
+            'destroy' => ['permission:delivery.manage-routes'],
+        ],
     ]);
 
     // Users
-    Route::resource('users', UserController::class)->middleware([
-        'index' => 'permission:user.view',
-        'create' => 'permission:user.create',
-        'store' => 'permission:user.create',
-        'show' => 'permission:user.view',
-        'edit' => 'permission:user.update',
-        'update' => 'permission:user.update',
-        'destroy' => 'permission:user.delete',
+    Route::resource('users', UserController::class, [
+        'middleware_for' => [
+            'index' => ['permission:user.view'],
+            'create' => ['permission:user.create'],
+            'store' => ['permission:user.create'],
+            'show' => ['permission:user.view'],
+            'edit' => ['permission:user.update'],
+            'update' => ['permission:user.update'],
+            'destroy' => ['permission:user.delete'],
+        ],
     ]);
     Route::post('users/{user}/avatar', [UserController::class, 'uploadAvatar'])->name('users.avatar')->middleware('permission:user.update');
 
     // Companies
-    Route::resource('companies', CompanyController::class)->only(['index', 'show', 'edit', 'update'])->middleware([
-        'index' => 'permission:company.view',
-        'show' => 'permission:company.view',
-        'edit' => 'permission:company.update',
-        'update' => 'permission:company.update',
+    Route::resource('companies', CompanyController::class, [
+        'only' => ['index', 'show', 'edit', 'update'],
+        'middleware_for' => [
+            'index' => ['permission:company.view'],
+            'show' => ['permission:company.view'],
+            'edit' => ['permission:company.update'],
+            'update' => ['permission:company.update'],
+        ],
     ]);
 
     // Branches
-    Route::resource('branches', BranchController::class)->middleware([
-        'index' => 'permission:branch.view',
-        'create' => 'permission:branch.create',
-        'store' => 'permission:branch.create',
-        'show' => 'permission:branch.view',
-        'edit' => 'permission:branch.update',
-        'update' => 'permission:branch.update',
-        'destroy' => 'permission:branch.delete',
+    Route::resource('branches', BranchController::class, [
+        'middleware_for' => [
+            'index' => ['permission:branch.view'],
+            'create' => ['permission:branch.create'],
+            'store' => ['permission:branch.create'],
+            'show' => ['permission:branch.view'],
+            'edit' => ['permission:branch.update'],
+            'update' => ['permission:branch.update'],
+            'destroy' => ['permission:branch.delete'],
+        ],
     ]);
 
     // Reports
