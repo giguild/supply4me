@@ -20,9 +20,9 @@
     @endif
 
     <p class="detail-label">ERP Login URL</p>
-    <p class="detail-value">{{ url('/erp/login') }}</p>
+    <p class="detail-value">{{ 'https://supply4me.ng/erp/login' }}</p>
 
-    <a href="{{ url('/erp/login') }}" class="btn">Log In to ERP</a>
+    <a href="{{ 'https://supply4me.ng/erp/login' }}" class="btn">Log In to ERP</a>
 @endsection
 
 @section('footer-text', 'You are receiving this because an account was created for you on SUPPLY4ME.')
