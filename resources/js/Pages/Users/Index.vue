@@ -32,9 +32,17 @@
             </template>
 
             <template #cell-name="{ row }">
-                <Link :href="route('users.show', row.id)" class="font-medium text-gray-900 dark:text-gray-100 hover:text-accent">
-                    {{ row.name }}
-                </Link>
+                <div class="flex items-center gap-3">
+                    <div v-if="row.avatar" class="w-8 h-8 rounded-full overflow-hidden shrink-0">
+                        <img :src="`/storage/${row.avatar}`" :alt="row.name" class="w-full h-full object-cover" />
+                    </div>
+                    <div v-else class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs font-medium text-gray-600 dark:text-gray-300 shrink-0">
+                        {{ row.name?.charAt(0) || '?' }}
+                    </div>
+                    <Link :href="route('users.show', row.id)" class="font-medium text-gray-900 dark:text-gray-100 hover:text-accent">
+                        {{ row.name }}
+                    </Link>
+                </div>
             </template>
 
             <template #actions="{ row }">

@@ -4,10 +4,10 @@ namespace App\Listeners\Payments;
 
 use App\Events\Payments\PaymentCompleted;
 use App\Models\Payments\Payment;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use App\Mail\PaymentReceiptMail;
 use Illuminate\Support\Facades\Mail;
 
-class SendPaymentConfirmation implements ShouldQueue
+class SendPaymentConfirmation
 {
     public function handle(PaymentCompleted $event): void
     {
@@ -15,7 +15,7 @@ class SendPaymentConfirmation implements ShouldQueue
         $payment = $event->payment->load('customer');
 
         if ($payment->customer && $payment->customer->email) {
-            Mail::to($payment->customer->email)->send(new \App\Mail\PaymentReceiptMail($payment));
+            Mail::to($payment->customer->email)->send(new PaymentReceiptMail($payment));
         }
     }
 }

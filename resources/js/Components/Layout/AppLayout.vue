@@ -123,7 +123,10 @@
                             <NotificationBell />
 
                             <div class="flex items-center gap-2 pl-2 border-l border-gray-200 dark:border-gray-700">
-                                <div class="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs font-medium text-gray-600 dark:text-gray-300">{{ user?.name?.charAt(0) || 'U' }}</div>
+                                <div v-if="avatarUrl" class="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
+                                    <img :src="avatarUrl" :alt="user?.name" class="w-full h-full object-cover" />
+                                </div>
+                                <div v-else class="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs font-medium text-gray-600 dark:text-gray-300">{{ user?.name?.charAt(0) || 'U' }}</div>
                                 <div class="hidden sm:block">
                                     <p class="text-sm font-medium text-gray-900 dark:text-gray-100 leading-tight">{{ user?.name }}</p>
                                     <p class="text-xs text-gray-500 dark:text-gray-400 leading-tight">{{ userRole }}</p>
@@ -210,6 +213,8 @@ const sidebarCollapsed = ref(false);
 const expandedGroups = ref(['Receiving', 'Shipping', 'Administration', 'Reports']);
 const { theme, toggleTheme } = useTheme();
 
+const avatarUrl = computed(() => props.user?.avatar ? `/storage/${props.user.avatar}` : null);
+
 const userRole = computed(() => props.user?.roles?.[0] || 'User');
 const isSalesRep = computed(() => props.user?.roles?.includes('sales_rep'));
 const isSuperAdmin = computed(() => props.user?.roles?.includes('super_admin'));
@@ -239,6 +244,7 @@ const icons = {
     products: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>',
     orders: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>',
     invoices: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>',
+    payments: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg>',
     stock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>',
     grn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
     picklist: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>',
@@ -259,6 +265,7 @@ const adminNav = computed(() => [
     { label: 'Products', route: 'products.index', icon: icons.products, permission: 'product.view' },
     { label: 'Orders', route: 'orders.index', icon: icons.orders, permission: 'order.view' },
     { label: 'Invoices', route: 'invoices.index', icon: icons.invoices, permission: 'invoice.view' },
+    { label: 'Payments', route: 'payments.index', icon: icons.payments, permission: 'payment.view' },
     { label: 'Stock', route: 'stock.index', icon: icons.stock, permission: 'stock.view' },
     { label: 'Warehouses', route: 'warehouses.index', icon: icons.warehouse, permission: 'stock.view' },
 ].filter(item => !item.permission || hasPermission(item.permission)));

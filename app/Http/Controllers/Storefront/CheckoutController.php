@@ -210,6 +210,10 @@ class CheckoutController extends Controller
 
         app(NotificationService::class)->orderPlaced($result['order']);
 
+        if ($customer->email) {
+            \Illuminate\Support\Facades\Mail::to($customer->email)->send(new \App\Mail\OrderConfirmedMail($result['order']));
+        }
+
         return redirect()->route('storefront.payment', [
             'invoice' => $result['invoice']->id,
         ]);

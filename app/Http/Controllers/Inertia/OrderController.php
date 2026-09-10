@@ -190,6 +190,10 @@ class OrderController extends Controller
 
         app(NotificationService::class)->orderPlaced($order);
 
+        if ($order->customer && $order->customer->email) {
+            \Illuminate\Support\Facades\Mail::to($order->customer->email)->send(new \App\Mail\OrderConfirmedMail($order));
+        }
+
         return redirect()->route('orders.index')->with('success', 'Order created successfully');
     }
 

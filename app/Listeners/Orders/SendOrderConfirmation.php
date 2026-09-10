@@ -3,12 +3,11 @@
 namespace App\Listeners\Orders;
 
 use App\Events\Orders\OrderConfirmed;
-use App\Models\Core\User;
 use App\Models\Orders\Order;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use App\Mail\OrderConfirmedMail;
 use Illuminate\Support\Facades\Mail;
 
-class SendOrderConfirmation implements ShouldQueue
+class SendOrderConfirmation
 {
     public function handle(OrderConfirmed $event): void
     {
@@ -16,7 +15,7 @@ class SendOrderConfirmation implements ShouldQueue
         $order = $event->order->load('customer');
 
         if ($order->customer && $order->customer->email) {
-            Mail::to($order->customer->email)->send(new \App\Mail\OrderConfirmedMail($order));
+            Mail::to($order->customer->email)->send(new OrderConfirmedMail($order));
         }
     }
 }

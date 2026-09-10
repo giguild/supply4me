@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Inertia;
 
 use App\Http\Controllers\Controller;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Customers\Customer;
 use App\Models\Invoicing\Invoice;
 use App\Models\Payments\Payment;
@@ -118,6 +119,17 @@ class PaymentController extends Controller
         ]);
     }
 
+    public function download(Request $request, Payment $payment): \Symfony\Component\HttpFoundation\Response
+    {
+        $payment->load(['customer', 'supplier', 'allocations.invoice', 'approvedBy', 'receivedBy', 'company', 'branch']);
+
+        $filename = preg_replace('/[^A-Za-z0-9\-_.]/', '-', $payment->payment_number) . '.pdf';
+
+        return Pdf::loadView('payments.receipt', ['payment' => $payment])
+            ->setPaper('a4', 'portrait')
+            ->download($filename);
+    }
+
     public function edit(Request $request, Payment $payment): Response
     {
         $customers = Customer::where('company_id', $request->user()->company_id)->get();
@@ -190,6 +202,8 @@ class PaymentController extends Controller
 
         $this->syncInvoicePayment($payment);
 
+        $this->sendReceiptEmail($payment);
+
         return redirect()->route('payments.show', $payment)->with('success', 'Payment approved — invoice updated');
     }
 
@@ -208,6 +222,8 @@ class PaymentController extends Controller
         ]);
 
         $this->syncInvoicePayment($payment);
+
+        $this->sendReceiptEmail($payment);
 
         return redirect()->route('payments.show', $payment)->with('success', 'Partial payment recorded — invoice updated');
     }
@@ -234,6 +250,15 @@ class PaymentController extends Controller
             $invoice->order->update([
                 'payment_status' => $totalPaid >= $invoice->total_amount ? 'paid' : 'partial',
             ]);
+        }
+    }
+
+    private function sendReceiptEmail(Payment $payment): void
+    {
+        $payment->load('customer');
+
+        if ($payment->customer && $payment->customer->email) {
+            \Illuminate\Support\Facades\Mail::to($payment->customer->email)->send(new \App\Mail\PaymentReceiptMail($payment));
         }
     }
 

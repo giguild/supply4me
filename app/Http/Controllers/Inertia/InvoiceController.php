@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Inertia;
 
 use App\Http\Controllers\Controller;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Customers\Customer;
 use App\Models\Invoicing\Invoice;
 use App\Models\Invoicing\InvoiceItem;
@@ -120,7 +121,7 @@ class InvoiceController extends Controller
                 'unit_price' => $item['unit_price'],
                 'discount_percentage' => $item['discount_percentage'] ?? 0,
                 'tax_amount' => 0,
-                'total_amount' => $lineTotal,
+                'line_total' => $lineTotal,
             ]);
         }
 
@@ -132,6 +133,11 @@ class InvoiceController extends Controller
         ]);
 
         app(NotificationService::class)->invoiceCreated($invoice);
+
+        if ($invoice->customer && $invoice->customer->email) {
+            $invoice->load(['items.product', 'company']);
+            \Illuminate\Support\Facades\Mail::to($invoice->customer->email)->send(new \App\Mail\InvoiceMail($invoice));
+        }
 
         return redirect()->route('invoices.index')->with('success', 'Invoice created successfully');
     }
@@ -231,7 +237,7 @@ class InvoiceController extends Controller
                 'unit_price' => $item['unit_price'],
                 'discount_percentage' => $item['discount_percentage'] ?? 0,
                 'tax_amount' => 0,
-                'total_amount' => $lineTotal,
+                'line_total' => $lineTotal,
             ]);
         }
 
@@ -277,6 +283,17 @@ class InvoiceController extends Controller
         ]);
 
         return redirect()->route('invoices.show', $invoice)->with('success', 'Invoice voided successfully');
+    }
+
+    public function download(Request $request, Invoice $invoice): \Symfony\Component\HttpFoundation\Response
+    {
+        $invoice->load(['customer', 'order', 'items.product', 'payments', 'createdBy', 'company']);
+
+        $filename = preg_replace('/[^A-Za-z0-9\-_.]/', '-', $invoice->invoice_number) . '.pdf';
+
+        return Pdf::loadView('invoices.print', ['invoice' => $invoice])
+            ->setPaper('a4', 'portrait')
+            ->download($filename);
     }
 
     public function storePayment(Request $request, Invoice $invoice): \Illuminate\Http\RedirectResponse

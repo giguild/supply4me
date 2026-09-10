@@ -4,23 +4,27 @@ namespace App\Listeners\Delivery;
 
 use App\Events\Delivery\DeliveryCompleted;
 use App\Events\Delivery\DeliveryFailed;
+use App\Mail\DeliveryUpdateMail;
 use App\Models\Delivery\Delivery;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\Mail;
 
-class NotifyCustomerOfDelivery implements ShouldQueue
+class NotifyCustomerOfDelivery
 {
     public function handle(DeliveryCompleted|DeliveryFailed $event): void
     {
         /** @var Delivery $delivery */
         $delivery = $event->delivery->load('customer', 'order');
 
-        if ($delivery->customer && $delivery->customer->email) {
-            $notification = match (true) {
-                $event instanceof DeliveryCompleted => new \App\Notifications\DeliveryCompletedNotification($delivery),
-                $event instanceof DeliveryFailed => new \App\Notifications\DeliveryFailedNotification($delivery, $event->reason),
-            };
-
-            $delivery->customer->notify($notification);
+        if (!$delivery->customer || !$delivery->customer->email) {
+            return;
         }
+
+        if ($event instanceof DeliveryCompleted) {
+            $mail = new DeliveryUpdateMail($delivery, 'has been successfully delivered');
+        } else {
+            $mail = new DeliveryUpdateMail($delivery, 'could not be completed', $event->reason);
+        }
+
+        Mail::to($delivery->customer->email)->send($mail);
     }
 }

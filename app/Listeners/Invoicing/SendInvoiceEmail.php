@@ -5,10 +5,10 @@ namespace App\Listeners\Invoicing;
 use App\Events\Invoicing\InvoiceGenerated;
 use App\Events\Invoicing\InvoiceSent;
 use App\Models\Invoicing\Invoice;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use App\Mail\InvoiceMail;
 use Illuminate\Support\Facades\Mail;
 
-class SendInvoiceEmail implements ShouldQueue
+class SendInvoiceEmail
 {
     public function handle(InvoiceGenerated|InvoiceSent $event): void
     {
@@ -16,7 +16,7 @@ class SendInvoiceEmail implements ShouldQueue
         $invoice = $event->invoice->load('customer');
 
         if ($invoice->customer && $invoice->customer->email) {
-            Mail::to($invoice->customer->email)->send(new \App\Mail\InvoiceMail($invoice));
+            Mail::to($invoice->customer->email)->send(new InvoiceMail($invoice));
         }
     }
 }

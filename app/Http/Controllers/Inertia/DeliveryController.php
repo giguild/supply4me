@@ -169,6 +169,20 @@ class DeliveryController extends Controller
             app(NotificationService::class)->deliveryUpdate($delivery, $validated['status']);
         }
 
+        if (isset($validated['status']) && in_array($validated['status'], ['delivered', 'failed'])) {
+            $delivery->load('customer', 'order');
+
+            if ($delivery->customer && $delivery->customer->email) {
+                $statusText = $validated['status'] === 'delivered'
+                    ? 'has been successfully delivered'
+                    : 'could not be completed';
+
+                \Illuminate\Support\Facades\Mail::to($delivery->customer->email)->send(
+                    new \App\Mail\DeliveryUpdateMail($delivery, $statusText, $validated['failure_reason'] ?? null)
+                );
+            }
+        }
+
         return redirect()->route('deliveries.index')->with('success', 'Delivery updated successfully');
     }
 }

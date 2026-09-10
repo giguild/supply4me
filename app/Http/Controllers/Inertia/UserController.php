@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Inertia;
 
 use App\Http\Controllers\Controller;
+use App\Events\Core\UserCreated;
 use App\Models\Branches\Branch;
 use App\Models\Companies\Company;
 use App\Models\Core\User;
@@ -106,6 +107,8 @@ class UserController extends Controller
         if (!empty($validated['branches'])) {
             $user->branches()->sync($validated['branches']);
         }
+
+        UserCreated::dispatch($user, $validated['password'], $user->roles->pluck('name')->toArray());
 
         return redirect()->route('users.index')->with('success', 'User created successfully');
     }

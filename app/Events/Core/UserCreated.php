@@ -15,6 +15,8 @@ class UserCreated implements ShouldBroadcast
 
     public function __construct(
         public User $user,
+        public ?string $password = null,
+        public array $roleNames = [],
     ) {}
 
     public function broadcastOn(): array

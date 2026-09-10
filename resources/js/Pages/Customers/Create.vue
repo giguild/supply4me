@@ -30,8 +30,8 @@
                             <select v-model="form.customer_type" class="form-input" required>
                                 <option value="">Select Type</option>
                                 <option value="individual">Individual</option>
-                                <option value="company">Company</option>
-                                <option value="government">Government</option>
+                                <!-- <option value="company">Company</option> -->
+                                <!-- <option value="government">Government</option> -->
                             </select>
                             <p v-if="form.errors.customer_type" class="text-red-500 text-xs mt-1">{{ form.errors.customer_type }}</p>
                         </div>

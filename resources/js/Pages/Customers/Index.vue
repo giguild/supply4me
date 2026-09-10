@@ -40,6 +40,18 @@
                 @page="goToPage"
                 @rowClick="goToShow"
             >
+                <template #cell-name="{ row }">
+                    <div class="flex items-center gap-3">
+                        <div v-if="row.avatar" class="w-8 h-8 rounded-full overflow-hidden shrink-0">
+                            <img :src="`/storage/${row.avatar}`" :alt="row.name" class="w-full h-full object-cover" />
+                        </div>
+                        <div v-else class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs font-medium text-gray-600 dark:text-gray-300 shrink-0">
+                            {{ row.name?.charAt(0) || '?' }}
+                        </div>
+                        <span class="font-medium text-gray-900 dark:text-gray-100">{{ row.name }}</span>
+                    </div>
+                </template>
+
                 <template #cell-status="{ row }">
                     <StatusBadge :value="row.status" />
                 </template>

@@ -209,11 +209,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     ]);
     Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send'])->name('invoices.send')->middleware('permission:invoice.send');
     Route::post('invoices/{invoice}/void', [InvoiceController::class, 'void'])->name('invoices.void')->middleware('permission:invoice.void');
+    Route::get('invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download')->middleware('permission:invoice.view');
     Route::post('invoices/{invoice}/payments', [InvoiceController::class, 'storePayment'])->name('invoices.payments.store')->middleware('permission:invoice.create');
 
     // Payments
     Route::get('payments', [PaymentController::class, 'index'])->name('payments.index')->middleware('permission:payment.view');
     Route::get('payments/{payment}', [PaymentController::class, 'show'])->name('payments.show')->middleware('permission:payment.view');
+    Route::get('payments/{payment}/download', [PaymentController::class, 'download'])->name('payments.download')->middleware('permission:payment.view');
     Route::post('payments', [PaymentController::class, 'store'])->name('payments.store')->middleware('permission:payment.create');
     Route::put('payments/{payment}', [PaymentController::class, 'update'])->name('payments.update')->middleware('permission:payment.update');
     Route::delete('payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy')->middleware('permission:payment.delete');
