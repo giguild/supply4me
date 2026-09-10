@@ -44,8 +44,8 @@
     <table class="header">
         <tr>
             <td width="55%" valign="top">
-                @if (file_exists(storage_path('app/branding/logo_dark.png')))
-                    <img src="{{ storage_path('app/branding/logo_dark.png') }}" style="height:40px; margin-bottom:6px;" alt="{{ config('app.name') }}" />
+                @if (file_exists(public_path('images/logo_dark.png')))
+                    <img src="{{ public_path('images/logo_dark.png') }}" style="height:40px; margin-bottom:6px;" alt="{{ config('app.name') }}" />
                 @endif
                 <div class="brand-name">{{ $company->name ?? config('app.name') }}</div>
                 @if ($company && ($company->address_line_1 || $company->city || $company->state || $company->email || $company->phone || $company->tax_number))
