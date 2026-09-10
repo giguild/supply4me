@@ -266,6 +266,12 @@ class InvoiceController extends Controller
             'performed_by' => $request->user()->id,
         ]);
 
+        $invoice->load(['customer', 'items.product', 'company']);
+
+        if ($invoice->customer && $invoice->customer->email) {
+            \Illuminate\Support\Facades\Mail::to($invoice->customer->email)->send(new \App\Mail\InvoiceMail($invoice));
+        }
+
         return redirect()->route('invoices.show', $invoice)->with('success', 'Invoice sent successfully');
     }
 
