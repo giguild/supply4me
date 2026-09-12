@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Inertia;
 
 use App\Actions\Inventory\ReleaseStockAction;
 use App\Actions\Inventory\ReserveStockAction;
+use App\Enums\Orders\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Customers\Customer;
 use App\Models\Inventory\StockItem;
@@ -319,6 +320,28 @@ class OrderController extends Controller
         $order->delete();
 
         return redirect()->route('orders.index')->with('success', 'Order deleted successfully');
+    }
+
+    public function pending(Request $request, Order $order): \Illuminate\Http\RedirectResponse
+    {
+        $this->authorizeOrderAccess($request, $order);
+
+        if ($order->status->value !== OrderStatus::Draft->value) {
+            return back()->with('error', 'Only draft orders can be marked as pending.');
+        }
+
+        $previousStatus = $order->status->value;
+        $order->update(['status' => OrderStatus::Pending]);
+
+        OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'status' => OrderStatus::Pending->value,
+            'previous_status' => $previousStatus,
+            'notes' => $request->get('notes'),
+            'performed_by' => $request->user()->id,
+        ]);
+
+        return redirect()->route('orders.show', $order)->with('success', 'Order marked as pending');
     }
 
     public function confirm(Request $request, Order $order): \Illuminate\Http\RedirectResponse

@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers\Api\V1\Inventory;
 
+use App\Actions\Inventory\ReceiveTransferStockAction;
 use App\Actions\Inventory\TransferStockAction;
+use App\Enums\Inventory\TransferStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\StockTransfer;
-use App\Resources\Inventory\StockAdjustmentResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class StockTransferController extends Controller
 {
     public function __construct(
-        protected TransferStockAction $transferStockAction
+        protected TransferStockAction $transferStockAction,
+        protected ReceiveTransferStockAction $receiveTransferStockAction
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -54,18 +56,18 @@ class StockTransferController extends Controller
     public function show(StockTransfer $stockTransfer): JsonResponse
     {
         return $this->success(
-            $stockTransfer->load(['items.product', 'fromWarehouse', 'toWarehouse', 'approvedBy'])
+            $stockTransfer->load(['items.product', 'fromWarehouse', 'toWarehouse', 'approvedBy', 'shippedBy', 'receivedBy'])
         );
     }
 
     public function approve(StockTransfer $stockTransfer): JsonResponse
     {
-        if ($stockTransfer->status !== 'pending') {
+        if ($stockTransfer->status !== TransferStatus::PendingApproval) {
             return $this->error('Only pending transfers can be approved', 422);
         }
 
         $stockTransfer->update([
-            'status' => 'approved',
+            'status' => TransferStatus::Approved,
             'approved_by' => auth()->id(),
             'approved_at' => now(),
         ]);
@@ -78,12 +80,12 @@ class StockTransferController extends Controller
 
     public function ship(StockTransfer $stockTransfer): JsonResponse
     {
-        if ($stockTransfer->status !== 'approved') {
+        if ($stockTransfer->status !== TransferStatus::Approved) {
             return $this->error('Only approved transfers can be shipped', 422);
         }
 
         $stockTransfer->update([
-            'status' => 'shipped',
+            'status' => TransferStatus::InTransit,
             'shipped_at' => now(),
         ]);
 
@@ -95,26 +97,36 @@ class StockTransferController extends Controller
 
     public function receive(Request $request, StockTransfer $stockTransfer): JsonResponse
     {
-        if ($stockTransfer->status !== 'shipped') {
-            return $this->error('Only shipped transfers can be received', 422);
+        if ($stockTransfer->status !== TransferStatus::InTransit) {
+            return $this->error('Only in-transit transfers can be received', 422);
         }
 
         $validated = $request->validate([
             'items' => 'required|array|min:1',
             'items.*.stock_transfer_item_id' => 'required|exists:stock_transfer_items,id',
             'items.*.received_quantity' => 'required|integer|min:0',
-            'items.*.condition' => 'sometimes|string|in:good,damaged,expired',
+            'items.*.condition' => 'sometimes|in:good,damaged,expired',
             'items.*.notes' => 'nullable|string|max:255',
         ]);
 
-        $stockTransfer->update([
-            'status' => 'received',
-            'received_at' => now(),
-            'received_by' => auth()->id(),
-        ]);
+        $items = array_map(function ($item) {
+            $item['transfer_item_id'] = $item['stock_transfer_item_id'];
+            return $item;
+        }, $validated['items']);
+
+        $transferItems = $stockTransfer->items->keyBy('id');
+        foreach ($items as $item) {
+            if ($transferItems->has($item['transfer_item_id'])) {
+                continue;
+            }
+
+            return $this->error('One or more items do not belong to this transfer', 422);
+        }
+
+        $transfer = $this->receiveTransferStockAction->execute($stockTransfer, $items, $request->user());
 
         return $this->success(
-            $stockTransfer->fresh(),
+            $transfer->load(['items.product', 'fromWarehouse', 'toWarehouse']),
             'Transfer received successfully'
         );
     }

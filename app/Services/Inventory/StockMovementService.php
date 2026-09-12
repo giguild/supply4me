@@ -12,6 +12,25 @@ use App\ValueObjects\Quantity;
 class StockMovementService
 {
     /**
+     * Resolve the acting user id across guards (web, sanctum API, queue jobs),
+     * falling back to the first user as the system actor.
+     */
+    public function actorId(): ?string
+    {
+        foreach (array_keys(config('auth.guards')) as $guard) {
+            try {
+                if ($id = auth($guard)->id()) {
+                    return $id;
+                }
+            } catch (\Throwable $e) {
+                // guard not available in this context (queue/console)
+            }
+        }
+
+        return \App\Models\Core\User::query()->orderBy('created_at')->value('id');
+    }
+
+    /**
      * Record a stock receipt (goods received into inventory).
      */
     public function recordReceipt(StockItem $stockItem, Quantity $quantity, Money $cost): StockMovement
@@ -35,7 +54,7 @@ class StockMovementService
             'quantity_after' => $quantityAfter,
             'unit_cost' => $unitCost,
             'total_cost' => $cost->getAmount(),
-            'performed_by' => auth()->id(),
+            'performed_by' => $this->actorId(),
         ]);
     }
 
@@ -69,7 +88,7 @@ class StockMovementService
             'quantity_after' => $quantityAfter,
             'unit_cost' => $unitCost,
             'total_cost' => $unitCost * $quantity->getValue(),
-            'performed_by' => auth()->id(),
+            'performed_by' => $this->actorId(),
         ]);
     }
 
@@ -104,7 +123,7 @@ class StockMovementService
             'to_warehouse_id' => $toWarehouse->id,
             'unit_cost' => $unitCost,
             'total_cost' => $unitCost * $quantity->getValue(),
-            'performed_by' => auth()->id(),
+            'performed_by' => $this->actorId(),
         ]);
     }
 
@@ -138,7 +157,7 @@ class StockMovementService
             'unit_cost' => $unitCost,
             'total_cost' => $unitCost * abs($quantity->getValue()),
             'reason' => $reason,
-            'performed_by' => auth()->id(),
+            'performed_by' => $this->actorId(),
         ]);
     }
 }

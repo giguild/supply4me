@@ -7,6 +7,13 @@
                 </template>
             </PageHeader>
 
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <StatCard label="Orders Awaiting Pick" :value="stats.awaiting_pick" subtitle="Confirmed/processing, no pick list yet" />
+                <StatCard label="Pending Pick Lists" :value="stats.pending_lists" subtitle="Draft or pending" />
+                <StatCard label="Picking In Progress" :value="stats.in_progress_lists" subtitle="Active pick lists" />
+                <StatCard label="Completed Pick Lists" :value="stats.completed_lists" subtitle="All items picked" />
+            </div>
+
             <DataTable
                 :columns="columns"
                 :mobileColumns="mobileColumns"
@@ -25,7 +32,7 @@
                     <StatusBadge :value="row.status" :label="row.status" />
                 </template>
                 <template #cell-assigned_to="{ row }">
-                    <span class="text-gray-500 dark:text-gray-400">{{ row.assigned_to?.name ?? 'Unassigned' }}</span>
+                    <span class="text-gray-500 dark:text-gray-400">{{ row.picker?.name ?? 'Unassigned' }}</span>
                 </template>
                 <template #cell-created_at="{ row }">
                     <span class="text-gray-500 dark:text-gray-400">{{ row.created_at }}</span>
@@ -53,9 +60,11 @@ import PageHeader from '@/Components/UI/PageHeader.vue';
 import DataTable from '@/Components/UI/DataTable.vue';
 import StatusBadge from '@/Components/UI/StatusBadge.vue';
 import EmptyState from '@/Components/UI/EmptyState.vue';
+import StatCard from '@/Components/UI/StatCard.vue';
 
 defineProps({
     pickLists: Object,
+    stats: { type: Object, default: () => ({ awaiting_pick: 0, pending_lists: 0, in_progress_lists: 0, completed_lists: 0 }) },
 });
 
 const columns = [

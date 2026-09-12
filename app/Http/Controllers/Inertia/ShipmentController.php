@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Inertia;
 
+use App\Enums\Orders\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Inventory\Warehouse;
 use App\Models\Orders\Order;
+use App\Models\Orders\OrderStatusHistory;
 use App\Models\Shipping\Shipment;
 use App\Models\Shipping\ShipmentItem;
 use App\Models\Shipping\ShippingCarrier;
@@ -33,7 +35,7 @@ class ShipmentController extends Controller
 
         $shipments = $query->latest()->paginate($request->get('per_page', 15));
 
-        return Inertia::render('Shipping/Index', [
+        return Inertia::render('Shipments/Index', [
             'shipments' => $shipments,
             'filters' => $request->only(['search', 'status']),
         ]);
@@ -50,7 +52,7 @@ class ShipmentController extends Controller
             ->with('customer')
             ->get();
 
-        return Inertia::render('Shipping/Create', [
+        return Inertia::render('Shipments/Create', [
             'warehouses' => $warehouses,
             'carriers' => $carriers,
             'orders' => $orders,
@@ -62,14 +64,14 @@ class ShipmentController extends Controller
         $validated = $request->validate([
             'order_id' => 'required|exists:orders,id',
             'warehouse_id' => 'required|exists:warehouses,id',
-            'carrier_id' => 'nullable|exists:shipping_carriers,id',
+            'carrier_id' => 'required|exists:shipping_carriers,id',
             'tracking_number' => 'nullable|string|max:255',
             'shipping_method' => 'nullable|string|max:100',
             'estimated_delivery_date' => 'nullable|date',
             'shipping_cost' => 'nullable|numeric|min:0',
             'weight' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
-            'items' => 'required|array|min:1',
+            'items' => 'nullable|array|min:1',
             'items.*.order_item_id' => 'required|exists:order_items,id',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|numeric|min:0.01',
@@ -82,7 +84,7 @@ class ShipmentController extends Controller
             'company_id' => $companyId,
             'order_id' => $validated['order_id'],
             'warehouse_id' => $validated['warehouse_id'],
-            'carrier_id' => $validated['carrier_id'] ?? null,
+            'carrier_id' => $validated['carrier_id'],
             'status' => 'pending',
             'tracking_number' => $validated['tracking_number'] ?? null,
             'shipping_method' => $validated['shipping_method'] ?? null,
@@ -92,13 +94,41 @@ class ShipmentController extends Controller
             'notes' => $validated['notes'] ?? null,
         ]);
 
-        foreach ($validated['items'] as $item) {
+        $items = $validated['items'] ?? null;
+
+        if ($items === null || $items === []) {
+            $items = Order::find($validated['order_id'])?->items
+                ->map(fn ($item) => [
+                    'order_item_id' => $item->id,
+                    'product_id' => $item->product_id,
+                    'quantity' => $item->quantity,
+                ])
+                ->all() ?? [];
+        }
+
+        foreach ($items as $item) {
             ShipmentItem::create([
                 'shipment_id' => $shipment->id,
                 'order_item_id' => $item['order_item_id'],
                 'product_id' => $item['product_id'],
                 'quantity' => $item['quantity'],
                 'weight' => $item['weight'] ?? null,
+            ]);
+        }
+
+        $order = Order::find($validated['order_id']);
+
+        if ($order && in_array($order->status->value, ['confirmed', 'processing', 'picking', 'packing', 'ready_to_ship'], true)) {
+            $previousStatus = $order->status->value;
+
+            $order->update(['status' => OrderStatus::Shipped]);
+
+            OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'status' => OrderStatus::Shipped->value,
+                'previous_status' => $previousStatus,
+                'notes' => "Shipment {$shipment->shipment_number} created",
+                'performed_by' => $request->user()->id,
             ]);
         }
 
@@ -115,7 +145,7 @@ class ShipmentController extends Controller
             'items.orderItem',
         ]);
 
-        return Inertia::render('Shipping/Show', [
+        return Inertia::render('Shipments/Show', [
             'shipment' => $shipment,
         ]);
     }
@@ -133,7 +163,7 @@ class ShipmentController extends Controller
 
         $shipment->load('items.product');
 
-        return Inertia::render('Shipping/Edit', [
+        return Inertia::render('Shipments/Show', [
             'shipment' => $shipment,
             'warehouses' => $warehouses,
             'carriers' => $carriers,
@@ -169,7 +199,7 @@ class ShipmentController extends Controller
             'items.product',
         ]);
 
-        return Inertia::render('Shipping/Track', [
+        return Inertia::render('Shipments/Show', [
             'shipment' => $shipment,
         ]);
     }

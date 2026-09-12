@@ -23,6 +23,7 @@ use App\Http\Controllers\Inertia\ShipmentController;
 use App\Http\Controllers\Inertia\DeliveryController;
 use App\Http\Controllers\Inertia\DriverController;
 use App\Http\Controllers\Inertia\DeliveryRouteController;
+use App\Http\Controllers\Inertia\ShippingCarrierController;
 use App\Http\Controllers\Inertia\UserController;
 use App\Http\Controllers\Inertia\CompanyController;
 use App\Http\Controllers\Inertia\BranchController;
@@ -192,6 +193,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'destroy' => ['permission:order.delete'],
         ],
     ]);
+    Route::post('orders/{order}/pending', [OrderController::class, 'pending'])->name('orders.pending')->middleware('permission:order.update');
     Route::post('orders/{order}/confirm', [OrderController::class, 'confirm'])->name('orders.confirm')->middleware('permission:order.confirm');
     Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel')->middleware('permission:order.cancel');
 
@@ -226,9 +228,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Stock
     Route::get('stock', [StockController::class, 'index'])->name('stock.index')->middleware('permission:stock.view');
     Route::get('stock/adjustments', [StockController::class, 'adjustments'])->name('stock.adjustments')->middleware('permission:stock.view');
+    Route::get('stock/adjustments/create', [StockController::class, 'adjustmentsCreate'])->name('stock.adjustments.create')->middleware('permission:stock.adjust');
     Route::post('stock/adjustments', [StockController::class, 'storeAdjustment'])->name('stock.adjustments.store')->middleware('permission:stock.adjust');
+    Route::post('stock/adjustments/{adjustment}/approve', [StockController::class, 'approveAdjustment'])->name('stock.adjustments.approve')->middleware('permission:stock.manage');
+    Route::post('stock/adjustments/{adjustment}/reject', [StockController::class, 'rejectAdjustment'])->name('stock.adjustments.reject')->middleware('permission:stock.manage');
     Route::get('stock/transfers', [StockController::class, 'transfers'])->name('stock.transfers')->middleware('permission:stock.view');
+    Route::get('stock/transfers/create', [StockController::class, 'transfersCreate'])->name('stock.transfers.create')->middleware('permission:stock.transfer');
     Route::post('stock/transfers', [StockController::class, 'storeTransfer'])->name('stock.transfers.store')->middleware('permission:stock.transfer');
+    Route::post('stock/transfers/{transfer}/approve', [StockController::class, 'approveTransfer'])->name('stock.transfers.approve')->middleware('permission:stock.manage');
+    Route::post('stock/transfers/{transfer}/ship', [StockController::class, 'shipTransfer'])->name('stock.transfers.ship')->middleware('permission:stock.manage');
+    Route::post('stock/transfers/{transfer}/receive', [StockController::class, 'receiveTransfer'])->name('stock.transfers.receive')->middleware('permission:stock.manage');
 
     // Warehouses
     Route::resource('warehouses', WarehouseController::class, [
@@ -268,6 +277,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'destroy' => ['permission:picklist.manage'],
         ],
     ]);
+    Route::post('pick-lists/{pickList}/start', [PickListController::class, 'start'])->name('pick-lists.start')->middleware('permission:picklist.update');
+    Route::post('pick-lists/{pickList}/complete', [PickListController::class, 'complete'])->name('pick-lists.complete')->middleware('permission:picklist.complete');
 
     // Packing Lists
     Route::resource('packing-lists', PackingListController::class, [
@@ -281,6 +292,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'destroy' => ['permission:packinglist.manage'],
         ],
     ]);
+    Route::post('packing-lists/{packingList}/pack', [PackingListController::class, 'pack'])->name('packing-lists.pack')->middleware('permission:packinglist.update');
+    Route::post('packing-lists/{packingList}/verify', [PackingListController::class, 'verify'])->name('packing-lists.verify')->middleware('permission:packinglist.complete');
 
     // Shipments
     Route::resource('shipments', ShipmentController::class, [
@@ -332,6 +345,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'edit' => ['permission:delivery.manage-routes'],
             'update' => ['permission:delivery.manage-routes'],
             'destroy' => ['permission:delivery.manage-routes'],
+        ],
+    ]);
+
+    // Shipping Carriers
+    Route::resource('shipping-carriers', ShippingCarrierController::class, [
+        'only' => ['index', 'create', 'store', 'edit', 'update', 'destroy'],
+        'middleware_for' => [
+            'index' => ['permission:shipment.view'],
+            'create' => ['permission:shipment.manage'],
+            'store' => ['permission:shipment.manage'],
+            'edit' => ['permission:shipment.manage'],
+            'update' => ['permission:shipment.manage'],
+            'destroy' => ['permission:shipment.manage'],
         ],
     ]);
 

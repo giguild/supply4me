@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('order_item_id', 36);
             $table->string('product_id', 36);
             $table->decimal('quantity_delivered', 15, 2)->default(0);
+            $table->decimal('quantity', 15, 2)->nullable();
             $table->decimal('quantity_returned', 15, 2)->default(0);
             $table->enum('condition', ['good', 'damaged', 'partial', 'wrong_item'])->default('good');
             $table->text('notes')->nullable();

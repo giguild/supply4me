@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Inertia;
 
+use App\Enums\Orders\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Customers\Customer;
 use App\Models\Delivery\Delivery;
 use App\Models\Delivery\DeliveryItem;
 use App\Models\Delivery\Driver;
 use App\Models\Orders\Order;
+use App\Models\Orders\OrderStatusHistory;
 use App\Models\Shipping\Shipment;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
@@ -35,7 +37,7 @@ class DeliveryController extends Controller
 
         $deliveries = $query->latest()->paginate($request->get('per_page', 15));
 
-        return Inertia::render('Delivery/Index', [
+        return Inertia::render('Deliveries/Index', [
             'deliveries' => $deliveries,
             'filters' => $request->only(['search', 'status']),
         ]);
@@ -55,7 +57,7 @@ class DeliveryController extends Controller
             ->whereNotIn('status', ['delivered', 'cancelled'])
             ->get();
 
-        return Inertia::render('Delivery/Create', [
+        return Inertia::render('Deliveries/Create', [
             'customers' => $customers,
             'drivers' => $drivers,
             'orders' => $orders,
@@ -119,7 +121,7 @@ class DeliveryController extends Controller
             'items.orderItem',
         ]);
 
-        return Inertia::render('Delivery/Show', [
+        return Inertia::render('Deliveries/Show', [
             'delivery' => $delivery,
         ]);
     }
@@ -137,7 +139,7 @@ class DeliveryController extends Controller
 
         $delivery->load('items.product');
 
-        return Inertia::render('Delivery/Edit', [
+        return Inertia::render('Deliveries/Show', [
             'delivery' => $delivery,
             'customers' => $customers,
             'drivers' => $drivers,
@@ -163,7 +165,52 @@ class DeliveryController extends Controller
             'status' => 'nullable|string|max:50',
         ]);
 
+        $previousStatus = $delivery->status->value;
+
         $delivery->update($validated);
+
+        if (isset($validated['status']) && $validated['status'] === 'delivered' && $previousStatus !== 'delivered') {
+            $delivery->load('order');
+
+            if ($delivery->order) {
+                foreach ($delivery->items as $deliveryItem) {
+                    if (!$deliveryItem->orderItem) {
+                        continue;
+                    }
+
+                    $deliveryItem->update([
+                        'quantity_delivered' => $deliveryItem->orderItem->quantity,
+                    ]);
+                }
+
+                $previousStatus = $delivery->order->status->value;
+
+                $delivery->order->update([
+                    'fulfillment_status' => 'fulfilled',
+                    'status' => OrderStatus::Delivered->value,
+                ]);
+
+                OrderStatusHistory::create([
+                    'order_id' => $delivery->order->id,
+                    'status' => OrderStatus::Delivered->value,
+                    'previous_status' => $previousStatus,
+                    'notes' => "Delivery {$delivery->delivery_number} delivered",
+                    'performed_by' => $request->user()->id,
+                ]);
+
+                $delivery->order->update(['status' => OrderStatus::Completed->value]);
+
+                OrderStatusHistory::create([
+                    'order_id' => $delivery->order->id,
+                    'status' => OrderStatus::Completed->value,
+                    'previous_status' => OrderStatus::Delivered->value,
+                    'notes' => "Delivery {$delivery->delivery_number} delivered — order completed",
+                    'performed_by' => $request->user()->id,
+                ]);
+            }
+
+            app(\App\Services\Inventory\StockCommitService::class)->commitDelivery($delivery->fresh());
+        }
 
         if (isset($validated['status']) && in_array($validated['status'], ['in_transit', 'delivered', 'failed'])) {
             app(NotificationService::class)->deliveryUpdate($delivery, $validated['status']);

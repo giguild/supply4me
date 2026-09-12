@@ -2,9 +2,11 @@
 
 namespace App\Actions\PickingPacking;
 
+use App\Enums\Orders\OrderStatus;
 use App\Enums\PickingPacking\PickItemStatus;
 use App\Enums\PickingPacking\PickListStatus;
 use App\Events\PickingPacking\PickListGenerated;
+use App\Exceptions\OrderAlreadyPickedException;
 use App\Models\Inventory\StockItem;
 use App\Models\Orders\Order;
 use App\Models\PickingPacking\PickList;
@@ -16,9 +18,14 @@ class GeneratePickListAction
     {
         $order->load('items.product');
 
+        if (PickList::where('order_id', $order->id)->exists()) {
+            throw new OrderAlreadyPickedException('This order already has a pick list.');
+        }
+
         $pickList = PickList::create([
             'company_id' => $order->company_id,
-            'warehouse_id' => $order->warehouse_id,
+            'warehouse_id' => $order->warehouse_id
+                ?? \App\Models\Inventory\Warehouse::where('company_id', $order->company_id)->value('id'),
             'order_id' => $order->id,
             'status' => PickListStatus::Pending,
         ]);
@@ -43,6 +50,8 @@ class GeneratePickListAction
         }
 
         event(new PickListGenerated($pickList));
+
+        $order->update(['status' => OrderStatus::Picking]);
 
         return $pickList;
     }

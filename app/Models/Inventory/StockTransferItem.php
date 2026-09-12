@@ -2,6 +2,7 @@
 
 namespace App\Models\Inventory;
 
+use App\Enums\Inventory\TransferItemCondition;
 use App\Models\Traits\HasUuid;
 use Database\Factories\StockTransferItemFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,9 +17,12 @@ class StockTransferItem extends Model
         'transfer_id',
         'product_id',
         'variant_id',
+        'bin_id',
         'quantity',
         'quantity_received',
-        'bin_id',
+        'condition',
+        'unit_cost',
+        'notes',
     ];
 
     protected function casts(): array
@@ -26,6 +30,8 @@ class StockTransferItem extends Model
         return [
             'quantity' => 'decimal:2',
             'quantity_received' => 'decimal:2',
+            'condition' => TransferItemCondition::class,
+            'unit_cost' => 'decimal:2',
         ];
     }
 

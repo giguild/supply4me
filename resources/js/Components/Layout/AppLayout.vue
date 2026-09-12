@@ -291,6 +291,7 @@ const adminMoreNavGroups = computed(() => [
         label: 'Shipping',
         items: [
             { label: 'Shipments', route: 'shipments.index', icon: icons.shipments, permission: 'shipment.view' },
+            { label: 'Carriers', route: 'shipping-carriers.index', icon: icons.shipments, permission: 'shipment.manage' },
             { label: 'Deliveries', route: 'deliveries.index', icon: icons.deliveries, permission: 'delivery.view' },
             { label: 'Drivers', route: 'drivers.index', icon: icons.drivers, permission: 'delivery.view' },
             { label: 'Delivery Routes', route: 'delivery-routes.index', icon: icons.routes, permission: 'delivery.view-routes' },

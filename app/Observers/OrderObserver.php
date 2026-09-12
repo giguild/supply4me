@@ -54,7 +54,7 @@ class OrderObserver
             $order->statusHistory()->create([
                 'order_id' => $order->id,
                 'status' => $newStatus,
-                'comment' => "Status changed from {$oldStatus->value} to {$newStatus->value}",
+                'notes' => "Status changed from {$oldStatus->value} to {$newStatus->value}",
             ]);
 
             OrderStatusChanged::dispatch($order, $oldStatus, $newStatus);

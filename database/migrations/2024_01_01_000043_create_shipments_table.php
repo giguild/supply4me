@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('shipping_method')->nullable();
             $table->string('tracking_number')->nullable();
             $table->string('shipping_label_url')->nullable();
-            $table->enum('status', ['draft', 'label_created', 'picked_up', 'in_transit', 'out_for_delivery', 'delivered', 'failed', 'returned'])->default('draft');
+            $table->enum('status', ['draft', 'label_created', 'pending', 'ready', 'picked_up', 'in_transit', 'out_for_delivery', 'delivered', 'failed', 'returned'])->default('draft');
             $table->date('estimated_delivery_date')->nullable();
             $table->date('actual_delivery_date')->nullable();
             $table->decimal('shipping_cost', 15, 2)->default(0);

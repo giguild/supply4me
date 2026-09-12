@@ -14,8 +14,9 @@ return new class extends Migration
             $table->string('order_item_id', 36);
             $table->string('product_id', 36);
             $table->string('variant_id', 36)->nullable();
-            $table->decimal('quantity_packed', 15, 2);
-            $table->string('package_number')->nullable();
+            $table->decimal('quantity', 15, 2);
+            $table->string('package_type')->nullable();
+            $table->string('tracking_number')->nullable();
             $table->decimal('weight', 10, 3)->nullable();
             $table->text('dimensions')->nullable();
             $table->timestamps();

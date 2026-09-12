@@ -14,7 +14,8 @@ return new class extends Migration
             $table->string('order_item_id', 36);
             $table->string('product_id', 36);
             $table->string('variant_id', 36)->nullable();
-            $table->decimal('quantity_shipped', 15, 2);
+            $table->decimal('quantity', 15, 2);
+            $table->decimal('weight', 10, 3)->nullable();
             $table->string('batch_number')->nullable();
             $table->string('serial_number')->nullable();
             $table->date('expiry_date')->nullable();

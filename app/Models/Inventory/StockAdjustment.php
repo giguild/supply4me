@@ -29,6 +29,9 @@ class StockAdjustment extends Model
         'performed_by',
         'approved_by',
         'approved_at',
+        'rejected_by',
+        'rejected_at',
+        'rejection_reason',
         'notes',
     ];
 
@@ -36,6 +39,7 @@ class StockAdjustment extends Model
     {
         return [
             'approved_at' => 'datetime',
+            'rejected_at' => 'datetime',
             'type' => AdjustmentType::class,
         ];
     }
@@ -68,5 +72,10 @@ class StockAdjustment extends Model
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(\App\Models\Core\User::class, 'approved_by');
+    }
+
+    public function rejectedBy(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Core\User::class, 'rejected_by');
     }
 }

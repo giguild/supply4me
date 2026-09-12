@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\Inventory\ReorderService;
+use App\Services\Inventory\StockCommitService;
 use App\Services\Inventory\StockMovementService;
 use App\Services\Inventory\StockReservationService;
 use App\Services\Invoice\InvoiceCalculationService;
@@ -46,6 +47,10 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(StockMovementService::class, function ($app) {
             return new StockMovementService();
+        });
+
+        $this->app->singleton(StockCommitService::class, function ($app) {
+            return new StockCommitService($app->make(StockMovementService::class));
         });
 
         $this->app->singleton(ReorderService::class, function ($app) {

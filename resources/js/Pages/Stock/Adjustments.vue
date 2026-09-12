@@ -12,10 +12,10 @@
                 :mobileColumns="mobileColumns"
                 :data="adjustments.data"
                 :meta="adjustments"
-                @page="(p) => router.get(route('stock.adjustments.index'), { page: p }, { preserveState: true, replace: true })"
+                @page="(p) => router.get(route('stock.adjustments'), { page: p }, { preserveState: true, replace: true })"
             >
-                <template #cell-created_at="{ row }">
-                    {{ row.created_at }}
+                <template #cell-adjustment_number="{ row }">
+                    <span class="font-medium text-gray-900 dark:text-gray-100">{{ row.adjustment_number }}</span>
                 </template>
                 <template #cell-product="{ row }">
                     <span class="font-medium text-gray-900 dark:text-gray-100">{{ row.product?.name }}</span>
@@ -24,22 +24,29 @@
                     <span class="text-gray-500 dark:text-gray-400">{{ row.warehouse?.name }}</span>
                 </template>
                 <template #cell-type="{ row }">
-                    <StatusBadge
-                        :value="row.type"
-                        :label="row.type"
-                        :variant="row.type === 'addition' ? 'success' : row.type === 'subtraction' ? 'danger' : 'info'"
-                    />
+                    <StatusBadge :value="row.type" :label="row.type" />
                 </template>
                 <template #cell-quantity="{ row }">
-                    <span :class="row.type === 'subtraction' ? 'text-red-600' : 'text-green-600'" class="font-medium">
-                        {{ row.type === 'subtraction' ? '-' : '+' }}{{ row.quantity }}
+                    <span :class="row.quantity >= 0 ? 'text-green-600' : 'text-red-600'" class="font-medium">
+                        {{ row.quantity >= 0 ? '+' : '' }}{{ row.quantity }}
                     </span>
                 </template>
-                <template #cell-reason="{ row }">
-                    <span class="text-gray-500 dark:text-gray-400 max-w-xs truncate block">{{ row.reason }}</span>
+                <template #cell-status="{ row }">
+                    <StatusBadge :value="row.status" :label="row.status" />
                 </template>
                 <template #cell-user="{ row }">
                     <span class="text-gray-500 dark:text-gray-400">{{ row.user?.name }}</span>
+                </template>
+
+                <template #actions="{ row }">
+                    <div v-if="row.status === 'pending'" class="flex justify-end gap-2">
+                        <button type="button" class="btn btn-sm btn-outline" @click="approve(row)">
+                            Approve
+                        </button>
+                        <button type="button" class="btn btn-sm btn-danger" @click="reject(row)">
+                            Reject
+                        </button>
+                    </div>
                 </template>
 
                 <template #empty>
@@ -70,19 +77,31 @@ defineProps({
 });
 
 const columns = [
-    { key: 'created_at', label: 'Date' },
+    { key: 'adjustment_number', label: 'Number' },
     { key: 'product', label: 'Product' },
     { key: 'warehouse', label: 'Warehouse' },
     { key: 'type', label: 'Type' },
-    { key: 'quantity', label: 'Quantity' },
-    { key: 'reason', label: 'Reason' },
+    { key: 'quantity', label: 'Net Change' },
+    { key: 'status', label: 'Status' },
     { key: 'user', label: 'Created By' },
 ];
 
 const mobileColumns = [
-    { key: 'date', label: 'Date' },
+    { key: 'adjustment_number', label: 'Number' },
     { key: 'product', label: 'Product' },
-    { key: 'type', label: 'Type' },
-    { key: 'quantity', label: 'Qty' },
+    { key: 'quantity', label: 'Net Change' },
+    { key: 'status', label: 'Status' },
 ];
+
+const approve = (row) => {
+    if (confirm(`Approve adjustment ${row.adjustment_number}?`)) {
+        router.post(route('stock.adjustments.approve', row.id), {}, { preserveState: true });
+    }
+};
+
+const reject = (row) => {
+    if (confirm(`Reject adjustment ${row.adjustment_number}? Stock changes will be restored.`)) {
+        router.post(route('stock.adjustments.reject', row.id), {}, { preserveState: true });
+    }
+};
 </script>

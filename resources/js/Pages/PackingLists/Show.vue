@@ -4,11 +4,27 @@
             <PageHeader :title="`Packing List ${packingList.packing_list_number}`">
                 <template #actions>
                     <Link :href="route('packing-lists.index')" class="btn btn-outline btn-sm">Back</Link>
+                    <button
+                        v-if="packingList.status === 'in_progress'"
+                        type="button"
+                        class="btn btn-accent btn-sm"
+                        @click="pack"
+                    >
+                        Mark Packed
+                    </button>
+                    <button
+                        v-if="packingList.status === 'packed'"
+                        type="button"
+                        class="btn btn-accent btn-sm"
+                        @click="verify"
+                    >
+                        Verify Packing
+                    </button>
                 </template>
             </PageHeader>
 
             <div class="card p-6 mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <div>
                         <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Order</p>
                         <p class="text-sm text-gray-900 dark:text-gray-100">{{ packingList.order?.order_number }}</p>
@@ -18,8 +34,12 @@
                         <StatusBadge :value="packingList.status" :label="packingList.status" />
                     </div>
                     <div>
-                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Created</p>
-                        <p class="text-sm text-gray-900 dark:text-gray-100">{{ packingList.created_at }}</p>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Packer</p>
+                        <p class="text-sm text-gray-900 dark:text-gray-100">{{ packingList.packer?.name ?? 'Unassigned' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Warehouse</p>
+                        <p class="text-sm text-gray-900 dark:text-gray-100">{{ packingList.warehouse?.name ?? '-' }}</p>
                     </div>
                 </div>
                 <div v-if="packingList.notes" class="mt-4">
@@ -32,18 +52,9 @@
                 <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
                     <h3 class="text-lg font-semibold">Items</h3>
                 </div>
-                <DataTable
-                    :columns="itemColumns"
-                    :data="packingList.items || []"
-                >
+                <DataTable :columns="itemColumns" :data="packingList.items || []">
                     <template #cell-product="{ row }">
                         <span class="font-medium text-gray-900 dark:text-gray-100">{{ row.product?.name }}</span>
-                    </template>
-                    <template #cell-status="{ row }">
-                        <StatusBadge
-                            :value="row.status ?? 'pending'"
-                            :label="row.status ?? 'pending'"
-                        />
                     </template>
                 </DataTable>
             </div>
@@ -52,19 +63,30 @@
 </template>
 
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { router, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
 import PageHeader from '@/Components/UI/PageHeader.vue';
 import DataTable from '@/Components/UI/DataTable.vue';
 import StatusBadge from '@/Components/UI/StatusBadge.vue';
 
-defineProps({
+const props = defineProps({
     packingList: Object,
 });
 
 const itemColumns = [
     { key: 'product', label: 'Product' },
     { key: 'quantity', label: 'Quantity' },
-    { key: 'status', label: 'Status' },
 ];
+
+const pack = () => {
+    if (confirm(`Mark packing list ${props.packingList.packing_list_number} as packed?`)) {
+        router.post(route('packing-lists.pack', props.packingList.id), {}, { preserveScroll: true });
+    }
+};
+
+const verify = () => {
+    if (confirm(`Verify packing list ${props.packingList.packing_list_number}?`)) {
+        router.post(route('packing-lists.verify', props.packingList.id), {}, { preserveScroll: true });
+    }
+};
 </script>

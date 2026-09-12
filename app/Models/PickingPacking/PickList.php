@@ -50,6 +50,11 @@ class PickList extends Model
         return 'pick_list_number';
     }
 
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Orders\Order::class);
+    }
+
     public function warehouse(): BelongsTo
     {
         return $this->belongsTo(\App\Models\Inventory\Warehouse::class);

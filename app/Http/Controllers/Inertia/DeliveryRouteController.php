@@ -25,8 +25,8 @@ class DeliveryRouteController extends Controller
 
         $routes = $query->latest()->paginate($request->get('per_page', 15));
 
-        return Inertia::render('Delivery/Routes', [
-            'routes' => $routes,
+        return Inertia::render('DeliveryRoutes/Index', [
+            'deliveryRoutes' => $routes,
             'filters' => $request->only(['search']),
         ]);
     }
@@ -41,7 +41,7 @@ class DeliveryRouteController extends Controller
             ->with('customer')
             ->get();
 
-        return Inertia::render('Delivery/CreateRoute', [
+        return Inertia::render('DeliveryRoutes/Create', [
             'drivers' => $drivers,
             'deliveries' => $deliveries,
         ]);
@@ -87,8 +87,8 @@ class DeliveryRouteController extends Controller
             'stops' => fn ($q) => $q->with('delivery.customer')->orderBy('sequence'),
         ]);
 
-        return Inertia::render('Delivery/ShowRoute', [
-            'route' => $deliveryRoute,
+        return Inertia::render('DeliveryRoutes/Edit', [
+            'deliveryRoute' => $deliveryRoute,
         ]);
     }
 
@@ -104,8 +104,8 @@ class DeliveryRouteController extends Controller
 
         $deliveryRoute->load('stops.delivery');
 
-        return Inertia::render('Delivery/EditRoute', [
-            'route' => $deliveryRoute,
+        return Inertia::render('DeliveryRoutes/Edit', [
+            'deliveryRoute' => $deliveryRoute,
             'drivers' => $drivers,
             'deliveries' => $deliveries,
         ]);

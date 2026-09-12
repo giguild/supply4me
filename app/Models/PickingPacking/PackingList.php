@@ -23,9 +23,11 @@ class PackingList extends Model
         'company_id',
         'packing_list_number',
         'order_id',
+        'pick_list_id',
         'warehouse_id',
         'status',
         'started_at',
+        'packed_at',
         'completed_at',
         'packer_id',
         'notes',
@@ -35,6 +37,7 @@ class PackingList extends Model
     {
         return [
             'started_at' => 'datetime',
+            'packed_at' => 'datetime',
             'completed_at' => 'datetime',
             'status' => PackingStatus::class,
         ];
@@ -68,5 +71,10 @@ class PackingList extends Model
     public function packer(): BelongsTo
     {
         return $this->belongsTo(\App\Models\Core\User::class, 'packer_id');
+    }
+
+    public function pickList(): BelongsTo
+    {
+        return $this->belongsTo(PickList::class, 'pick_list_id');
     }
 }

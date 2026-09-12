@@ -11,9 +11,10 @@ return new class extends Migration
         Schema::create('pick_lists', function (Blueprint $table) {
             $table->string('id', 36)->primary();
             $table->string('company_id', 36);
-            $table->string('pick_number');
+            $table->string('pick_list_number');
             $table->string('warehouse_id', 36);
-            $table->enum('status', ['draft', 'assigned', 'picking', 'completed', 'cancelled'])->default('draft');
+            $table->string('order_id', 36)->nullable();
+            $table->enum('status', ['draft', 'pending', 'in_progress', 'completed', 'cancelled'])->default('pending');
             $table->string('picker_id', 36)->nullable();
             $table->timestamp('started_at')->nullable();
             $table->timestamp('completed_at')->nullable();
@@ -23,8 +24,9 @@ return new class extends Migration
 
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->foreign('warehouse_id')->references('id')->on('warehouses');
+            $table->foreign('order_id')->references('id')->on('orders')->onDelete('set null');
             $table->foreign('picker_id')->references('id')->on('users')->onDelete('set null');
-            $table->unique(['company_id', 'pick_number']);
+            $table->unique(['company_id', 'pick_list_number']);
         });
     }
 

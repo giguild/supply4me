@@ -4,7 +4,11 @@ namespace App\Http\Controllers\Api\V1\PickingPacking;
 
 use App\Actions\PickingPacking\GeneratePickListAction;
 use App\Actions\PickingPacking\PickItemAction;
+use App\Enums\PickingPacking\PickItemStatus;
+use App\Enums\PickingPacking\PickListStatus;
+use App\Exceptions\OrderAlreadyPickedException;
 use App\Http\Controllers\Controller;
+use App\Models\Orders\Order;
 use App\Models\PickingPacking\PickList;
 use App\Models\PickingPacking\PickListItem;
 use Illuminate\Http\JsonResponse;
@@ -45,7 +49,13 @@ class PickListController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $pickList = $this->generatePickListAction->execute($validated);
+        $order = Order::findOrFail($validated['order_id']);
+
+        try {
+            $pickList = $this->generatePickListAction->execute($order);
+        } catch (OrderAlreadyPickedException $e) {
+            return $this->error($e->getMessage(), 422);
+        }
 
         return $this->created(
             $pickList->load(['order', 'warehouse', 'items.product']),
@@ -62,12 +72,12 @@ class PickListController extends Controller
 
     public function start(PickList $pickList): JsonResponse
     {
-        if ($pickList->status !== 'pending' && $pickList->status !== 'draft') {
+        if (! in_array($pickList->status->value, [PickListStatus::Pending->value, PickListStatus::Draft->value], true)) {
             return $this->error('Pick list cannot be started in current status', 422);
         }
 
         $pickList->update([
-            'status' => 'in_progress',
+            'status' => PickListStatus::InProgress,
             'picker_id' => auth()->id(),
             'started_at' => now(),
         ]);
@@ -80,18 +90,18 @@ class PickListController extends Controller
 
     public function complete(PickList $pickList): JsonResponse
     {
-        if ($pickList->status !== 'in_progress') {
+        if ($pickList->status->value !== PickListStatus::InProgress->value) {
             return $this->error('Only in-progress pick lists can be completed', 422);
         }
 
-        $allPicked = $pickList->items()->where('status', '!=', 'picked')->count() === 0;
+        $allPicked = $pickList->items()->where('status', '!=', PickItemStatus::Picked->value)->count() === 0;
 
-        if (!$allPicked) {
+        if (! $allPicked) {
             return $this->error('Not all items have been picked', 422);
         }
 
         $pickList->update([
-            'status' => 'completed',
+            'status' => PickListStatus::Completed,
             'completed_at' => now(),
         ]);
 
@@ -113,7 +123,7 @@ class PickListController extends Controller
             'notes' => 'nullable|string|max:255',
         ]);
 
-        $item = $this->pickItemAction->execute($item, $validated);
+        $item = $this->pickItemAction->execute($item, (float) $validated['quantity_picked'], $validated['notes'] ?? null);
 
         return $this->success($item->fresh()->load('product'), 'Item picked successfully');
     }

@@ -109,6 +109,16 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function pickList(): HasOne
+    {
+        return $this->hasOne(\App\Models\PickingPacking\PickList::class);
+    }
+
+    public function packingList(): HasOne
+    {
+        return $this->hasOne(\App\Models\PickingPacking\PackingList::class);
+    }
+
     public function statusHistory(): HasMany
     {
         return $this->hasMany(OrderStatusHistory::class);

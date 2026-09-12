@@ -33,12 +33,12 @@ class StockAdjustmentController extends Controller
     {
         $validated = $request->validate([
             'warehouse_id' => 'required|exists:warehouses,id',
-            'type' => 'required|string|in:increase,decrease,recount',
+            'type' => 'required|string|in:cycle_count,physical_count,damage,expiry,shrinkage,other',
             'reason' => 'required|string|max:500',
             'notes' => 'nullable|string|max:1000',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer',
+            'items.*.quantity_after' => 'required|numeric',
             'items.*.unit_cost' => 'nullable|numeric|min:0',
             'items.*.notes' => 'nullable|string|max:255',
         ]);

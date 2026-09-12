@@ -31,7 +31,7 @@ class DriverController extends Controller
 
         $drivers = $query->latest()->paginate($request->get('per_page', 15));
 
-        return Inertia::render('Delivery/Drivers', [
+        return Inertia::render('Drivers/Index', [
             'drivers' => $drivers,
             'filters' => $request->only(['search', 'status']),
         ]);
@@ -41,7 +41,7 @@ class DriverController extends Controller
     {
         $users = User::where('company_id', $request->user()->company_id)->get();
 
-        return Inertia::render('Delivery/CreateDriver', [
+        return Inertia::render('Drivers/Create', [
             'users' => $users,
         ]);
     }
@@ -72,7 +72,7 @@ class DriverController extends Controller
             'deliveries' => fn ($q) => $q->with('customer')->latest()->limit(10),
         ]);
 
-        return Inertia::render('Delivery/ShowDriver', [
+        return Inertia::render('Drivers/Edit', [
             'driver' => $driver,
         ]);
     }
@@ -81,7 +81,7 @@ class DriverController extends Controller
     {
         $users = User::where('company_id', $request->user()->company_id)->get();
 
-        return Inertia::render('Delivery/EditDriver', [
+        return Inertia::render('Drivers/Edit', [
             'driver' => $driver,
             'users' => $users,
         ]);

@@ -12,10 +12,10 @@
                 :mobileColumns="mobileColumns"
                 :data="transfers.data"
                 :meta="transfers"
-                @page="(p) => router.get(route('stock.transfers.index'), { page: p }, { preserveState: true, replace: true })"
+                @page="(p) => router.get(route('stock.transfers'), { page: p }, { preserveState: true, replace: true })"
             >
-                <template #cell-created_at="{ row }">
-                    {{ row.created_at }}
+                <template #cell-transfer_number="{ row }">
+                    <span class="font-medium text-gray-900 dark:text-gray-100">{{ row.transfer_number }}</span>
                 </template>
                 <template #cell-product="{ row }">
                     <span class="font-medium text-gray-900 dark:text-gray-100">{{ row.product?.name }}</span>
@@ -31,6 +31,21 @@
                 </template>
                 <template #cell-status="{ row }">
                     <StatusBadge :value="row.status" :label="row.status" />
+                </template>
+
+                <template #actions="{ row }">
+                    <div v-if="row.status === 'pending_approval' || row.status === 'approved' || row.status === 'in_transit'"
+                         class="flex justify-end gap-2">
+                        <button v-if="row.status === 'pending_approval'" type="button" class="btn btn-sm btn-outline" @click="approve(row)">
+                            Approve
+                        </button>
+                        <button v-if="row.status === 'approved'" type="button" class="btn btn-sm btn-outline" @click="ship(row)">
+                            Ship
+                        </button>
+                        <button v-if="row.status === 'in_transit'" type="button" class="btn btn-sm btn-accent" @click="receive(row)">
+                            Receive
+                        </button>
+                    </div>
                 </template>
 
                 <template #empty>
@@ -61,7 +76,7 @@ defineProps({
 });
 
 const columns = [
-    { key: 'created_at', label: 'Date' },
+    { key: 'transfer_number', label: 'Number' },
     { key: 'product', label: 'Product' },
     { key: 'from_warehouse', label: 'From Warehouse' },
     { key: 'to_warehouse', label: 'To Warehouse' },
@@ -70,9 +85,27 @@ const columns = [
 ];
 
 const mobileColumns = [
-    { key: 'date', label: 'Date' },
+    { key: 'transfer_number', label: 'Number' },
     { key: 'product', label: 'Product' },
     { key: 'quantity', label: 'Qty' },
     { key: 'status', label: 'Status' },
 ];
+
+const approve = (row) => {
+    if (confirm(`Approve transfer ${row.transfer_number}?`)) {
+        router.post(route('stock.transfers.approve', row.id), {}, { preserveState: true });
+    }
+};
+
+const ship = (row) => {
+    if (confirm(`Ship transfer ${row.transfer_number}?`)) {
+        router.post(route('stock.transfers.ship', row.id), {}, { preserveState: true });
+    }
+};
+
+const receive = (row) => {
+    if (confirm(`Receive transfer ${row.transfer_number} and add stock to the destination warehouse?`)) {
+        router.post(route('stock.transfers.receive', row.id), {}, { preserveState: true });
+    }
+};
 </script>

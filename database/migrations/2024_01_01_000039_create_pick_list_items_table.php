@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('bin_id', 36)->nullable();
             $table->decimal('quantity_to_pick', 15, 2);
             $table->decimal('quantity_picked', 15, 2)->default(0);
-            $table->enum('status', ['pending', 'picked', 'partial', 'cancelled'])->default('pending');
+            $table->enum('status', ['pending', 'picking', 'picked', 'short'])->default('pending');
             $table->timestamp('picked_at')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();

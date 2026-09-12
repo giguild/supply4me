@@ -7,6 +7,13 @@
                 </template>
             </PageHeader>
 
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <StatCard label="Orders Ready to Pack" :value="stats.ready_to_pack" subtitle="Pick completed, no packing list yet" />
+                <StatCard label="Pending Packing Lists" :value="stats.pending_lists" subtitle="Draft or in progress" />
+                <StatCard label="Packed" :value="stats.packed_lists" subtitle="Awaiting verification" />
+                <StatCard label="Verified" :value="stats.verified_lists" subtitle="Verified and ready to ship" />
+            </div>
+
             <DataTable
                 :columns="columns"
                 :data="packingLists.data"
@@ -49,9 +56,11 @@ import PageHeader from '@/Components/UI/PageHeader.vue';
 import DataTable from '@/Components/UI/DataTable.vue';
 import StatusBadge from '@/Components/UI/StatusBadge.vue';
 import EmptyState from '@/Components/UI/EmptyState.vue';
+import StatCard from '@/Components/UI/StatCard.vue';
 
 defineProps({
     packingLists: Object,
+    stats: { type: Object, default: () => ({ ready_to_pack: 0, pending_lists: 0, packed_lists: 0, verified_lists: 0 }) },
 });
 
 const columns = [

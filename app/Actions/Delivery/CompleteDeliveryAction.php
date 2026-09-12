@@ -53,6 +53,8 @@ class CompleteDeliveryAction
                 ]);
             }
 
+            app(\App\Services\Inventory\StockCommitService::class)->commitDelivery($delivery);
+
             event(new DeliveryCompleted($delivery, $deliveryItems));
 
             return $delivery->fresh();

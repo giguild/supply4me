@@ -90,6 +90,9 @@
         </div>
 
         <div class="flex justify-end gap-3 mt-6">
+            <button v-if="order.status === 'draft'" @click="markPending" class="btn" style="background: #d4edda; color: #155724;">
+                Make Pending
+            </button>
             <button v-if="order.status === 'pending'" @click="confirmOrder" class="btn" style="background: #d4edda; color: #155724;">
                 Confirm Order
             </button>
@@ -112,6 +115,15 @@ import { useToast } from '@/composables/useToast';
 
 const props = defineProps({ order: Object });
 const toast = useToast();
+
+const markPending = () => {
+    if (confirm('Are you sure you want to mark this order as pending?')) {
+        router.post(route('orders.pending', props.order.id), {}, {
+            onSuccess: () => toast.success('Order marked as pending'),
+            onError: () => toast.error('Failed to mark order as pending'),
+        });
+    }
+};
 
 const confirmOrder = () => {
     if (confirm('Are you sure you want to confirm this order?')) {

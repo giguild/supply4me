@@ -2,21 +2,31 @@
 
 namespace App\Http\Controllers\Inertia;
 
+use App\Actions\PickingPacking\GeneratePickListAction;
+use App\Actions\PickingPacking\PickItemAction;
+use App\Enums\PickingPacking\PickItemStatus;
+use App\Enums\PickingPacking\PickListStatus;
+use App\Exceptions\OrderAlreadyPickedException;
 use App\Http\Controllers\Controller;
-use App\Models\Inventory\Warehouse;
 use App\Models\Orders\Order;
 use App\Models\PickingPacking\PickList;
 use App\Models\PickingPacking\PickListItem;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PickListController extends Controller
 {
+    public function __construct(
+        protected GeneratePickListAction $generatePickListAction,
+        protected PickItemAction $pickItemAction
+    ) {}
+
     public function index(Request $request): Response
     {
         $query = PickList::where('company_id', $request->user()->company_id)
-            ->with(['warehouse', 'order', 'picker']);
+            ->with(['order', 'warehouse', 'picker']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -25,8 +35,25 @@ class PickListController extends Controller
 
         $pickLists = $query->latest()->paginate($request->get('per_page', 15));
 
-        return Inertia::render('PickingPacking/PickLists', [
+        $stats = [
+            'awaiting_pick' => Order::where('company_id', $request->user()->company_id)
+                ->whereIn('status', ['confirmed', 'processing'])
+                ->whereDoesntHave('pickList')
+                ->count(),
+            'pending_lists' => PickList::where('company_id', $request->user()->company_id)
+                ->whereIn('status', [PickListStatus::Draft->value, PickListStatus::Pending->value])
+                ->count(),
+            'in_progress_lists' => PickList::where('company_id', $request->user()->company_id)
+                ->where('status', PickListStatus::InProgress->value)
+                ->count(),
+            'completed_lists' => PickList::where('company_id', $request->user()->company_id)
+                ->where('status', PickListStatus::Completed->value)
+                ->count(),
+        ];
+
+        return Inertia::render('PickLists/Index', [
             'pickLists' => $pickLists,
+            'stats' => $stats,
             'filters' => $request->only(['search']),
         ]);
     }
@@ -35,110 +62,124 @@ class PickListController extends Controller
     {
         $companyId = $request->user()->company_id;
 
-        $warehouses = Warehouse::where('company_id', $companyId)->get();
         $orders = Order::where('company_id', $companyId)
             ->whereIn('status', ['confirmed', 'processing'])
+            ->whereDoesntHave('pickList')
             ->with('customer')
+            ->orderByDesc('created_at')
             ->get();
 
-        return Inertia::render('PickingPacking/CreatePickList', [
-            'warehouses' => $warehouses,
+        return Inertia::render('PickLists/Create', [
             'orders' => $orders,
         ]);
     }
 
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'warehouse_id' => 'required|exists:warehouses,id',
             'order_id' => 'required|exists:orders,id',
-            'notes' => 'nullable|string',
-            'items' => 'required|array|min:1',
-            'items.*.order_item_id' => 'required|exists:order_items,id',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity_to_pick' => 'required|numeric|min:0.01',
+            'notes' => 'nullable|string|max:1000',
         ]);
 
-        $companyId = $request->user()->company_id;
+        $order = Order::with('items.product')
+            ->where('company_id', $request->user()->company_id)
+            ->findOrFail($validated['order_id']);
 
-        $pickList = PickList::create([
-            'company_id' => $companyId,
-            'warehouse_id' => $validated['warehouse_id'],
-            'order_id' => $validated['order_id'],
-            'status' => 'pending',
-            'picker_id' => $request->user()->id,
-            'notes' => $validated['notes'] ?? null,
-        ]);
-
-        foreach ($validated['items'] as $item) {
-            PickListItem::create([
-                'pick_list_id' => $pickList->id,
-                'order_id' => $validated['order_id'],
-                'order_item_id' => $item['order_item_id'],
-                'product_id' => $item['product_id'],
-                'quantity_to_pick' => $item['quantity_to_pick'],
-                'quantity_picked' => 0,
-                'status' => 'pending',
-            ]);
+        if (! in_array($order->status->value, ['confirmed', 'processing'], true)) {
+            return back()->with('error', 'Only confirmed or processing orders can have pick lists generated.');
         }
 
-        return redirect()->route('pick-lists.index')->with('success', 'Pick list created successfully');
+        if (PickList::where('order_id', $order->id)->exists()) {
+            return back()->with('error', 'This order already has a pick list.');
+        }
+
+        try {
+            $pickList = $this->generatePickListAction->execute($order);
+        } catch (OrderAlreadyPickedException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        if (! empty($validated['notes'])) {
+            $pickList->update(['notes' => $validated['notes']]);
+        }
+
+        return redirect()->route('pick-lists.show', $pickList)->with('success', 'Pick list generated successfully');
     }
 
     public function show(Request $request, PickList $pickList): Response
     {
         $pickList->load([
-            'warehouse',
             'order.customer',
-            'items' => fn ($q) => $q->with(['product', 'orderItem']),
+            'warehouse',
             'picker',
+            'items' => fn ($q) => $q->with(['product', 'orderItem', 'bin']),
         ]);
 
-        return Inertia::render('PickingPacking/Show', [
+        return Inertia::render('PickLists/Show', [
             'pickList' => $pickList,
         ]);
     }
 
-    public function update(Request $request, PickList $pickList): \Illuminate\Http\RedirectResponse
+    public function start(Request $request, PickList $pickList): RedirectResponse
     {
-        $validated = $request->validate([
-            'status' => 'nullable|string|max:50',
-            'notes' => 'nullable|string',
-            'items' => 'nullable|array',
-            'items.*.id' => 'required_with:items|exists:pick_list_items,id',
-            'items.*.quantity_picked' => 'nullable|numeric|min:0',
-            'items.*.status' => 'nullable|string|max:50',
-            'items.*.notes' => 'nullable|string',
+        if (! in_array($pickList->status->value, [PickListStatus::Pending->value, PickListStatus::Draft->value], true)) {
+            return back()->with('error', 'Pick list cannot be started in its current status.');
+        }
+
+        $pickList->update([
+            'status' => PickListStatus::InProgress,
+            'picker_id' => $request->user()->id,
+            'started_at' => now(),
         ]);
 
-        if ($request->filled('status')) {
-            $updateData = ['status' => $validated['status']];
-            if ($validated['status'] === 'in_progress' && is_null($pickList->started_at)) {
-                $updateData['started_at'] = now();
-            }
-            if ($validated['status'] === 'completed') {
-                $updateData['completed_at'] = now();
-            }
-            $pickList->update($updateData);
+        return back()->with('success', 'Pick list started');
+    }
+
+    public function complete(Request $request, PickList $pickList): RedirectResponse
+    {
+        if ($pickList->status->value !== PickListStatus::InProgress->value) {
+            return back()->with('error', 'Only in-progress pick lists can be completed.');
         }
 
-        if ($request->filled('notes')) {
-            $pickList->update(['notes' => $validated['notes']]);
+        $unpicked = $pickList->items()->where('status', '!=', PickItemStatus::Picked->value)->count();
+
+        if ($unpicked > 0) {
+            return back()->with('error', 'Not all items have been picked.');
         }
 
-        if ($request->filled('items')) {
-            foreach ($validated['items'] as $item) {
-                PickListItem::where('id', $item['id'])->update(
-                    array_filter([
-                        'quantity_picked' => $item['quantity_picked'] ?? null,
-                        'status' => $item['status'] ?? null,
-                        'notes' => $item['notes'] ?? null,
-                        'picked_at' => ($item['status'] ?? null) === 'picked' ? now() : null,
-                    ], fn ($v) => $v !== null)
+        $pickList->update([
+            'status' => PickListStatus::Completed,
+            'completed_at' => now(),
+        ]);
+
+        return back()->with('success', 'Pick list completed');
+    }
+
+    public function update(Request $request, PickList $pickList): RedirectResponse
+    {
+        $validated = $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'required|exists:pick_list_items,id',
+            'items.*.quantity_picked' => 'required|numeric|min:0',
+            'items.*.notes' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            foreach ($validated['items'] as $itemData) {
+                $item = PickListItem::where('id', $itemData['id'])
+                    ->where('pick_list_id', $pickList->id)
+                    ->firstOrFail();
+
+                $this->pickItemAction->execute(
+                    $item,
+                    (float) $itemData['quantity_picked'],
+                    $itemData['notes'] ?? null
                 );
             }
+        } catch (\App\Exceptions\ExceedsPickQuantityException $e) {
+            return back()->with('error', $e->getMessage());
         }
 
-        return redirect()->route('pick-lists.show', $pickList)->with('success', 'Pick list updated successfully');
+        return back()->with('success', 'Picked quantities updated');
     }
 }

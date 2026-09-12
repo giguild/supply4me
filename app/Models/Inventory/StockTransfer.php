@@ -28,6 +28,8 @@ class StockTransfer extends Model
         'shipped_at',
         'received_at',
         'shipped_by',
+        'approved_by',
+        'approved_at',
         'received_by',
         'notes',
     ];
@@ -37,6 +39,7 @@ class StockTransfer extends Model
         return [
             'shipped_at' => 'datetime',
             'received_at' => 'datetime',
+            'approved_at' => 'datetime',
             'status' => TransferStatus::class,
         ];
     }

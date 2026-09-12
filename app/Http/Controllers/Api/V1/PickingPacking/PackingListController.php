@@ -4,7 +4,11 @@ namespace App\Http\Controllers\Api\V1\PickingPacking;
 
 use App\Actions\PickingPacking\PackOrderAction;
 use App\Actions\PickingPacking\VerifyPackingAction;
+use App\Enums\PickingPacking\PackingStatus;
+use App\Exceptions\OrderAlreadyPackedException;
+use App\Exceptions\OrderNotPickedException;
 use App\Http\Controllers\Controller;
+use App\Models\Orders\Order;
 use App\Models\PickingPacking\PackingList;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -37,11 +41,17 @@ class PackingListController extends Controller
     {
         $validated = $request->validate([
             'order_id' => 'required|exists:orders,id',
-            'pick_list_id' => 'required|exists:pick_lists,id',
+            'pick_list_id' => 'nullable|exists:pick_lists,id',
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $packingList = $this->packOrderAction->execute($validated);
+        $order = Order::findOrFail($validated['order_id']);
+
+        try {
+            $packingList = $this->packOrderAction->execute($order, $validated);
+        } catch (OrderAlreadyPackedException|OrderNotPickedException $e) {
+            return $this->error($e->getMessage(), 422);
+        }
 
         return $this->created(
             $packingList->load(['order', 'pickList', 'items.product']),
@@ -58,8 +68,8 @@ class PackingListController extends Controller
 
     public function pack(Request $request, PackingList $packingList): JsonResponse
     {
-        if ($packingList->status !== 'pending') {
-            return $this->error('Only pending packing lists can be packed', 422);
+        if ($packingList->status->value !== PackingStatus::InProgress->value) {
+            return $this->error('Only packing lists in progress can be packed', 422);
         }
 
         $validated = $request->validate([
@@ -71,9 +81,10 @@ class PackingListController extends Controller
         ]);
 
         $packingList->update([
-            'status' => 'packing',
+            'status' => PackingStatus::Packed,
             'packer_id' => auth()->id(),
             'packed_at' => now(),
+            'completed_at' => now(),
         ]);
 
         return $this->success(
@@ -84,8 +95,8 @@ class PackingListController extends Controller
 
     public function verify(Request $request, PackingList $packingList): JsonResponse
     {
-        if ($packingList->status !== 'packing') {
-            return $this->error('Only packing lists in packing status can be verified', 422);
+        if ($packingList->status->value !== PackingStatus::Packed->value) {
+            return $this->error('Only packed packing lists can be verified', 422);
         }
 
         $validated = $request->validate([
@@ -93,7 +104,7 @@ class PackingListController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
-        $packingList = $this->verifyPackingAction->execute($packingList, $validated);
+        $packingList = $this->verifyPackingAction->execute($packingList, $validated['notes'] ?? null);
 
         return $this->success(
             $packingList->fresh(),

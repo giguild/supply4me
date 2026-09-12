@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('warehouse_id', 36);
             $table->string('price_list_id', 36)->nullable();
             $table->enum('order_type', ['sales', 'return', 'exchange'])->default('sales');
-            $table->enum('status', ['draft', 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'completed', 'cancelled', 'on_hold'])->default('draft');
+            $table->enum('status', ['draft', 'pending', 'confirmed', 'processing', 'picking', 'packing', 'ready_to_ship', 'shipped', 'delivered', 'completed', 'cancelled', 'on_hold'])->default('draft');
             $table->enum('payment_status', ['unpaid', 'partial', 'paid', 'refunded', 'overpaid'])->default('unpaid');
             $table->enum('fulfillment_status', ['unfulfilled', 'partial', 'fulfilled', 'returned'])->default('unfulfilled');
             $table->enum('priority', ['low', 'normal', 'high', 'urgent'])->default('normal');
