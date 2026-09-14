@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Products\Product;
 use App\Models\Products\ProductCategory;
 use App\Models\Products\ProductBrand;
+use App\Models\Products\FeaturedProduct;
 use App\Models\Wishlists\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +15,31 @@ use Inertia\Inertia;
 class StorefrontController extends Controller
 {
     public function index(Request $request)
+    {
+        $company = $this->getCompany();
+
+        $categories = ProductCategory::where('company_id', $company->id)->where('status', 'active')->withCount('products')->get();
+        $brands = ProductBrand::where('company_id', $company->id)->where('status', 'active')->get();
+
+        $featured = FeaturedProduct::where('company_id', $company->id)
+            ->active()
+            ->with('product.category', 'product.brand', 'product.unit')
+            ->orderBy('sort_order')
+            ->limit(8)
+            ->get()
+            ->pluck('product')
+            ->filter();
+
+        return Inertia::render('Storefront/Home', [
+            'categories' => $categories,
+            'brands' => $brands,
+            'featured' => $featured,
+            'cartCount' => $this->getCartCount(),
+            'company' => $company,
+        ]);
+    }
+
+    public function products(Request $request)
     {
         $company = $this->getCompany();
 
@@ -48,22 +74,16 @@ class StorefrontController extends Controller
 
         $products = $query->paginate(12)->withQueryString();
 
-        foreach ($products->items() as $product) {
-            $product->load(['category', 'brand']);
-        }
-        $categories = ProductCategory::where('company_id', $company->id)->where('status', 'active')->get();
+        $categories = ProductCategory::where('company_id', $company->id)->where('status', 'active')->withCount('products')->get();
         $brands = ProductBrand::where('company_id', $company->id)->where('status', 'active')->get();
 
-        $cartCount = $this->getCartCount();
-        $wishlistIds = $this->getWishlistIds();
-
-        return Inertia::render('Storefront/Home', [
+        return Inertia::render('Storefront/Products', [
             'products' => $products,
             'categories' => $categories,
             'brands' => $brands,
             'filters' => $request->only(['search', 'category_id', 'brand_id', 'sort']),
-            'cartCount' => $cartCount,
-            'wishlistIds' => $wishlistIds,
+            'cartCount' => $this->getCartCount(),
+            'wishlistIds' => $this->getWishlistIds(),
             'company' => $company,
         ]);
     }

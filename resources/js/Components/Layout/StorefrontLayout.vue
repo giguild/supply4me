@@ -11,6 +11,12 @@
             <span class="text-lg font-bold text-[var(--color-text)] hidden sm:block">SUPPLY4ME</span>
           </a>
 
+          <!-- Desktop nav -->
+          <nav class="hidden sm:flex items-center gap-6 ml-6">
+            <a href="/" class="text-sm font-medium transition-colors" :class="currentPage === 'home' ? 'text-accent' : 'text-[var(--color-text-secondary)] hover:text-accent'">Home</a>
+            <a href="/shop" class="text-sm font-medium transition-colors" :class="currentPage === 'products' ? 'text-accent' : 'text-[var(--color-text-secondary)] hover:text-accent'">Products</a>
+          </nav>
+
           <!-- Search (desktop) -->
           <div v-if="searchable" class="flex-1 max-w-xl mx-8 hidden sm:block">
             <slot name="search" />

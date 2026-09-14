@@ -24,6 +24,7 @@ use App\Http\Controllers\Inertia\DeliveryController;
 use App\Http\Controllers\Inertia\DriverController;
 use App\Http\Controllers\Inertia\DeliveryRouteController;
 use App\Http\Controllers\Inertia\ShippingCarrierController;
+use App\Http\Controllers\Inertia\FeaturedProductController;
 use App\Http\Controllers\Inertia\UserController;
 use App\Http\Controllers\Inertia\CompanyController;
 use App\Http\Controllers\Inertia\BranchController;
@@ -41,6 +42,7 @@ use Illuminate\Support\Facades\Route;
 
 // ── Storefront (public - landing page) ───────────────────────
 Route::get('/', [StorefrontController::class, 'index'])->name('storefront.home');
+Route::get('/shop', [StorefrontController::class, 'products'])->name('storefront.products');
 Route::get('/product/{slug}', [StorefrontController::class, 'show'])->name('storefront.product');
 
 Route::get('/cart', [CartController::class, 'index'])->name('storefront.cart');
@@ -358,6 +360,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'edit' => ['permission:shipment.manage'],
             'update' => ['permission:shipment.manage'],
             'destroy' => ['permission:shipment.manage'],
+        ],
+    ]);
+
+    // Featured Products
+    Route::resource('featured-products', FeaturedProductController::class, [
+        'only' => ['index', 'store', 'update', 'destroy'],
+        'middleware_for' => [
+            'index' => ['permission:product.view'],
+            'store' => ['permission:product.update'],
+            'update' => ['permission:product.update'],
+            'destroy' => ['permission:product.update'],
         ],
     ]);
 

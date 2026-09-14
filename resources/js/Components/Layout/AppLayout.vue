@@ -263,6 +263,7 @@ const adminNav = computed(() => [
     { label: 'Customers', route: 'customers.index', icon: icons.customers, permission: 'customer.view' },
     { label: 'Suppliers', route: 'suppliers.index', icon: icons.suppliers, permission: 'supplier.view' },
     { label: 'Products', route: 'products.index', icon: icons.products, permission: 'product.view' },
+            { label: 'Featured Products', route: 'featured-products.index', icon: icons.products, permission: 'product.view' },
     { label: 'Orders', route: 'orders.index', icon: icons.orders, permission: 'order.view' },
     { label: 'Invoices', route: 'invoices.index', icon: icons.invoices, permission: 'invoice.view' },
     { label: 'Payments', route: 'payments.index', icon: icons.payments, permission: 'payment.view' },
