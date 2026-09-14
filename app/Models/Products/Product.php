@@ -97,7 +97,7 @@ class Product extends Model
 
     public function getNumberColumn(): string
     {
-        return self::sku;
+        return 'sku';
     }
 
     public function category(): BelongsTo
