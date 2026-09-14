@@ -23,7 +23,10 @@
                         </div>
                         <div>
                             <label class="form-label">Code *</label>
-                            <input v-model="form.code" type="text" class="form-input" required />
+                            <div class="flex gap-2">
+                                <input v-model="form.code" type="text" class="form-input flex-1" required />
+                                <button type="button" class="btn btn-outline shrink-0" @click="generateCode">Generate</button>
+                            </div>
                             <p v-if="form.errors.code" class="text-red-500 text-xs mt-1">{{ form.errors.code }}</p>
                         </div>
                         <div>
@@ -51,7 +54,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="md:col-span-2">
                             <label class="form-label">Address</label>
-                            <input v-model="form.address" type="text" class="form-input" />
+                            <input v-model="form.address_line_1" type="text" class="form-input" />
                         </div>
                         <div>
                             <label class="form-label">City</label>
@@ -59,11 +62,14 @@
                         </div>
                         <div>
                             <label class="form-label">State</label>
-                            <input v-model="form.state" type="text" class="form-input" />
+                            <select v-model="form.state" class="form-input">
+                                <option value="">Select State</option>
+                                <option v-for="state in states" :key="state" :value="state">{{ state }}</option>
+                            </select>
                         </div>
                         <div>
                             <label class="form-label">Country</label>
-                            <input v-model="form.country" type="text" class="form-input" />
+                            <input v-model="form.country" type="text" class="form-input" placeholder="Nigeria" />
                         </div>
                     </div>
                 </div>
@@ -102,9 +108,11 @@
 import { Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
 import PageHeader from '@/Components/UI/PageHeader.vue';
+import { useNigerianStates } from '@/composables/useNigerianStates';
 import { useToast } from '@/composables/useToast';
 
 const toast = useToast();
+const { states } = useNigerianStates();
 
 defineProps({
     branches: Array,
@@ -115,7 +123,7 @@ const form = useForm({
     code: '',
     branch_id: '',
     type: 'main',
-    address: '',
+    address_line_1: '',
     city: '',
     state: '',
     country: 'Nigeria',
@@ -127,5 +135,14 @@ const submit = () => {
     form.post(route('warehouses.store'), {
         onSuccess: () => toast.success('Warehouse created successfully.'),
     });
+};
+
+const generateCode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
+    let code = 'WH-';
+    for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    form.code = code;
 };
 </script>

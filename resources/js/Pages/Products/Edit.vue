@@ -76,10 +76,12 @@
                             <label class="form-label">Minimum Price</label>
                             <input v-model="form.minimum_price" type="number" step="0.01" min="0" class="form-input" />
                         </div>
+                        <!-- Tax Rate (%) - Global tax set by admin in Settings
                         <div>
                             <label class="form-label">Tax Rate (%)</label>
                             <input v-model="form.tax_rate" type="number" step="0.01" min="0" max="100" class="form-input" />
                         </div>
+                        -->
                         <div>
                             <label class="form-label">Reorder Level</label>
                             <input v-model="form.reorder_level" type="number" min="0" class="form-input" />
@@ -219,7 +221,7 @@ const form = useForm({
     cost_price: props.product.cost_price,
     selling_price: props.product.selling_price,
     minimum_price: props.product.minimum_price || '',
-    tax_rate: props.product.tax_rate || '',
+    tax_rate: 0,
     reorder_level: props.product.reorder_level || '',
     reorder_quantity: props.product.reorder_quantity || '',
     minimum_order_quantity: props.product.minimum_order_quantity || 1,

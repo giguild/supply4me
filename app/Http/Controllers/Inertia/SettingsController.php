@@ -16,8 +16,7 @@ class SettingsController extends Controller
 
         $settings = Setting::whereIn('group', ['general', 'invoice', 'order', 'inventory'])
             ->get()
-            ->groupBy('group')
-            ->map(fn ($items) => $items->pluck('value', 'key'));
+            ->pluck('value', 'key');
 
         return Inertia::render('Settings/Index', [
             'company' => $company,
@@ -28,10 +27,19 @@ class SettingsController extends Controller
     public function update(Request $request): \Illuminate\Http\RedirectResponse
     {
         $validated = $request->validate([
-            'settings' => 'required|array',
+            'company_name' => 'nullable|string|max:255',
+            'company_email' => 'nullable|email|max:255',
+            'company_phone' => 'nullable|string|max:50',
+            'company_address' => 'nullable|string|max:500',
+            'company_city' => 'nullable|string|max:100',
+            'company_country' => 'nullable|string|max:100',
+            'tax_number' => 'nullable|string|max:50',
+            'currency' => 'nullable|string|max:10',
+            'tax_enabled' => 'nullable|string|in:0,1',
+            'tax_rate' => 'nullable|numeric|min:0|max:100',
         ]);
 
-        foreach ($validated['settings'] as $key => $value) {
+        foreach ($validated as $key => $value) {
             Setting::updateOrCreate(
                 ['key' => $key],
                 ['value' => $value]

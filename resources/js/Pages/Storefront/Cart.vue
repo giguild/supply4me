@@ -80,7 +80,7 @@
               <span class="text-[var(--color-text-secondary)]">Subtotal</span>
               <span class="font-medium text-[var(--color-text)]">₦{{ Number(subtotal).toLocaleString() }}</span>
             </div>
-            <div class="flex justify-between text-sm">
+            <div v-if="taxAmount > 0" class="flex justify-between text-sm">
               <span class="text-[var(--color-text-secondary)]">Tax ({{ taxRate }}%)</span>
               <span class="font-medium text-[var(--color-text)]">₦{{ Number(taxAmount).toLocaleString() }}</span>
             </div>

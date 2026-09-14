@@ -11,6 +11,7 @@ use App\Models\Orders\OrderItem;
 use App\Models\Payments\Payment;
 use App\Models\Payments\PaymentAllocation;
 use App\Models\Products\Product;
+use App\Models\Settings\Setting;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -49,8 +50,9 @@ class CheckoutController extends Controller
             return redirect()->route('storefront.cart');
         }
 
-        $taxRate = 7.5;
-        $taxAmount = $subtotal * ($taxRate / 100);
+        $taxEnabled = Setting::where('key', 'tax_enabled')->value('value') ?? '0';
+        $taxRate = (float) (Setting::where('key', 'tax_rate')->value('value') ?? '7.5');
+        $taxAmount = $taxEnabled === '1' ? $subtotal * ($taxRate / 100) : 0;
         $total = $subtotal + $taxAmount;
 
         $addresses = $customer->shippingAddresses()->orderByDesc('is_default')->get();
@@ -118,7 +120,10 @@ class CheckoutController extends Controller
 
         $company = \App\Models\Companies\Company::firstOrFail();
 
-        $result = DB::transaction(function () use ($cart, $customer, $company, $request, $shippingAddressId) {
+        $taxEnabled = Setting::where('key', 'tax_enabled')->value('value') ?? '0';
+        $taxRate = (float) (Setting::where('key', 'tax_rate')->value('value') ?? '7.5');
+
+        $result = DB::transaction(function () use ($cart, $customer, $company, $request, $shippingAddressId, $taxEnabled, $taxRate) {
             $subtotal = 0;
             $taxAmount = 0;
             $lineItems = [];
@@ -128,7 +133,7 @@ class CheckoutController extends Controller
                 if (!$product) continue;
 
                 $lineTotal = $product->selling_price * $item['quantity'];
-                $tax = $lineTotal * 0.075;
+                $tax = $taxEnabled === '1' ? $lineTotal * ($taxRate / 100) : 0;
                 $subtotal += $lineTotal;
                 $taxAmount += $tax;
 
@@ -166,7 +171,7 @@ class CheckoutController extends Controller
                     'unit_id' => $line['product']->unit_id,
                     'quantity' => $line['quantity'],
                     'unit_price' => $line['unit_price'],
-                    'tax_rate' => 7.5,
+                    'tax_rate' => $taxEnabled === '1' ? $taxRate : 0,
                     'tax_amount' => $line['tax_amount'],
                     'line_total' => $line['total'],
                 ]);
@@ -197,7 +202,7 @@ class CheckoutController extends Controller
                     'unit_id' => $line['product']->unit_id,
                     'quantity' => $line['quantity'],
                     'unit_price' => $line['unit_price'],
-                    'tax_rate' => 7.5,
+                    'tax_rate' => $taxEnabled === '1' ? $taxRate : 0,
                     'tax_amount' => $line['tax_amount'],
                     'line_total' => $line['total'],
                 ]);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
 use App\Models\Products\Product;
+use App\Models\Settings\Setting;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -40,8 +41,9 @@ class CartController extends Controller
             }
         }
 
-        $taxRate = 7.5;
-        $taxAmount = $subtotal * ($taxRate / 100);
+        $taxEnabled = Setting::where('key', 'tax_enabled')->value('value') ?? '0';
+        $taxRate = (float) (Setting::where('key', 'tax_rate')->value('value') ?? '7.5');
+        $taxAmount = $taxEnabled === '1' ? $subtotal * ($taxRate / 100) : 0;
         $total = $subtotal + $taxAmount;
 
         return Inertia::render('Storefront/Cart', [

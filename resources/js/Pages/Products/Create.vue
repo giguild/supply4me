@@ -21,7 +21,7 @@
                         </div>
                         <div>
                             <label class="form-label">Name *</label>
-                            <input v-model="form.name" type="text" class="form-input" />
+                            <input v-model="form.name" type="text" class="form-input" :class="{ 'border-red-500': submitted && !form.name.trim() }" />
                             <p v-if="form.errors.name" class="text-red-500 text-xs mt-1">{{ form.errors.name }}</p>
                         </div>
                         <div>
@@ -64,22 +64,24 @@
                         </div>
                         <div>
                             <label class="form-label">Cost Price *</label>
-                            <input v-model="form.cost_price" type="number" step="0.01" min="0" class="form-input" />
+                            <input v-model="form.cost_price" type="number" step="0.01" min="0" class="form-input" :class="{ 'border-red-500': submitted && (form.cost_price === '' || form.cost_price === null) }" />
                             <p v-if="form.errors.cost_price" class="text-red-500 text-xs mt-1">{{ form.errors.cost_price }}</p>
                         </div>
                         <div>
                             <label class="form-label">Selling Price *</label>
-                            <input v-model="form.selling_price" type="number" step="0.01" min="0" class="form-input" />
+                            <input v-model="form.selling_price" type="number" step="0.01" min="0" class="form-input" :class="{ 'border-red-500': submitted && (form.selling_price === '' || form.selling_price === null) }" />
                             <p v-if="form.errors.selling_price" class="text-red-500 text-xs mt-1">{{ form.errors.selling_price }}</p>
                         </div>
                         <div>
                             <label class="form-label">Minimum Price</label>
                             <input v-model="form.minimum_price" type="number" step="0.01" min="0" class="form-input" />
                         </div>
+                        <!-- Tax Rate (%) - Global tax set by admin in Settings
                         <div>
                             <label class="form-label">Tax Rate (%)</label>
                             <input v-model="form.tax_rate" type="number" step="0.01" min="0" max="100" class="form-input" />
                         </div>
+                        -->
                         <div>
                             <label class="form-label">Reorder Level</label>
                             <input v-model="form.reorder_level" type="number" min="0" class="form-input" />
@@ -188,6 +190,7 @@ const props = defineProps({
 const toast = useToast();
 const isDragging = ref(false);
 const imagePreviews = ref([]);
+const submitted = ref(false);
 
 const form = useForm({
     name: '',
@@ -201,9 +204,9 @@ const form = useForm({
     cost_price: '',
     selling_price: '',
     minimum_price: '',
-    tax_rate: '',
-    reorder_level: '',
-    reorder_quantity: '',
+    tax_rate: 0,
+    reorder_level: 10,
+    reorder_quantity: 50,
     minimum_order_quantity: 1,
     maximum_order_quantity: '',
     max_order_unlimited: true,
@@ -241,6 +244,11 @@ const removeImage = (idx) => {
 };
 
 const submit = () => {
+    submitted.value = true;
+    if (!form.name.trim()) { toast.error('Name is required.'); return; }
+    if (form.cost_price === '' || form.cost_price === null) { toast.error('Cost price is required.'); return; }
+    if (form.selling_price === '' || form.selling_price === null) { toast.error('Selling price is required.'); return; }
+
     const data = { ...form.data() }
     data.maximum_order_quantity = data.max_order_unlimited ? null : data.maximum_order_quantity
     delete data.max_order_unlimited

@@ -56,6 +56,26 @@
                     </div>
                 </div>
 
+                <!-- Tax Settings -->
+                <div class="mt-8 border-t border-gray-100 dark:border-gray-700 pt-6">
+                    <h3 class="text-lg font-semibold mb-4">Tax Settings</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="form-label">Tax Status</label>
+                            <select v-model="form.tax_enabled" class="form-input">
+                                <option value="1">Enabled</option>
+                                <option value="0">Disabled</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="form-label">Tax Rate (%)</label>
+                            <input v-model="form.tax_rate" type="number" step="0.01" min="0" max="100" class="form-input" :disabled="form.tax_enabled === '0'" />
+                            <p class="text-xs text-gray-500 mt-1">Applied to all orders at checkout</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mt-6 flex justify-end">
                     <button type="submit" class="btn btn-primary" :disabled="form.processing">
                         {{ form.processing ? 'Saving...' : 'Save Settings' }}
@@ -88,6 +108,8 @@ const form = useForm({
     company_country: props.company?.country || props.settings?.company_country || '',
     tax_number: props.company?.tax_number || props.settings?.tax_number || '',
     currency: props.settings?.currency || 'NGN',
+    tax_enabled: props.settings?.tax_enabled || '0',
+    tax_rate: props.settings?.tax_rate || '7.5',
 });
 
 const submit = () => {
