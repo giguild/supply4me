@@ -55,7 +55,7 @@
         <a
           v-for="(cat, index) in categories.slice(0, 8)"
           :key="cat.id"
-          :href="`/products?category_id=${cat.id}`"
+          :href="`/shop?category_id=${cat.id}`"
           class="group relative bg-white rounded-2xl border border-[var(--color-border)] p-6 text-center hover:shadow-lg hover:border-accent/50 transition-all duration-300 dark:bg-gray-800 dark:border-gray-700"
         >
           <div class="w-14 h-14 mx-auto mb-3 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
