@@ -48,6 +48,11 @@ class DashboardController extends Controller
             'recent_orders' => [],
             'recent_payments' => [],
 
+            'status_pending' => 0,
+            'status_processing' => 0,
+            'status_completed' => 0,
+            'status_cancelled' => 0,
+
             'quick_actions' => [],
         ];
 
@@ -77,6 +82,12 @@ class DashboardController extends Controller
                         'created_at' => $order->created_at,
                     ])
                     ->values();
+
+                // Order status counts for donut chart
+                $stats['status_pending'] = Order::where('company_id', $companyId)->whereIn('status', ['pending', 'draft', 'on_hold'])->count();
+                $stats['status_processing'] = Order::where('company_id', $companyId)->whereIn('status', ['confirmed', 'processing', 'picking', 'packing', 'ready_to_ship', 'shipped', 'in_transit'])->count();
+                $stats['status_completed'] = Order::where('company_id', $companyId)->whereIn('status', ['delivered', 'completed', 'received'])->count();
+                $stats['status_cancelled'] = Order::where('company_id', $companyId)->where('status', 'cancelled')->count();
             }
 
             if ($can('customer.view')) {

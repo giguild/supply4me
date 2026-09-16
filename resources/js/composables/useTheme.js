@@ -1,11 +1,11 @@
 import { ref, watch, onMounted } from 'vue';
 
 const THEME_KEY = 'supply4me-theme';
-
 const theme = ref('light');
 
 function applyTheme(newTheme) {
     const root = document.documentElement;
+    root.setAttribute('data-theme', newTheme);
     if (newTheme === 'dark') {
         root.classList.add('dark');
     } else {
