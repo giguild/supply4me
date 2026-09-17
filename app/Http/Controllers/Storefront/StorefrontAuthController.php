@@ -14,6 +14,10 @@ class StorefrontAuthController extends Controller
 {
     public function showRegister()
     {
+        if (Auth::guard('customer')->check()) {
+            return redirect()->route('storefront.account');
+        }
+
         return Inertia::render('Storefront/Register', [
             'cartCount' => $this->getCartCount(),
         ]);
@@ -48,6 +52,10 @@ class StorefrontAuthController extends Controller
 
     public function showLogin()
     {
+        if (Auth::guard('customer')->check()) {
+            return redirect()->route('storefront.account');
+        }
+
         return Inertia::render('Storefront/Login', [
             'cartCount' => $this->getCartCount(),
         ]);

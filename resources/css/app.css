@@ -402,3 +402,79 @@ body {
     .stagger-1, .stagger-2, .stagger-3, .stagger-4, .stagger-5 { animation: none; opacity: 1; }
     *, *::before, *::after { transition-duration: 0.01ms !important; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Landing Page Utilities
+   ═══════════════════════════════════════════════════════════════ */
+
+.landing-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.landing-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--brand), transparent);
+    opacity: 0.2;
+}
+
+.glass-landing {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glow-brand {
+    box-shadow: 0 0 30px rgba(159, 81, 36, 0.3);
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, #9F5124, #c4764a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Smooth scroll for anchor links */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for landing */
+.landing-page::-webkit-scrollbar {
+    width: 8px;
+}
+
+.landing-page::-webkit-scrollbar-track {
+    background: var(--bg);
+}
+
+.landing-page::-webkit-scrollbar-thumb {
+    background: var(--brand);
+    border-radius: 4px;
+}
+
+.landing-page::-webkit-scrollbar-thumb:hover {
+    background: var(--brand-hover);
+}
+
+/* Grid patterns for landing sections */
+.hero-grid-pattern {
+    background-image: 
+        linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 60px 60px;
+}
+
+.metrics-grid-pattern {
+    background-image: 
+        linear-gradient(rgba(159,81,36,0.3) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(159,81,36,0.3) 1px, transparent 1px);
+    background-size: 60px 60px;
+}

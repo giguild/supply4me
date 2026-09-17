@@ -1,0 +1,46 @@
+/* Supply 4 Me — landing page design tokens
+   Adapt these into the project's existing design system rather than duplicating them blindly.
+*/
+:root {
+  --s4m-brand: #9F5124;
+  --s4m-charcoal: #2D2C2C;
+  --s4m-mid-grey: #616262;
+  --s4m-warm-white: #F1EFEE;
+  --s4m-white: #F9F9FA;
+
+  --s4m-bg-dark: #0B1115;
+  --s4m-bg-dark-2: #111A20;
+  --s4m-surface-dark: rgba(24, 28, 30, 0.64);
+  --s4m-surface-light: rgba(249, 249, 250, 0.78);
+
+  --s4m-border-dark: rgba(255,255,255,0.10);
+  --s4m-border-light: rgba(45,44,44,0.10);
+
+  --s4m-text-light: #F9F9FA;
+  --s4m-text-dark: #2D2C2C;
+  --s4m-text-muted-dark: #A9B0B5;
+  --s4m-text-muted-light: #616262;
+
+  --s4m-success: #168B61;
+  --s4m-danger: #D94A43;
+
+  --s4m-radius-sm: 12px;
+  --s4m-radius-md: 18px;
+  --s4m-radius-lg: 26px;
+  --s4m-radius-xl: 34px;
+
+  --s4m-shadow-soft: 0 18px 50px rgba(0,0,0,0.18);
+  --s4m-shadow-card: 0 12px 28px rgba(0,0,0,0.12);
+  --s4m-glow-brand: 0 10px 34px rgba(159,81,36,0.28);
+
+  --s4m-container: 1240px;
+}
+
+/* Suggested glass treatment */
+.s4m-glass {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: var(--s4m-shadow-soft);
+}

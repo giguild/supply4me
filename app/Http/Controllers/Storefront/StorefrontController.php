@@ -30,12 +30,41 @@ class StorefrontController extends Controller
             ->pluck('product')
             ->filter();
 
+        // Landing page stats - these can be made dynamic via settings/CMS later
+        $stats = [
+            'retailers' => '10,000+',
+            'categories' => '500+',
+            'states' => '36',
+            'delivery_rate' => '99%',
+        ];
+
+        // Testimonials - these can be made dynamic via CMS later
+        $testimonials = [
+            [
+                'name' => 'Chinedu A.',
+                'role' => 'Retail Store Owner, Lagos',
+                'quote' => 'Supply 4 Me has made it easier for us to stock genuine products at great prices. Delivery is always on time.',
+            ],
+            [
+                'name' => 'Fatima R.',
+                'role' => 'Mini Mart, Kano',
+                'quote' => 'A reliable partner for our business. The variety and pricing help us serve our customers better.',
+            ],
+            [
+                'name' => 'Tunde M.',
+                'role' => 'Distributor, Abuja',
+                'quote' => 'Professional service and genuine products. Highly recommended for any growing business.',
+            ],
+        ];
+
         return Inertia::render('Storefront/Home', [
             'categories' => $categories,
             'brands' => $brands,
             'featured' => $featured,
             'cartCount' => $this->getCartCount(),
             'company' => $company,
+            'stats' => $stats,
+            'testimonials' => $testimonials,
         ]);
     }
 
