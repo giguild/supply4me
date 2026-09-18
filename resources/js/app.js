@@ -9,7 +9,7 @@ import { route as ziggyRoute, ZiggyVue } from '../../vendor/tightenco/ziggy';
 const appName = import.meta.env.VITE_APP_NAME || 'SUPPLY4ME';
 
 createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
+    title: (title) => title ? `${title} - ${appName}` : appName,
     resolve: (name) =>
         resolvePageComponent(
             `./Pages/${name}.vue`,

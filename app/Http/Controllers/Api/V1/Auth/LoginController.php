@@ -21,8 +21,12 @@ class LoginController extends Controller
     /**
      * Show login page (Inertia).
      */
-    public function showLogin(): Response
+    public function showLogin(): \Illuminate\Http\RedirectResponse|\Inertia\Response
     {
+        if (Auth::guard('web')->check()) {
+            return redirect()->route('dashboard');
+        }
+
         return Inertia::render('Auth/Login');
     }
 

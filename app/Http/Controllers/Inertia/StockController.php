@@ -50,7 +50,7 @@ class StockController extends Controller
             'total_items' => $allStock->sum('quantity_on_hand'),
             'low_stock' => $allStock->filter(fn ($s) => $s->quantity_on_hand > 0 && $s->quantity_on_hand < $s->reorder_level)->count(),
             'out_of_stock' => $allStock->filter(fn ($s) => $s->quantity_on_hand <= 0)->count(),
-            'total_value' => $allStock->sum(fn ($s) => $s->quantity_on_hand * ($s->cost_price ?? 0)),
+            'total_value' => $allStock->sum(fn ($s) => $s->quantity_on_hand * (($s->cost_price > 0 ? $s->cost_price : null) ?? $s->product?->cost_price ?? 0)),
         ];
 
         return Inertia::render('Stock/Index', [

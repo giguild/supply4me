@@ -10,7 +10,7 @@ use Inertia\Inertia;
 
 class CartController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $cart = session()->get('cart', []);
         $items = [];
@@ -53,6 +53,7 @@ class CartController extends Controller
             'taxAmount' => $taxAmount,
             'total' => $total,
             'cartCount' => array_sum(array_column($cart, 'quantity')),
+            'customer' => $request->user('customer'),
         ]);
     }
 

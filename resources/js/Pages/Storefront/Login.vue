@@ -124,17 +124,17 @@
             <!-- Register Link -->
             <p class="text-center text-sm text-[#616262]">
               Don't have an account?
-              <a href="/register" class="text-[#9F5124] font-semibold hover:text-[#8a4620] transition-colors">Register</a>
+              <a :href="redirect ? `/register?redirect=${redirect}` : '/register'" class="text-[#9F5124] font-semibold hover:text-[#8a4620] transition-colors">Register</a>
             </p>
           </div>
 
           <!-- Back to Home -->
           <p class="text-center mt-6">
-            <a href="/" class="text-sm text-[#616262] hover:text-[#9F5124] transition-colors flex items-center justify-center gap-1.5">
+            <a :href="redirect || '/'" class="text-sm text-[#616262] hover:text-[#9F5124] transition-colors flex items-center justify-center gap-1.5">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
               </svg>
-              Back to Home
+              {{ redirect ? 'Back to Cart' : 'Back to Home' }}
             </a>
           </p>
         </div>
@@ -153,12 +153,14 @@ import MarketingFooter from '@/Components/Landing/MarketingFooter.vue'
 
 const props = defineProps({
   cartCount: { type: Number, default: 0 },
+  redirect: { type: String, default: '' },
 })
 
 const form = useForm({
   email: '',
   password: '',
   remember: false,
+  redirect: props.redirect,
 })
 
 const processing = ref(false)

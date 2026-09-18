@@ -166,10 +166,8 @@ function logout() {
 
 const navItems = [
   { label: 'Home', href: '/' },
-  { label: 'Shop', href: '/shop' },
-  { label: 'For Businesses', href: '#business' },
-  { label: 'About Us', href: '#about' },
-  { label: 'Contact', href: '#contact' },
+  { label: 'About Us', href: '/about' },
+  { label: 'Contact', href: '/contact' },
 ]
 
 function handleScroll() {

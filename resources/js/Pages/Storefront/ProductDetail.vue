@@ -220,6 +220,14 @@
                   </svg>
                   {{ message }}
                 </p>
+                <div v-if="message" class="flex gap-3 mt-3">
+                  <a href="/cart" class="flex-1 text-center bg-[#9F5124] text-white py-2.5 rounded-full text-sm font-bold hover:bg-[#8a4620] transition-all duration-300">
+                    Go to Cart
+                  </a>
+                  <a :href="$page.props.auth?.customer ? '/checkout' : '/store-login?redirect=/checkout'" class="flex-1 text-center bg-white border border-[#9F5124] text-[#9F5124] py-2.5 rounded-full text-sm font-bold hover:bg-[#9F5124]/5 transition-all duration-300">
+                    {{ $page.props.auth?.customer ? 'Checkout' : 'Login to Checkout' }}
+                  </a>
+                </div>
                 <p v-if="error" class="mt-3 text-sm text-red-600 font-medium flex items-center gap-2">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>

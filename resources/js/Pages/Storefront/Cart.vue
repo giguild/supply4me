@@ -134,11 +134,11 @@
                     </div>
                   </div>
 
-                  <a href="/checkout" class="block w-full bg-[#9F5124] text-white text-center py-3.5 rounded-full font-bold hover:bg-[#8a4620] transition-all duration-300 hover:shadow-lg hover:shadow-[#9F5124]/25 flex items-center justify-center gap-2">
+                  <a :href="customer ? '/checkout' : '/store-login?redirect=/checkout'" class="block w-full bg-[#9F5124] text-white text-center py-3.5 rounded-full font-bold hover:bg-[#8a4620] transition-all duration-300 hover:shadow-lg hover:shadow-[#9F5124]/25 flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                     </svg>
-                    Proceed to Checkout
+                    {{ customer ? 'Proceed to Checkout' : 'Login to Checkout' }}
                   </a>
 
                   <a href="/shop" class="block w-full text-center text-[#9F5124] font-semibold text-sm mt-4 hover:text-[#8a4620] transition-colors">
@@ -168,6 +168,7 @@ const props = defineProps({
   taxAmount: Number,
   total: Number,
   cartCount: { type: Number, default: 0 },
+  customer: Object,
 })
 
 function updateQuantity(item, newQty) {

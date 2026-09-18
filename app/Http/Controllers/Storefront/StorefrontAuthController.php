@@ -20,6 +20,7 @@ class StorefrontAuthController extends Controller
 
         return Inertia::render('Storefront/Register', [
             'cartCount' => $this->getCartCount(),
+            'redirect' => request()->query('redirect', ''),
         ]);
     }
 
@@ -47,6 +48,11 @@ class StorefrontAuthController extends Controller
 
         Auth::guard('customer')->login($customer);
 
+        $redirect = $request->input('redirect');
+        if ($redirect && str_starts_with($redirect, '/')) {
+            return redirect($redirect);
+        }
+
         return redirect()->route('storefront.home');
     }
 
@@ -58,6 +64,7 @@ class StorefrontAuthController extends Controller
 
         return Inertia::render('Storefront/Login', [
             'cartCount' => $this->getCartCount(),
+            'redirect' => request()->query('redirect', ''),
         ]);
     }
 
@@ -73,7 +80,12 @@ class StorefrontAuthController extends Controller
         if (Auth::guard('customer')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            return redirect()->intended(route('storefront.checkout'));
+            $redirect = $request->input('redirect');
+            if ($redirect && str_starts_with($redirect, '/')) {
+                return redirect($redirect);
+            }
+
+            return redirect()->route('storefront.account');
         }
 
         return back()->withErrors([

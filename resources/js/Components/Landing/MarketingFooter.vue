@@ -107,9 +107,13 @@
       </div>
     </div>
   </footer>
+
+  <InstallBanner />
 </template>
 
 <script setup>
+import InstallBanner from '@/Components/PWA/InstallBanner.vue'
+
 defineProps({
   customer: { type: Object, default: null },
   cartCount: { type: Number, default: 0 },
@@ -127,16 +131,14 @@ const socials = [
 const quickLinks = [
   { label: 'Home', href: '/' },
   { label: 'Shop', href: '/shop' },
-  { label: 'For Businesses', href: '#business' },
-  { label: 'About Us', href: '#about' },
-  { label: 'Contact', href: '#contact' },
+  { label: 'About Us', href: '/about' },
+  { label: 'Contact', href: '/contact' },
 ]
 
 const supportLinks = [
-  { label: 'Help Centre', href: '#' },
-  { label: 'Delivery Information', href: '#' },
-  { label: 'Returns & Refunds', href: '#' },
-  { label: 'Terms & Conditions', href: '#' },
-  { label: 'Privacy Policy', href: '#' },
+  { label: 'Help Centre', href: '/help-centre' },
+  { label: 'Returns & Refunds', href: '/returns' },
+  { label: 'Terms & Conditions', href: '/terms' },
+  { label: 'Privacy Policy', href: '/privacy' },
 ]
 </script>

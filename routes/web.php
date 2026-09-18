@@ -1,5 +1,6 @@
 <?php
 
+use Inertia\Inertia;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Inertia\DashboardController;
 use App\Http\Controllers\Inertia\ProfileController;
@@ -56,6 +57,22 @@ Route::post('/register', [StorefrontAuthController::class, 'register'])->name('s
 Route::get('/store-login', [StorefrontAuthController::class, 'showLogin'])->name('storefront.login');
 Route::post('/store-login', [StorefrontAuthController::class, 'login'])->name('storefront.login.post');
 Route::post('/store-logout', [StorefrontAuthController::class, 'logout'])->name('storefront.logout');
+
+Route::get('/about', fn () => Inertia::render('Storefront/About', ['cartCount' => 0]))->name('storefront.about');
+Route::get('/contact', function () {
+    $settings = \App\Models\Settings\Setting::whereIn('key', [
+        'company_name', 'company_email', 'company_phone', 'company_address', 'company_city', 'company_country',
+    ])->pluck('value', 'key');
+
+    return Inertia::render('Storefront/Contact', [
+        'settings' => $settings,
+        'cartCount' => 0,
+    ]);
+})->name('storefront.contact');
+Route::get('/help-centre', fn () => Inertia::render('Storefront/HelpCentre', ['cartCount' => 0]))->name('storefront.help');
+Route::get('/returns', fn () => Inertia::render('Storefront/Returns', ['cartCount' => 0]))->name('storefront.returns');
+Route::get('/terms', fn () => Inertia::render('Storefront/Terms', ['cartCount' => 0]))->name('storefront.terms');
+Route::get('/privacy', fn () => Inertia::render('Storefront/Privacy', ['cartCount' => 0]))->name('storefront.privacy');
 
 Route::middleware('auth:customer')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('storefront.checkout');

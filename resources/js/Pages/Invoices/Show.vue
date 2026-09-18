@@ -317,8 +317,6 @@ const formatMethod = (method) => {
 };
 
 const getReceiptPath = (pmt) => {
-    if (!pmt.metadata) return null;
-    const meta = typeof pmt.metadata === 'string' ? JSON.parse(pmt.metadata) : pmt.metadata;
-    return meta?.receipt_path || null;
+    return pmt.receipt_path || null;
 };
 </script>

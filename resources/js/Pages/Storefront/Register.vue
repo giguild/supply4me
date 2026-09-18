@@ -174,7 +174,7 @@
             <!-- Login Link -->
             <p class="text-center text-sm text-[#616262]">
               Already have an account?
-              <a href="/store-login" class="text-[#9F5124] font-semibold hover:text-[#8a4620] transition-colors">Login</a>
+              <a :href="redirect ? `/store-login?redirect=${redirect}` : '/store-login'" class="text-[#9F5124] font-semibold hover:text-[#8a4620] transition-colors">Login</a>
             </p>
           </div>
 
@@ -203,6 +203,7 @@ import MarketingFooter from '@/Components/Landing/MarketingFooter.vue'
 
 const props = defineProps({
   cartCount: { type: Number, default: 0 },
+  redirect: { type: String, default: '' },
 })
 
 const form = useForm({
@@ -211,6 +212,7 @@ const form = useForm({
   phone: '',
   password: '',
   password_confirmation: '',
+  redirect: props.redirect,
 })
 
 const processing = ref(false)

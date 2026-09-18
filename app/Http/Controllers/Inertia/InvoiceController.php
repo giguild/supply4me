@@ -310,11 +310,17 @@ class InvoiceController extends Controller
             'payment_date' => 'required|date',
             'reference_number' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
+            'receipt' => 'required|file|image|max:5120',
         ]);
 
         $remaining = (float) $invoice->due_amount;
         if ($validated['amount'] > $remaining) {
             return back()->withErrors(['amount' => "Payment amount cannot exceed the outstanding balance of ₦" . number_format($remaining, 2) . "."]);
+        }
+
+        $receiptPath = null;
+        if ($request->hasFile('receipt')) {
+            $receiptPath = $request->file('receipt')->store('payments/receipts', 'public');
         }
 
         $payment = Payment::create([
@@ -327,6 +333,7 @@ class InvoiceController extends Controller
             'payment_date' => $validated['payment_date'],
             'reference_number' => $validated['reference_number'] ?? null,
             'notes' => $validated['notes'] ?? null,
+            'receipt_path' => $receiptPath,
             'status' => 'completed',
             'received_by' => $request->user()->id,
             'approved_by' => $request->user()->id,
