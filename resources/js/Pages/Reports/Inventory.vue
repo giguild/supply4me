@@ -2,11 +2,16 @@
     <AppLayout :user="$page.props.auth.user">
         <PageHeader title="Inventory Report" subtitle="Monitor stock levels and inventory value" />
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <StatCard
                 label="Total Products"
                 :value="data.total_products ?? 0"
                 subtitle="in inventory"
+            />
+            <StatCard
+                label="Total Stock Items"
+                :value="data.total_stock_items ?? 0"
+                subtitle="units in stock"
             />
             <StatCard
                 label="Low Stock Items"
@@ -31,6 +36,7 @@
                         <tr>
                             <th>Product</th>
                             <th>SKU</th>
+                            <th>Warehouse</th>
                             <th>Current Stock</th>
                             <th>Min Level</th>
                             <th>Status</th>
@@ -41,6 +47,7 @@
                         <tr v-for="item in data.stock_levels ?? []" :key="item.id">
                             <td class="font-medium text-gray-900 dark:text-gray-100">{{ item.name }}</td>
                             <td class="font-mono text-gray-600 dark:text-gray-400">{{ item.sku }}</td>
+                            <td class="text-gray-600 dark:text-gray-400">{{ item.warehouse }}</td>
                             <td>{{ item.quantity }}</td>
                             <td>{{ item.min_stock_level }}</td>
                             <td>
@@ -49,7 +56,7 @@
                             <td>₦ {{ formatCurrency(item.value) }}</td>
                         </tr>
                         <tr v-if="!data.stock_levels?.length">
-                            <td colspan="6">
+                            <td colspan="7">
                                 <div class="text-center py-8">
                                     <svg class="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
                                     <p class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">No inventory data</p>

@@ -93,14 +93,19 @@ class ReportController extends Controller
 
         $totalProducts = Product::where('company_id', $companyId)->count();
         $totalStockItems = StockItem::where('company_id', $companyId)->sum('quantity_on_hand');
-        $totalStockValue = StockItem::where('company_id', $companyId)
-            ->selectRaw('SUM(quantity_on_hand * cost_price) as total_value')
+        $totalStockValue = StockItem::where('stock_items.company_id', $companyId)
+            ->join('products', 'stock_items.product_id', '=', 'products.id')
+            ->selectRaw('SUM(stock_items.quantity_on_hand * CASE WHEN stock_items.cost_price > 0 THEN stock_items.cost_price ELSE products.cost_price END) as total_value')
             ->value('total_value') ?? 0;
 
-        $lowStockItems = StockItem::where('company_id', $companyId)
-            ->whereColumn('quantity_on_hand', '<=', 'reorder_level')
+        $allStockItems = StockItem::where('company_id', $companyId)
             ->with(['product', 'warehouse'])
             ->get();
+
+        $lowStockItems = $allStockItems->filter(function ($s) {
+            $reorderLevel = $s->reorder_level > 0 ? $s->reorder_level : 10;
+            return $s->quantity_on_hand <= $reorderLevel;
+        });
 
         $stockByWarehouse = StockItem::where('stock_items.company_id', $companyId)
             ->join('warehouses', 'stock_items.warehouse_id', '=', 'warehouses.id')
@@ -115,20 +120,24 @@ class ReportController extends Controller
             ->groupBy('product_categories.id', 'product_categories.name')
             ->get();
 
-        $stockLevels = $lowStockItems->map(function ($item) {
+        $stockLevels = $allStockItems->map(function ($item) {
+            $effectiveCost = $item->cost_price > 0 ? $item->cost_price : ($item->product->cost_price ?? 0);
+            $reorderLevel = $item->reorder_level > 0 ? $item->reorder_level : ($item->product->reorder_level ?? 0);
             return [
                 'id' => $item->product->id ?? $item->id,
                 'name' => $item->product->name ?? 'Unknown',
                 'sku' => $item->product->sku ?? '-',
+                'warehouse' => $item->warehouse->name ?? '-',
                 'quantity' => $item->quantity_on_hand,
-                'min_stock_level' => $item->reorder_level,
-                'value' => round($item->quantity_on_hand * $item->cost_price, 2),
+                'min_stock_level' => $reorderLevel,
+                'value' => round($item->quantity_on_hand * $effectiveCost, 2),
             ];
         });
 
         return Inertia::render('Reports/Inventory', [
             'data' => [
                 'total_products' => $totalProducts,
+                'total_stock_items' => $totalStockItems,
                 'low_stock_count' => $lowStockItems->count(),
                 'total_value' => $totalStockValue,
                 'stock_levels' => $stockLevels,

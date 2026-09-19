@@ -85,7 +85,14 @@
                             </div>
                             <div>
                                 <label class="form-label">Condition</label>
-                                <input v-model="item.condition" type="text" class="form-input" placeholder="e.g. Good, Damaged" />
+                                <select v-model="item.condition" class="form-input">
+                                    <option value="">Select condition</option>
+                                    <option value="Good">Good</option>
+                                    <option value="Damaged">Damaged</option>
+                                    <option value="Expired">Expired</option>
+                                    <option value="Partial">Partial</option>
+                                    <option value="Rejected">Rejected</option>
+                                </select>
                             </div>
                             <div>
                                 <label class="form-label">Notes</label>
