@@ -296,8 +296,8 @@ const quickActions = computed(() => props.stats.quick_actions ?? [])
 
 const formatNumber = (v) => {
     if (v === undefined || v === null) return '0'
-    if (typeof v === 'number' && v >= 1000) return v.toLocaleString()
-    return v
+    const num = typeof v === 'string' ? parseFloat(v) : v
+    return isNaN(num) ? '0' : num.toLocaleString('en-NG', { maximumFractionDigits: 0 })
 }
 
 const formatCurrency = (v) => {

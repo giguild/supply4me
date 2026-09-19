@@ -66,7 +66,7 @@ class DashboardController extends Controller
                     ->count();
                 $stats['monthly_revenue'] = Order::where('company_id', $companyId)
                     ->where('created_at', '>=', now()->startOfMonth())
-                    ->whereIn('status', ['confirmed', 'processing', 'shipped', 'delivered', 'completed'])
+                    ->whereIn('status', ['confirmed', 'processing', 'picking', 'packing', 'ready_to_ship', 'shipped', 'delivered', 'completed'])
                     ->sum('total_amount');
                 $stats['recent_orders'] = Order::with('customer')
                     ->where('company_id', $companyId)
