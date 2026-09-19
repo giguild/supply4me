@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Inertia;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customers\Customer;
+use App\Models\Expenses\Expense;
 use App\Models\Invoicing\Invoice;
 use App\Models\Inventory\StockItem;
 use App\Models\Orders\Order;
@@ -197,20 +198,31 @@ class ReportController extends Controller
             ->orderBy('month')
             ->get();
 
-        $monthlyBreakdown = $revenueByMonth->map(function ($item) {
+        $monthlyBreakdown = $revenueByMonth->map(function ($item) use ($companyId) {
+            $monthStart = $item->month . '-01';
+            $monthEnd = now()->parse($monthStart)->endOfMonth()->toDateString();
+            $monthExpenses = Expense::where('company_id', $companyId)
+                ->where('status', 'approved')
+                ->whereBetween('expense_date', [$monthStart, $monthEnd])
+                ->sum('amount');
             return [
                 'name' => $item->month,
                 'revenue' => $item->revenue,
-                'expenses' => 0,
-                'profit' => $item->revenue,
+                'expenses' => $monthExpenses,
+                'profit' => $item->revenue - $monthExpenses,
             ];
         });
+
+        $totalExpenses = Expense::where('company_id', $companyId)
+            ->where('status', 'approved')
+            ->whereBetween('expense_date', [$startDate, $endDate])
+            ->sum('amount');
 
         return Inertia::render('Reports/Financial', [
             'data' => [
                 'revenue' => $totalRevenue,
-                'expenses' => 0,
-                'profit' => $totalRevenue,
+                'expenses' => $totalExpenses,
+                'profit' => $totalRevenue - $totalExpenses,
                 'total_invoiced' => $totalInvoiced,
                 'total_paid' => $totalPaid,
                 'total_outstanding' => $totalOutstanding,

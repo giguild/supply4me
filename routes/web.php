@@ -429,6 +429,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ],
     ]);
 
+    // Expenses
+    Route::resource('expenses', \App\Http\Controllers\Inertia\ExpenseController::class, [
+        'middleware_for' => [
+            'index' => ['permission:expense.view'],
+            'create' => ['permission:expense.create'],
+            'store' => ['permission:expense.create'],
+            'show' => ['permission:expense.view'],
+            'edit' => ['permission:expense.update'],
+            'update' => ['permission:expense.update'],
+            'destroy' => ['permission:expense.delete'],
+        ],
+    ]);
+    Route::resource('expense-categories', \App\Http\Controllers\Inertia\ExpenseCategoryController::class, [
+        'middleware_for' => [
+            'index' => ['permission:expense-category.view'],
+            'create' => ['permission:expense-category.create'],
+            'store' => ['permission:expense-category.create'],
+            'show' => ['permission:expense-category.view'],
+            'edit' => ['permission:expense-category.update'],
+            'update' => ['permission:expense-category.update'],
+            'destroy' => ['permission:expense-category.delete'],
+        ],
+    ]);
+
     // Reports
     Route::get('reports/sales', [ReportController::class, 'sales'])->name('reports.sales')->middleware('permission:report.view-sales');
     Route::get('reports/inventory', [ReportController::class, 'inventory'])->name('reports.inventory')->middleware('permission:report.view-inventory');
