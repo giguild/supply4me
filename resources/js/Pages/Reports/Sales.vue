@@ -46,6 +46,9 @@
                 :columns="productColumns"
                 :data="data.top_products ?? []"
             >
+                <template #cell-total_revenue="{ value }">
+                    ₦ {{ Number(value).toLocaleString('en-NG', { maximumFractionDigits: 2 }) }}
+                </template>
                 <template #empty>
                     <div class="text-center py-8">
                         <svg class="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>

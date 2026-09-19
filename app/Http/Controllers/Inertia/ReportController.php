@@ -61,7 +61,7 @@ class ReportController extends Controller
             $q->where('company_id', $companyId)->whereBetween('created_at', [$startDate, $endDate]);
         })
             ->join('products', 'order_items.product_id', '=', 'products.id')
-            ->select('products.name', DB::raw('SUM(order_items.quantity) as total_quantity'), DB::raw('SUM(order_items.line_total) as total_revenue'))
+            ->select('products.name', DB::raw('SUM(order_items.quantity) as quantity_sold'), DB::raw('SUM(order_items.line_total) as total_revenue'))
             ->groupBy('products.id', 'products.name')
             ->orderByDesc('total_revenue')
             ->limit(10)
@@ -93,10 +93,10 @@ class ReportController extends Controller
 
         $totalProducts = Product::where('company_id', $companyId)->count();
         $totalStockItems = StockItem::where('company_id', $companyId)->sum('quantity_on_hand');
-        $totalStockValue = StockItem::where('stock_items.company_id', $companyId)
+        $totalStockValue = (float) (StockItem::where('stock_items.company_id', $companyId)
             ->join('products', 'stock_items.product_id', '=', 'products.id')
             ->selectRaw('SUM(stock_items.quantity_on_hand * CASE WHEN stock_items.cost_price > 0 THEN stock_items.cost_price ELSE products.cost_price END) as total_value')
-            ->value('total_value') ?? 0;
+            ->value('total_value') ?? 0);
 
         $allStockItems = StockItem::where('company_id', $companyId)
             ->with(['product', 'warehouse'])
