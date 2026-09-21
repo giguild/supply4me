@@ -87,11 +87,11 @@
                                 <label class="form-label">Condition</label>
                                 <select v-model="item.condition" class="form-input">
                                     <option value="">Select condition</option>
-                                    <option value="Good">Good</option>
-                                    <option value="Damaged">Damaged</option>
-                                    <option value="Expired">Expired</option>
-                                    <option value="Partial">Partial</option>
-                                    <option value="Rejected">Rejected</option>
+                                    <option value="good">Good</option>
+                                    <option value="damaged">Damaged</option>
+                                    <option value="expired">Expired</option>
+                                    <option value="partial">Partial</option>
+                                    <option value="rejected">Rejected</option>
                                 </select>
                             </div>
                             <div>

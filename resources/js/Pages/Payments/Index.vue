@@ -21,6 +21,7 @@
                 <option value="approved">Approved</option>
                 <option value="rejected">Rejected</option>
                 <option value="completed">Completed</option>
+                <option value="refunded">Refunded</option>
                 <option value="cancelled">Cancelled</option>
             </select>
         </div>

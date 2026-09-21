@@ -133,6 +133,15 @@
             </div>
         </div>
 
+        <div v-if="payment.status === 'completed' && canRefundPayments" class="card p-6">
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">Refund Payment</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Issue a full or partial refund for this payment.</p>
+            <button @click="showRefundModal = true" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold border border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                Refund
+            </button>
+        </div>
+
         <Teleport to="body">
             <div v-if="showPartialModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="showPartialModal = false">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
@@ -156,6 +165,36 @@
                 </div>
             </div>
         </Teleport>
+
+        <Teleport to="body">
+            <div v-if="showRefundModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="showRefundModal = false">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">Refund Payment</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Enter the refund amount and reason.</p>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Refund Amount</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">&#8358;</span>
+                                <input v-model="refundAmount" type="number" step="0.01" :max="payment.amount" min="0.01"
+                                    class="form-input pl-8 w-full" placeholder="0.00" />
+                            </div>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Original amount: {{ formatCurrency(payment.amount) }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reason <span class="text-red-500">*</span></label>
+                            <textarea v-model="refundReason" rows="3" class="form-input w-full" placeholder="Reason for refund..."></textarea>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button @click="showRefundModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Cancel</button>
+                        <button @click="submitRefund" :disabled="!refundAmount || refundAmount <= 0 || !refundReason" class="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50">
+                            Confirm Refund
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
     </AppLayout>
 </template>
 
@@ -172,10 +211,17 @@ const toast = useToast();
 const page = usePage();
 const showFullReceipt = ref(false);
 const showPartialModal = ref(false);
+const showRefundModal = ref(false);
 const partialAmount = ref(null);
+const refundAmount = ref(null);
+const refundReason = ref('');
 
 const canApprovePayments = computed(() =>
     (page.props.auth.user?.permissions || []).includes('payment.approve')
+);
+
+const canRefundPayments = computed(() =>
+    (page.props.auth.user?.permissions || []).includes('payment.refund')
 );
 
 const receiptPath = computed(() => {
@@ -222,6 +268,19 @@ const rejectPayment = () => {
             onError: () => toast.error('Failed to reject payment'),
         });
     }
+};
+
+const submitRefund = () => {
+    if (!refundAmount.value || refundAmount.value <= 0 || !refundReason.value) return;
+    if (!confirm(`Refund ${formatCurrency(refundAmount.value)}? This action cannot be undone.`)) return;
+    showRefundModal.value = false;
+    router.post(route('payments.refund', props.payment.id), {
+        refund_amount: refundAmount.value,
+        refund_reason: refundReason.value,
+    }, {
+        onSuccess: () => toast.success('Payment refunded successfully'),
+        onError: () => toast.error('Failed to refund payment'),
+    });
 };
 
 const formatCurrency = (amount) => {

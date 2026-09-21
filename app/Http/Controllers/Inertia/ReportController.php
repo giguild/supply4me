@@ -218,14 +218,38 @@ class ReportController extends Controller
             ->whereBetween('expense_date', [$startDate, $endDate])
             ->sum('amount');
 
+        $totalRefunded = Payment::where('company_id', $companyId)
+            ->where('status', 'refunded')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->sum('amount');
+
+        $recentRefunds = Payment::where('company_id', $companyId)
+            ->where('status', 'refunded')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->with('customer')
+            ->latest()
+            ->take(10)
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'payment_number' => $p->payment_number,
+                'amount' => $p->amount,
+                'refund_amount' => $p->metadata['refund_amount'] ?? $p->amount,
+                'refund_reason' => $p->metadata['refund_reason'] ?? '-',
+                'customer' => $p->customer->name ?? '-',
+                'created_at' => $p->created_at,
+            ]);
+
         return Inertia::render('Reports/Financial', [
             'data' => [
                 'revenue' => $totalRevenue,
                 'expenses' => $totalExpenses,
-                'profit' => $totalRevenue - $totalExpenses,
+                'profit' => $totalRevenue - $totalExpenses - $totalRefunded,
                 'total_invoiced' => $totalInvoiced,
                 'total_paid' => $totalPaid,
                 'total_outstanding' => $totalOutstanding,
+                'total_refunded' => $totalRefunded,
+                'recent_refunds' => $recentRefunds,
                 'monthly_breakdown' => $monthlyBreakdown,
                 'overdue_invoices' => $overdueInvoices,
                 'payments_by_method' => $paymentsByMethod,

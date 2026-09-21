@@ -243,6 +243,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('payments/{payment}/approve', [PaymentController::class, 'approve'])->name('payments.approve')->middleware('permission:payment.approve');
     Route::post('payments/{payment}/reject', [PaymentController::class, 'reject'])->name('payments.reject')->middleware('permission:payment.reject');
     Route::post('payments/{payment}/mark-partial', [PaymentController::class, 'markPartial'])->name('payments.markPartial')->middleware('permission:payment.approve');
+    Route::post('payments/{payment}/refund', [PaymentController::class, 'refund'])->name('payments.refund')->middleware('permission:payment.refund');
 
     // Stock
     Route::get('stock', [StockController::class, 'index'])->name('stock.index')->middleware('permission:stock.view');

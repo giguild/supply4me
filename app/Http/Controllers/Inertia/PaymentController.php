@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Inertia;
 
+use App\Actions\Payments\RefundPaymentAction;
 use App\Http\Controllers\Controller;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Customers\Customer;
@@ -272,5 +273,28 @@ class PaymentController extends Controller
         $this->syncInvoicePayment($payment);
 
         return redirect()->route('payments.show', $payment)->with('success', 'Payment rejected');
+    }
+
+    public function refund(Request $request, Payment $payment): \Illuminate\Http\RedirectResponse
+    {
+        $validated = $request->validate([
+            'refund_amount' => 'required|numeric|min:0.01|max:' . $payment->amount,
+            'refund_reason' => 'required|string|max:1000',
+        ]);
+
+        try {
+            app(RefundPaymentAction::class)->execute(
+                $payment,
+                $request->user(),
+                $validated['refund_reason'],
+                $validated['refund_amount']
+            );
+
+            $this->syncInvoicePayment($payment);
+
+            return redirect()->route('payments.show', $payment)->with('success', 'Payment refunded successfully');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 }
