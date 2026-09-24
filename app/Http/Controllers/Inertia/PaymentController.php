@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Inertia;
 
 use App\Actions\Payments\RefundPaymentAction;
+use App\Models\Payments\PaymentReceipt;
 use App\Http\Controllers\Controller;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Customers\Customer;
@@ -74,7 +75,9 @@ class PaymentController extends Controller
             'reference_number' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'payment_date' => 'required|date',
-            'receipt' => 'required|file|image|max:5120',
+            'receipts' => 'nullable|array',
+            'receipts.*' => 'file|image|max:5120',
+            'receipt' => 'nullable|file|image|max:5120',
         ]);
 
         $companyId = $request->user()->company_id;
@@ -83,13 +86,33 @@ class PaymentController extends Controller
         $validated['status'] = 'pending';
         $validated['received_by'] = $request->user()->id;
 
+        $payment = Payment::create(collect($validated)->only([
+            'company_id', 'customer_id', 'supplier_id', 'order_id', 'payment_type',
+            'payment_method', 'amount', 'currency_code', 'reference_number',
+            'notes', 'payment_date', 'status', 'received_by',
+        ])->toArray());
+
+        // Handle single receipt (backward compat)
         if ($request->hasFile('receipt')) {
-            $validated['receipt_path'] = $request->file('receipt')->store('payment-receipts', 'public');
+            $path = $request->file('receipt')->store('payment-receipts', 'public');
+            PaymentReceipt::create([
+                'payment_id' => $payment->id,
+                'receipt_path' => $path,
+                'description' => 'Payment receipt',
+            ]);
         }
 
-        unset($validated['receipt']);
-
-        $payment = Payment::create($validated);
+        // Handle multiple receipts
+        if ($request->hasFile('receipts')) {
+            foreach ($request->file('receipts') as $file) {
+                $path = $file->store('payment-receipts', 'public');
+                PaymentReceipt::create([
+                    'payment_id' => $payment->id,
+                    'receipt_path' => $path,
+                    'description' => $file->getClientOriginalName(),
+                ]);
+            }
+        }
 
         if ($request->filled('invoice_id')) {
             PaymentAllocation::create([
@@ -113,6 +136,7 @@ class PaymentController extends Controller
             'approvedBy',
             'receivedBy',
             'branch',
+            'receipts',
         ]);
 
         return Inertia::render('Payments/Show', [

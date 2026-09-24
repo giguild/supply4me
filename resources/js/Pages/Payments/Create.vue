@@ -71,11 +71,18 @@
                     </div>
 
                     <div class="md:col-span-2">
-                        <label class="form-label">Payment Receipt <span class="text-red-500">*</span></label>
-                        <input type="file" accept="image/*,.pdf" required @change="handleReceipt"
+                        <label class="form-label">Payment Receipt(s)</label>
+                        <input type="file" accept="image/*,.pdf" @change="handleReceipts" multiple
                             class="form-input w-full text-sm text-gray-600 dark:text-gray-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent/10 file:text-accent hover:file:bg-accent/20" />
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Required — upload image or PDF (max 5MB)</p>
-                        <p v-if="form.errors.receipt" class="text-red-500 text-xs mt-1">{{ form.errors.receipt }}</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Upload one or more receipts (images or PDFs, max 5MB each). Useful for split payments (e.g. bank transfer + cash).</p>
+                        <div v-if="receiptFiles.length" class="mt-2 space-y-1">
+                            <div v-for="(file, i) in receiptFiles" :key="i" class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                {{ file.name }} ({{ (file.size / 1024).toFixed(0) }}KB)
+                                <button type="button" @click="removeReceipt(i)" class="text-red-400 hover:text-red-600">✕</button>
+                            </div>
+                        </div>
+                        <p v-if="form.errors.receipts" class="text-red-500 text-xs mt-1">{{ form.errors.receipts }}</p>
                     </div>
                 </div>
             </div>
@@ -140,6 +147,7 @@ const props = defineProps({
 const toast = useToast();
 const selectedInvoices = ref([]);
 const allocations = ref({});
+const receiptFiles = ref([]);
 
 const form = useForm({
     payment_type: 'incoming',
@@ -151,11 +159,19 @@ const form = useForm({
     reference_number: '',
     notes: '',
     allocations: [],
-    receipt: null,
+    receipts: [],
 });
 
-const handleReceipt = (e) => {
-    form.receipt = e.target.files[0] || null;
+const handleReceipts = (e) => {
+    const newFiles = Array.from(e.target.files);
+    receiptFiles.value = [...receiptFiles.value, ...newFiles];
+    form.receipts = receiptFiles.value;
+    e.target.value = '';
+};
+
+const removeReceipt = (index) => {
+    receiptFiles.value.splice(index, 1);
+    form.receipts = receiptFiles.value;
 };
 
 const filteredInvoices = computed(() => {

@@ -76,6 +76,19 @@
                     </div>
                 </div>
 
+                <!-- Notification Settings -->
+                <div class="mt-8 border-t border-gray-100 dark:border-gray-700 pt-6">
+                    <h3 class="text-lg font-semibold mb-2">Notification Settings</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Configure where order and payment notifications are sent.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="form-label">Order Notification Email</label>
+                            <input v-model="form.notification_email" type="email" class="form-input" placeholder="orders@company.com" />
+                            <p class="text-xs text-gray-500 mt-1">Dedicated email for order, payment, and delivery notifications. Leave empty to send to individual users.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mt-6 flex justify-end">
                     <button type="submit" class="btn btn-primary" :disabled="form.processing">
                         {{ form.processing ? 'Saving...' : 'Save Settings' }}
@@ -110,6 +123,7 @@ const form = useForm({
     currency: props.settings?.currency || 'NGN',
     tax_enabled: props.settings?.tax_enabled || '0',
     tax_rate: props.settings?.tax_rate || '7.5',
+    notification_email: props.settings?.notification_email || '',
 });
 
 const submit = () => {

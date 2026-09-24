@@ -14,7 +14,7 @@ class SettingsController extends Controller
     {
         $company = $request->user()->company;
 
-        $settings = Setting::whereIn('group', ['general', 'invoice', 'order', 'inventory'])
+        $settings = Setting::whereIn('group', ['general', 'invoice', 'order', 'inventory', 'notification'])
             ->get()
             ->pluck('value', 'key');
 
@@ -37,6 +37,7 @@ class SettingsController extends Controller
             'currency' => 'nullable|string|max:10',
             'tax_enabled' => 'nullable|string|in:0,1',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
+            'notification_email' => 'nullable|email|max:255',
         ]);
 
         foreach ($validated as $key => $value) {

@@ -43,7 +43,27 @@
             </div>
         </div>
 
-        <div v-if="receiptUrl" class="card p-6 mb-6">
+        <div v-if="payment.receipts?.length" class="card p-6 mb-6">
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Payment Receipts ({{ payment.receipts.length }})</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div v-for="receipt in payment.receipts" :key="receipt.id" class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                    <div v-if="isImageReceipt(receipt.receipt_path)" class="bg-gray-50 dark:bg-gray-800">
+                        <img :src="'/storage/' + receipt.receipt_path" alt="Receipt" class="w-full max-h-48 object-contain cursor-pointer hover:opacity-90" @click="showFullReceiptPath = receipt.receipt_path" />
+                    </div>
+                    <div v-else-if="isPdfReceipt(receipt.receipt_path)" class="bg-gray-50 dark:bg-gray-800">
+                        <iframe :src="'/storage/' + receipt.receipt_path" class="w-full h-48" frameborder="0"></iframe>
+                    </div>
+                    <div v-else class="p-4">
+                        <a :href="'/storage/' + receipt.receipt_path" target="_blank" class="text-accent hover:underline text-sm">Download receipt</a>
+                    </div>
+                    <div v-if="receipt.description" class="px-3 py-2 border-t border-gray-100 dark:border-gray-700">
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ receipt.description }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-else-if="receiptUrl" class="card p-6 mb-6">
             <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Payment Receipt</p>
             <div v-if="isImage" class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800">
                 <img :src="receiptUrl" alt="Payment receipt" class="max-w-full max-h-96 mx-auto cursor-pointer hover:opacity-90 transition-opacity" @click="showFullReceipt = true" />
@@ -210,6 +230,7 @@ const props = defineProps({ payment: Object });
 const toast = useToast();
 const page = usePage();
 const showFullReceipt = ref(false);
+const showFullReceiptPath = ref(null);
 const showPartialModal = ref(false);
 const showRefundModal = ref(false);
 const partialAmount = ref(null);
@@ -241,6 +262,9 @@ const isPdf = computed(() => {
     if (!receiptUrl.value) return false;
     return /\.pdf$/i.test(receiptUrl.value);
 });
+
+const isImageReceipt = (path) => /\.(jpg|jpeg|png|gif|webp)$/i.test(path);
+const isPdfReceipt = (path) => /\.pdf$/i.test(path);
 
 const markPaid = () => {
     if (confirm('Mark this payment as fully paid? The linked invoice will be updated.')) {

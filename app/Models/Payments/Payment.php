@@ -87,6 +87,11 @@ class Payment extends Model
         return $this->hasMany(PaymentAllocation::class);
     }
 
+    public function receipts(): HasMany
+    {
+        return $this->hasMany(PaymentReceipt::class);
+    }
+
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(\App\Models\Core\User::class, 'approved_by');

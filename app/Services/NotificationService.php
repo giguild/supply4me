@@ -42,19 +42,67 @@ class NotificationService
                 'notification_id' => $notification->id,
                 'user_id' => $user->getKey(),
             ]);
+        }
 
-            if (!empty($params['email']) && $user->email) {
-                $this->sendEmail($user, [
+        // Send email to dedicated notification address if configured, otherwise to recipients
+        if (!empty($params['email'])) {
+            $companyId = $recipients->first()?->company_id ?? null;
+            $notificationEmail = $this->getNotificationEmail($companyId);
+
+            if ($notificationEmail) {
+                $this->sendEmailToAddress($notificationEmail, [
                     'title' => $params['title'] ?? 'Notification',
                     'message' => $params['message'] ?? '',
                     'type' => $params['type'] ?? 'general',
                     'action_url' => $params['action_url'] ?? null,
                     'action_label' => $params['action_label'] ?? null,
                 ]);
+            } else {
+                foreach ($recipients as $user) {
+                    if ($user instanceof User && $user->email) {
+                        $this->sendEmail($user, [
+                            'title' => $params['title'] ?? 'Notification',
+                            'message' => $params['message'] ?? '',
+                            'type' => $params['type'] ?? 'general',
+                            'action_url' => $params['action_url'] ?? null,
+                            'action_label' => $params['action_label'] ?? null,
+                        ]);
+                    }
+                }
             }
         }
 
         return $notification;
+    }
+
+    /**
+     * Get the dedicated notification email for a company.
+     */
+    private function getNotificationEmail(?string $companyId): ?string
+    {
+        if (!$companyId) return null;
+
+        $setting = \App\Models\Settings\Setting::where('company_id', $companyId)
+            ->where('key', 'notification_email')
+            ->first();
+
+        $email = $setting?->value;
+        return !empty($email) ? $email : null;
+    }
+
+    /**
+     * Send email to a specific address.
+     */
+    private function sendEmailToAddress(string $email, array $data): void
+    {
+        try {
+            Mail::to($email)->send(new GenericNotificationMail($data));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send notification email', [
+                'email' => $email,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
