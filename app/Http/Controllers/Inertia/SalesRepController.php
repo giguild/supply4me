@@ -94,8 +94,49 @@ class SalesRepController extends Controller
                 'pending_payments' => $payments->pending_payments ?? 0,
                 'rejected_payments' => $payments->rejected_payments ?? 0,
                 'payment_completion_rate' => $completionRate,
+                'is_other' => false,
             ];
         });
+
+        // Orders whose customer is unassigned or assigned to someone who is not a
+        // sales rep are excluded from the per-rep query above. Add them back as a
+        // single row so this page always reconciles with the company-wide reports.
+        $companyTotals = Order::where('company_id', $companyId)
+            ->whereNotIn('status', ['cancelled', 'draft'])
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->select(
+                DB::raw('COUNT(id) as total_orders'),
+                DB::raw('SUM(total_amount) as total_revenue')
+            )
+            ->first();
+
+        $repRevenue = (float) $reps->sum('total_revenue');
+        $repOrders = (int) $reps->sum('total_orders');
+        $otherRevenue = round((float) ($companyTotals->total_revenue ?? 0) - $repRevenue, 2);
+        $otherOrders = (int) ($companyTotals->total_orders ?? 0) - $repOrders;
+
+        if ($otherRevenue > 0.005 || $otherOrders > 0) {
+            $reps->push([
+                'id' => null,
+                'name' => 'Unassigned / Other',
+                'email' => null,
+                'phone' => null,
+                'region' => null,
+                'state' => null,
+                'status' => 'n/a',
+                'total_customers' => 0,
+                'active_customers' => 0,
+                'total_orders' => $otherOrders,
+                'total_revenue' => $otherRevenue,
+                'avg_order_value' => $otherOrders > 0 ? round($otherRevenue / $otherOrders, 2) : 0,
+                'total_payments' => 0,
+                'collected_amount' => 0,
+                'pending_payments' => 0,
+                'rejected_payments' => 0,
+                'payment_completion_rate' => 0,
+                'is_other' => true,
+            ]);
+        }
 
         return Inertia::render('SalesRep/AdminIndex', [
             'salesReps' => $reps,

@@ -6,7 +6,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <StatCard
                 label="Total Sales Reps"
-                :value="salesReps.length"
+                :value="repCount"
                 subtitle="active reps"
             />
             <StatCard
@@ -62,12 +62,18 @@
         <DataTable :columns="columns" :data="filteredReps" :mobileColumns="mobileColumns">
             <template #cell-name="{ row }">
                 <div class="flex items-center gap-3">
-                    <Link :href="route('sales-reps.show', row.id)" class="btn btn-outline btn-sm hidden sm:inline-flex">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                    </Link>
-                    <div>
-                        <Link :href="route('sales-reps.show', row.id)" class="font-medium text-gray-900 dark:text-gray-100 hover:text-accent">{{ row.name }}</Link>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ row.email }}</p>
+                    <template v-if="!row.is_other">
+                        <Link :href="route('sales-reps.show', row.id)" class="btn btn-outline btn-sm hidden sm:inline-flex">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        </Link>
+                        <div>
+                            <Link :href="route('sales-reps.show', row.id)" class="font-medium text-gray-900 dark:text-gray-100 hover:text-accent">{{ row.name }}</Link>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ row.email }}</p>
+                        </div>
+                    </template>
+                    <div v-else>
+                        <p class="font-medium text-gray-500 dark:text-gray-400">{{ row.name }}</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500">No sales rep assigned</p>
                     </div>
                 </div>
             </template>
@@ -98,7 +104,8 @@
                 <span v-else class="text-sm text-gray-400 dark:text-gray-500">0</span>
             </template>
             <template #cell-status="{ row }">
-                <StatusBadge :value="row.status" />
+                <span v-if="row.is_other" class="text-sm text-gray-400 dark:text-gray-500">-</span>
+                <StatusBadge v-else :value="row.status" />
             </template>
             <template #empty>
                 <div class="text-center py-8">
@@ -151,6 +158,8 @@ const filters = reactive({
     search: props.filters?.search || '',
     status: props.filters?.status || '',
 });
+
+const repCount = computed(() => props.salesReps.filter(rep => !rep.is_other).length);
 
 const totals = computed(() => {
     return props.salesReps.reduce((acc, rep) => {
