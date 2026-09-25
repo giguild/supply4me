@@ -20,8 +20,8 @@ class UpdateOrderDeliveryStatus implements ShouldQueue
 
             $fulfillmentStatus = match (true) {
                 $totalDelivered >= $totalOrdered => FulfillmentStatus::Fulfilled,
-                $totalDelivered > 0 => FulfillmentStatus::PartiallyFulfilled,
-                default => FulfillmentStatus::Pending,
+                $totalDelivered > 0 => FulfillmentStatus::Partial,
+                default => FulfillmentStatus::Unfulfilled,
             };
 
             $order->update(['fulfillment_status' => $fulfillmentStatus]);

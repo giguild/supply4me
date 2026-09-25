@@ -83,10 +83,29 @@ class DashboardController extends Controller
                     ])
                     ->values();
 
-                // Order status counts for donut chart
-                $stats['status_pending'] = Order::where('company_id', $companyId)->whereIn('status', ['pending', 'draft', 'on_hold'])->count();
-                $stats['status_processing'] = Order::where('company_id', $companyId)->whereIn('status', ['confirmed', 'processing', 'picking', 'packing', 'ready_to_ship', 'shipped', 'in_transit'])->count();
-                $stats['status_completed'] = Order::where('company_id', $companyId)->whereIn('status', ['delivered', 'completed', 'received'])->count();
+                // Order status counts for donut chart.
+                // Fulfilled orders count as completed and are excluded from the
+                // other buckets so every order lands in exactly one segment.
+                $notFulfilled = fn ($q) => $q->where(function ($q) {
+                    $q->where('fulfillment_status', '!=', 'fulfilled')->orWhereNull('fulfillment_status');
+                });
+
+                $stats['status_pending'] = $notFulfilled(
+                    Order::where('company_id', $companyId)->whereIn('status', ['pending', 'draft', 'on_hold'])
+                )->count();
+
+                $stats['status_processing'] = $notFulfilled(
+                    Order::where('company_id', $companyId)->whereIn('status', ['confirmed', 'processing', 'picking', 'packing', 'ready_to_ship', 'shipped'])
+                )->count();
+
+                $stats['status_completed'] = Order::where('company_id', $companyId)
+                    ->where('status', '!=', 'cancelled')
+                    ->where(function ($q) {
+                        $q->whereIn('status', ['delivered', 'completed'])
+                            ->orWhere('fulfillment_status', 'fulfilled');
+                    })
+                    ->count();
+
                 $stats['status_cancelled'] = Order::where('company_id', $companyId)->where('status', 'cancelled')->count();
             }
 

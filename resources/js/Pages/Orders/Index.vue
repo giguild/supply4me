@@ -67,6 +67,12 @@
                         style="background: #d4edda; color: #155724;"
                     >Confirm</button>
                     <button
+                        v-if="canFulfill && row.fulfillment_status !== 'fulfilled' && row.status !== 'cancelled'"
+                        @click="fulfillOrder(row.id)"
+                        class="btn btn-sm"
+                        style="background: #d4edda; color: #155724;"
+                    >Fulfill</button>
+                    <button
                         v-if="row.status !== 'completed' && row.status !== 'cancelled'"
                         @click="cancelOrder(row.id)"
                         class="btn btn-sm btn-danger"
@@ -87,7 +93,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { router, Link } from '@inertiajs/vue3';
+import { router, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
 import PageHeader from '@/Components/UI/PageHeader.vue';
 import DataTable from '@/Components/UI/DataTable.vue';
@@ -102,8 +108,13 @@ const props = defineProps({
 });
 
 const toast = useToast();
+const page = usePage();
 const search = ref(props.filters?.search || '');
 const statusFilter = ref(props.filters?.status || '');
+
+const canFulfill = computed(() =>
+    page.props.auth.user?.permissions?.includes('order.fulfill')
+);
 
 const columns = [
     { key: 'order_number', label: 'Order#' },
@@ -165,6 +176,15 @@ const cancelOrder = (id) => {
         router.post(route('orders.cancel', id), {}, {
             onSuccess: () => toast.success('Order cancelled successfully'),
             onError: () => toast.error('Failed to cancel order'),
+        });
+    }
+};
+
+const fulfillOrder = (id) => {
+    if (confirm('Mark this order as fulfilled?')) {
+        router.post(route('orders.fulfill', id), {}, {
+            onSuccess: () => toast.success('Order marked as fulfilled'),
+            onError: () => toast.error('Failed to mark order as fulfilled'),
         });
     }
 };

@@ -56,7 +56,7 @@ class CancelOrderAction
             $order->update([
                 'status' => OrderStatus::Cancelled,
                 'payment_status' => PaymentStatus::Cancelled,
-                'fulfillment_status' => FulfillmentStatus::Cancelled,
+                'fulfillment_status' => FulfillmentStatus::Unfulfilled,
             ]);
 
             event(new OrderCancelled($order, $user, $reason));

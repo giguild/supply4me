@@ -27,6 +27,26 @@
                 <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Payment Status</p>
                 <StatusBadge :value="order.payment_status" />
             </div>
+            <div class="card p-5">
+                <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Fulfillment</p>
+                <div class="flex items-center gap-2">
+                    <StatusBadge :value="order.fulfillment_status" />
+                    <button
+                        v-if="canFulfill && order.fulfillment_status !== 'fulfilled'"
+                        @click="fulfillOrder"
+                        class="text-xs font-medium text-accent hover:underline"
+                    >
+                        Mark Fulfilled
+                    </button>
+                    <button
+                        v-else-if="canFulfill && order.fulfillment_status === 'fulfilled'"
+                        @click="unfulfillOrder"
+                        class="text-xs font-medium text-red-500 hover:underline"
+                    >
+                        Undo
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div class="card overflow-hidden mb-6">
@@ -107,7 +127,8 @@
 </template>
 
 <script setup>
-import { router, Link } from '@inertiajs/vue3';
+import { router, Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
 import PageHeader from '@/Components/UI/PageHeader.vue';
 import StatusBadge from '@/Components/UI/StatusBadge.vue';
@@ -115,6 +136,11 @@ import { useToast } from '@/composables/useToast';
 
 const props = defineProps({ order: Object });
 const toast = useToast();
+const page = usePage();
+
+const canFulfill = computed(() =>
+    page.props.auth.user?.permissions?.includes('order.fulfill')
+);
 
 const markPending = () => {
     if (confirm('Are you sure you want to mark this order as pending?')) {
@@ -139,6 +165,24 @@ const cancelOrder = () => {
         router.post(route('orders.cancel', props.order.id), {}, {
             onSuccess: () => toast.success('Order cancelled successfully'),
             onError: () => toast.error('Failed to cancel order'),
+        });
+    }
+};
+
+const fulfillOrder = () => {
+    if (confirm('Mark this order as fulfilled?')) {
+        router.post(route('orders.fulfill', props.order.id), {}, {
+            onSuccess: () => toast.success('Order marked as fulfilled'),
+            onError: () => toast.error('Failed to mark order as fulfilled'),
+        });
+    }
+};
+
+const unfulfillOrder = () => {
+    if (confirm('Remove the fulfillment mark from this order?')) {
+        router.post(route('orders.unfulfill', props.order.id), {}, {
+            onSuccess: () => toast.success('Fulfillment mark removed'),
+            onError: () => toast.error('Failed to remove fulfillment mark'),
         });
     }
 };

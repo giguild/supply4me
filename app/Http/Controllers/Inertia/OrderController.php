@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Inertia;
 
 use App\Actions\Inventory\ReleaseStockAction;
 use App\Actions\Inventory\ReserveStockAction;
+use App\Enums\Orders\FulfillmentStatus;
 use App\Enums\Orders\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Customers\Customer;
@@ -425,5 +426,51 @@ class OrderController extends Controller
         app(NotificationService::class)->orderCancelled($order);
 
         return redirect()->route('orders.show', $order)->with('success', 'Order cancelled and stock released');
+    }
+
+    public function fulfill(Request $request, Order $order): \Illuminate\Http\RedirectResponse
+    {
+        $this->authorizeOrderAccess($request, $order);
+
+        if ($order->status->value === OrderStatus::Cancelled->value) {
+            return back()->with('error', 'A cancelled order cannot be marked as fulfilled.');
+        }
+
+        if ($order->fulfillment_status === FulfillmentStatus::Fulfilled) {
+            return back()->with('error', 'This order is already marked as fulfilled.');
+        }
+
+        $order->update(['fulfillment_status' => FulfillmentStatus::Fulfilled]);
+
+        OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'status' => $order->status->value,
+            'previous_status' => $order->status->value,
+            'notes' => $request->get('notes') ?: 'Order marked as fulfilled',
+            'performed_by' => $request->user()->id,
+        ]);
+
+        return redirect()->route('orders.show', $order)->with('success', 'Order marked as fulfilled');
+    }
+
+    public function unfulfill(Request $request, Order $order): \Illuminate\Http\RedirectResponse
+    {
+        $this->authorizeOrderAccess($request, $order);
+
+        if ($order->fulfillment_status !== FulfillmentStatus::Fulfilled) {
+            return back()->with('error', 'This order is not currently marked as fulfilled.');
+        }
+
+        $order->update(['fulfillment_status' => FulfillmentStatus::Unfulfilled]);
+
+        OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'status' => $order->status->value,
+            'previous_status' => $order->status->value,
+            'notes' => $request->get('notes') ?: 'Fulfillment mark removed',
+            'performed_by' => $request->user()->id,
+        ]);
+
+        return redirect()->route('orders.show', $order)->with('success', 'Fulfillment mark removed');
     }
 }

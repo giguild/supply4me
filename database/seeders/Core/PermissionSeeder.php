@@ -66,6 +66,7 @@ class PermissionSeeder extends Seeder
                 'order.delete',
                 'order.confirm',
                 'order.cancel',
+                'order.fulfill',
                 'order.manage',
                 'order.view-items',
                 'order.manage-items',

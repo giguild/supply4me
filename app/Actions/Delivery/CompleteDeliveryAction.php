@@ -49,7 +49,7 @@ class CompleteDeliveryAction
             $order = Order::find($delivery->order_id);
             if ($order) {
                 $order->update([
-                    'fulfillment_status' => FulfillmentStatus::Delivered,
+                    'fulfillment_status' => FulfillmentStatus::Fulfilled,
                 ]);
             }
 

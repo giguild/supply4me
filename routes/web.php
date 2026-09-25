@@ -215,6 +215,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('orders/{order}/pending', [OrderController::class, 'pending'])->name('orders.pending')->middleware('permission:order.update');
     Route::post('orders/{order}/confirm', [OrderController::class, 'confirm'])->name('orders.confirm')->middleware('permission:order.confirm');
     Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel')->middleware('permission:order.cancel');
+    Route::post('orders/{order}/fulfill', [OrderController::class, 'fulfill'])->name('orders.fulfill')->middleware('permission:order.fulfill');
+    Route::post('orders/{order}/unfulfill', [OrderController::class, 'unfulfill'])->name('orders.unfulfill')->middleware('permission:order.fulfill');
 
     // Invoices
     Route::resource('invoices', InvoiceController::class, [
