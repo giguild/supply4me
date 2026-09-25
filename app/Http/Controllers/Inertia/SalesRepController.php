@@ -143,7 +143,7 @@ class SalesRepController extends Controller
         $customers = Customer::where('company_id', $companyId)
             ->where('assigned_to', $user->id)
             ->withCount(['orders' => fn ($q) => $q->whereNotIn('status', ['cancelled', 'draft'])])
-            ->withSum('orders', 'total_amount')
+            ->withSum(['orders' => fn ($q) => $q->whereNotIn('status', ['cancelled', 'draft'])], 'total_amount')
             ->latest()
             ->paginate(15);
 
@@ -219,6 +219,7 @@ class SalesRepController extends Controller
             ->count();
 
         $totalOrders = Order::where('company_id', $companyId)
+            ->whereNotIn('status', ['cancelled', 'draft'])
             ->whereHas('customer', fn ($q) => $q->where('assigned_to', $user->id))
             ->count();
 
@@ -248,10 +249,10 @@ class SalesRepController extends Controller
 
         return Inertia::render('SalesRep/Dashboard', [
             'stats' => [
-                'total_customers' => $totalCustomers,
-                'active_customers' => $activeCustomers,
-                'total_orders' => $totalOrders,
-                'total_revenue' => $totalRevenue,
+                'total_customers' => (int) $totalCustomers,
+                'active_customers' => (int) $activeCustomers,
+                'total_orders' => (int) $totalOrders,
+                'total_revenue' => round((float) $totalRevenue, 2),
             ],
             'recentCustomers' => $recentCustomers,
             'recentOrders' => $recentOrders,

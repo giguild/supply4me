@@ -163,6 +163,8 @@ class CheckoutController extends Controller
             ]);
 
             foreach ($lineItems as $line) {
+                $unitCost = (float) ($line['product']->cost_price ?? 0);
+
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $line['product']->id,
@@ -171,6 +173,8 @@ class CheckoutController extends Controller
                     'unit_id' => $line['product']->unit_id,
                     'quantity' => $line['quantity'],
                     'unit_price' => $line['unit_price'],
+                    'unit_cost' => $unitCost,
+                    'cost_total' => $unitCost * (float) $line['quantity'],
                     'tax_rate' => $taxEnabled === '1' ? $taxRate : 0,
                     'tax_amount' => $line['tax_amount'],
                     'line_total' => $line['total'],

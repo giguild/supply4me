@@ -21,6 +21,8 @@ class OrderItem extends Model
         'name',
         'quantity',
         'unit_price',
+        'unit_cost',
+        'cost_total',
         'discount_percentage',
         'tax_rate',
         'tax_amount',
@@ -33,6 +35,8 @@ class OrderItem extends Model
         return [
             'quantity' => 'decimal:2',
             'unit_price' => 'decimal:2',
+            'unit_cost' => 'decimal:2',
+            'cost_total' => 'decimal:2',
             'discount_percentage' => 'decimal:2',
             'tax_rate' => 'decimal:2',
             'tax_amount' => 'decimal:2',

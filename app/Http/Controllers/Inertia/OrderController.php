@@ -165,6 +165,7 @@ class OrderController extends Controller
             $lineTotal -= $itemDiscount;
 
             $product = Product::find($item['product_id']);
+            $unitCost = (float) ($product->cost_price ?? 0);
 
             OrderItem::create([
                 'order_id' => $order->id,
@@ -174,6 +175,8 @@ class OrderController extends Controller
                 'name' => $product->name,
                 'quantity' => $item['quantity'],
                 'unit_price' => $item['unit_price'],
+                'unit_cost' => $unitCost,
+                'cost_total' => $unitCost * (float) $item['quantity'],
                 'discount_percentage' => $item['discount_percentage'] ?? 0,
                 'tax_amount' => 0,
                 'line_total' => $lineTotal,
@@ -293,6 +296,7 @@ class OrderController extends Controller
             $lineTotal -= $itemDiscount;
 
             $product = Product::find($item['product_id']);
+            $unitCost = (float) ($product->cost_price ?? 0);
 
             OrderItem::create([
                 'order_id' => $order->id,
@@ -302,6 +306,8 @@ class OrderController extends Controller
                 'name' => $product->name,
                 'quantity' => $item['quantity'],
                 'unit_price' => $item['unit_price'],
+                'unit_cost' => $unitCost,
+                'cost_total' => $unitCost * (float) $item['quantity'],
                 'discount_percentage' => $item['discount_percentage'] ?? 0,
                 'tax_amount' => 0,
                 'line_total' => $lineTotal,

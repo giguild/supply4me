@@ -26,10 +26,16 @@ const props = defineProps({
     format: { type: Boolean, default: true },
 });
 const formattedValue = computed(() => {
-    if (!props.format || typeof props.value === 'string') {
-        const num = parseFloat(props.value);
-        return isNaN(num) ? props.value : num.toLocaleString('en-NG', { maximumFractionDigits: 0 });
-    }
-    return props.value?.toLocaleString('en-NG', { maximumFractionDigits: 0 }) ?? '0';
+    const raw = props.value;
+    if (raw === null || raw === undefined || raw === '') return '0';
+
+    if (typeof raw === 'string' && !props.format) return raw;
+
+    const num = typeof raw === 'string' ? Number(raw.replace(/[^0-9.-]/g, '')) : Number(raw);
+    if (!Number.isFinite(num)) return typeof raw === 'string' ? raw : '0';
+
+    return num.toLocaleString('en-NG', {
+        maximumFractionDigits: props.format ? 0 : 2,
+    });
 });
 </script>

@@ -154,10 +154,14 @@ class ReportController extends Controller
         $startDate = $request->get('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->get('end_date', now()->endOfMonth()->toDateString());
 
-        $totalRevenue = Order::where('company_id', $companyId)
+        $totalRevenue = (float) Order::where('company_id', $companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->whereNotIn('status', ['cancelled', 'draft'])
             ->sum('total_amount');
+
+        $totalCogs = (float) $this->cogsQuery($companyId)
+            ->whereBetween('orders.created_at', [$startDate, $endDate])
+            ->sum(DB::raw('order_items.quantity * COALESCE(NULLIF(order_items.unit_cost, 0), products.cost_price)'));
 
         $totalInvoiced = Invoice::where('company_id', $companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
@@ -191,34 +195,66 @@ class ReportController extends Controller
 
         $revenueByMonth = Order::where('company_id', $companyId)
             ->whereNotIn('status', ['cancelled', 'draft'])
-            ->where('created_at', '>=', now()->subMonths(12)->startOfMonth())
+            ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month")
             ->selectRaw('SUM(total_amount) as revenue')
             ->groupBy('month')
             ->orderBy('month')
-            ->get();
+            ->pluck('revenue', 'month');
 
-        $monthlyBreakdown = $revenueByMonth->map(function ($item) use ($companyId) {
-            $monthStart = $item->month . '-01';
-            $monthEnd = now()->parse($monthStart)->endOfMonth()->toDateString();
-            $monthExpenses = Expense::where('company_id', $companyId)
-                ->where('status', 'approved')
-                ->whereBetween('expense_date', [$monthStart, $monthEnd])
-                ->sum('amount');
-            return [
-                'name' => $item->month,
-                'revenue' => $item->revenue,
-                'expenses' => $monthExpenses,
-                'profit' => $item->revenue - $monthExpenses,
-            ];
-        });
+        $cogsByMonth = $this->cogsQuery($companyId)
+            ->where('orders.created_at', '>=', now()->subMonths(11)->startOfMonth())
+            ->selectRaw("DATE_FORMAT(orders.created_at, '%Y-%m') as month")
+            ->selectRaw('SUM(order_items.quantity * COALESCE(NULLIF(order_items.unit_cost, 0), products.cost_price)) as cogs')
+            ->groupBy('month')
+            ->pluck('cogs', 'month');
 
-        $totalExpenses = Expense::where('company_id', $companyId)
+        $expensesByMonth = Expense::where('company_id', $companyId)
+            ->where('status', 'approved')
+            ->where('expense_date', '>=', now()->subMonths(11)->startOfMonth()->toDateString())
+            ->selectRaw("DATE_FORMAT(expense_date, '%Y-%m') as month")
+            ->selectRaw('SUM(amount) as expenses')
+            ->groupBy('month')
+            ->pluck('expenses', 'month');
+
+        $refundsByMonth = Payment::where('company_id', $companyId)
+            ->where('status', 'refunded')
+            ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month")
+            ->selectRaw('SUM(amount) as refunds')
+            ->groupBy('month')
+            ->pluck('refunds', 'month');
+
+        $monthlyBreakdown = collect();
+        for ($i = 11; $i >= 0; $i--) {
+            $key = now()->subMonths($i)->format('Y-m');
+            $revenue = (float) ($revenueByMonth[$key] ?? 0);
+            $cogs = (float) ($cogsByMonth[$key] ?? 0);
+            $expenses = (float) ($expensesByMonth[$key] ?? 0);
+            $refunds = (float) ($refundsByMonth[$key] ?? 0);
+            $grossProfit = $revenue - $cogs;
+
+            $monthlyBreakdown->push([
+                'name' => $key,
+                'revenue' => $revenue,
+                'cogs' => $cogs,
+                'gross_profit' => $grossProfit,
+                'expenses' => $expenses,
+                'refunds' => $refunds,
+                'profit' => $grossProfit - $expenses - $refunds,
+            ]);
+        }
+
+        $monthlyBreakdown = $monthlyBreakdown->reject(
+            fn ($m) => $m['revenue'] == 0 && $m['cogs'] == 0 && $m['expenses'] == 0 && $m['refunds'] == 0
+        )->values();
+
+        $totalExpenses = (float) Expense::where('company_id', $companyId)
             ->where('status', 'approved')
             ->whereBetween('expense_date', [$startDate, $endDate])
             ->sum('amount');
 
-        $totalRefunded = Payment::where('company_id', $companyId)
+        $totalRefunded = (float) Payment::where('company_id', $companyId)
             ->where('status', 'refunded')
             ->whereBetween('created_at', [$startDate, $endDate])
             ->sum('amount');
@@ -240,11 +276,15 @@ class ReportController extends Controller
                 'created_at' => $p->created_at,
             ]);
 
+        $grossProfit = $totalRevenue - $totalCogs;
+
         return Inertia::render('Reports/Financial', [
             'data' => [
                 'revenue' => $totalRevenue,
+                'cogs' => $totalCogs,
+                'gross_profit' => $grossProfit,
                 'expenses' => $totalExpenses,
-                'profit' => $totalRevenue - $totalExpenses - $totalRefunded,
+                'profit' => $grossProfit - $totalExpenses - $totalRefunded,
                 'total_invoiced' => $totalInvoiced,
                 'total_paid' => $totalPaid,
                 'total_outstanding' => $totalOutstanding,
@@ -259,5 +299,14 @@ class ReportController extends Controller
                 'end_date' => $endDate,
             ],
         ]);
+    }
+
+    private function cogsQuery(string $companyId): \Illuminate\Database\Query\Builder
+    {
+        return DB::table('order_items')
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->where('orders.company_id', $companyId)
+            ->whereNotIn('orders.status', ['cancelled', 'draft']);
     }
 }

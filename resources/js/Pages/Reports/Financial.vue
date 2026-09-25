@@ -2,7 +2,7 @@
     <AppLayout :user="$page.props.auth.user">
         <PageHeader title="Financial Report" subtitle="Revenue, expenses, and profit analysis" />
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
             <StatCard
                 label="Revenue"
                 :value="data.revenue ?? 0"
@@ -10,10 +10,22 @@
                 subtitle="total income"
             />
             <StatCard
+                label="Cost of Goods"
+                :value="data.cogs ?? 0"
+                prefix="₦ "
+                subtitle="cost of purchase"
+            />
+            <StatCard
+                label="Gross Profit"
+                :value="data.gross_profit ?? 0"
+                prefix="₦ "
+                subtitle="after cost of goods"
+            />
+            <StatCard
                 label="Expenses"
                 :value="data.expenses ?? 0"
                 prefix="₦ "
-                subtitle="total costs"
+                subtitle="operating costs"
             />
             <StatCard
                 label="Refunds"
@@ -22,10 +34,10 @@
                 subtitle="refunded payments"
             />
             <StatCard
-                label="Profit"
+                label="Net Profit"
                 :value="data.profit ?? 0"
                 prefix="₦ "
-                subtitle="net income"
+                subtitle="actual profit"
             />
         </div>
 
@@ -39,21 +51,29 @@
                         <tr>
                             <th>Month</th>
                             <th>Revenue</th>
+                            <th>Cost of Goods</th>
+                            <th>Gross Profit</th>
                             <th>Expenses</th>
-                            <th>Profit</th>
+                            <th>Refunds</th>
+                            <th>Net Profit</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="month in data.monthly_breakdown ?? []" :key="month.name">
                             <td class="font-medium text-gray-900 dark:text-gray-100">{{ month.name }}</td>
                             <td class="text-green-600 font-medium">₦ {{ formatCurrency(month.revenue) }}</td>
+                            <td class="text-orange-600 font-medium">₦ {{ formatCurrency(month.cogs) }}</td>
+                            <td class="font-medium" :class="month.gross_profit >= 0 ? 'text-blue-600' : 'text-red-600'">
+                                ₦ {{ formatCurrency(month.gross_profit) }}
+                            </td>
                             <td class="text-red-600 font-medium">₦ {{ formatCurrency(month.expenses) }}</td>
-                            <td class="font-medium" :class="month.profit >= 0 ? 'text-blue-600' : 'text-red-600'">
+                            <td class="text-red-600 font-medium">₦ {{ formatCurrency(month.refunds) }}</td>
+                            <td class="font-semibold" :class="month.profit >= 0 ? 'text-green-600' : 'text-red-600'">
                                 ₦ {{ formatCurrency(month.profit) }}
                             </td>
                         </tr>
                         <tr v-if="!data.monthly_breakdown?.length">
-                            <td colspan="4">
+                            <td colspan="7">
                                 <div class="text-center py-8">
                                     <svg class="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                                     <p class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">No financial data</p>
