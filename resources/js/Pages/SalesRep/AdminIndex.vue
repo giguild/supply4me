@@ -19,7 +19,7 @@
                 :value="formatCurrency(totals.total_revenue)"
                 :format="false"
                 prefix="₦"
-                subtitle="from rep customers"
+                subtitle="for selected period"
             />
             <StatCard
                 label="Total Collected"
@@ -32,11 +32,21 @@
 
         <!-- Filters -->
         <div class="card rounded-2xl p-4 mb-6">
-            <form @submit.prevent="applyFilters" class="flex flex-col sm:flex-row gap-3">
-                <div class="flex-1">
+            <form @submit.prevent="applyFilters" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+                <div>
+                    <label class="form-label">Start Date</label>
+                    <input v-model="filters.start_date" type="date" class="form-input" />
+                </div>
+                <div>
+                    <label class="form-label">End Date</label>
+                    <input v-model="filters.end_date" type="date" class="form-input" />
+                </div>
+                <div>
+                    <label class="form-label">Search</label>
                     <input v-model="filters.search" type="text" placeholder="Search sales reps..." class="form-input" />
                 </div>
-                <div class="w-full sm:w-48">
+                <div>
+                    <label class="form-label">Status</label>
                     <select v-model="filters.status" class="form-input">
                         <option value="">All Status</option>
                         <option value="active">Active</option>
@@ -44,7 +54,7 @@
                         <option value="pending">Pending</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary">Search</button>
+                <button type="submit" class="btn btn-primary">Apply</button>
             </form>
         </div>
 
@@ -136,6 +146,8 @@ const mobileColumns = [
 ];
 
 const filters = reactive({
+    start_date: props.filters?.start_date || '',
+    end_date: props.filters?.end_date || '',
     search: props.filters?.search || '',
     status: props.filters?.status || '',
 });

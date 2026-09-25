@@ -28,6 +28,11 @@ class ReportController extends Controller
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
 
+        $countedOrders = Order::where('company_id', $companyId)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereNotIn('status', ['cancelled', 'draft'])
+            ->count();
+
         $totalRevenue = Order::where('company_id', $companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->whereNotIn('status', ['cancelled', 'draft'])
@@ -68,7 +73,7 @@ class ReportController extends Controller
             ->limit(10)
             ->get();
 
-        $averageOrderValue = $totalOrders > 0 ? round($totalRevenue / $totalOrders, 2) : 0;
+        $averageOrderValue = $countedOrders > 0 ? round($totalRevenue / $countedOrders, 2) : 0;
 
         return Inertia::render('Reports/Sales', [
             'data' => [

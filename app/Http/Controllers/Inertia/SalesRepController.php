@@ -17,6 +17,8 @@ class SalesRepController extends Controller
     public function adminIndex(Request $request): Response
     {
         $companyId = $request->user()->company_id;
+        $startDate = $request->get('start_date', now()->startOfMonth()->toDateString());
+        $endDate = $request->get('end_date', now()->endOfMonth()->toDateString());
 
         $salesReps = User::where('company_id', $companyId)
             ->role('sales_rep')
@@ -33,6 +35,7 @@ class SalesRepController extends Controller
 
         $orderStats = Order::where('orders.company_id', $companyId)
             ->whereNotIn('orders.status', ['cancelled', 'draft'])
+            ->whereBetween('orders.created_at', [$startDate, $endDate])
             ->whereNotNull('orders.customer_id')
             ->join('customers', 'orders.customer_id', '=', 'customers.id')
             ->whereNotNull('customers.assigned_to')
@@ -47,6 +50,7 @@ class SalesRepController extends Controller
             ->keyBy('assigned_to');
 
         $paymentStats = Payment::where('payments.company_id', $companyId)
+            ->whereBetween('payments.created_at', [$startDate, $endDate])
             ->whereNotNull('payments.customer_id')
             ->join('customers', 'payments.customer_id', '=', 'customers.id')
             ->whereNotNull('customers.assigned_to')
@@ -95,13 +99,18 @@ class SalesRepController extends Controller
 
         return Inertia::render('SalesRep/AdminIndex', [
             'salesReps' => $reps,
-            'filters' => $request->only(['search', 'status']),
+            'filters' => $request->only(['search', 'status']) + [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ],
         ]);
     }
 
     public function show(Request $request, User $user): Response
     {
         $companyId = $request->user()->company_id;
+        $startDate = $request->get('start_date', now()->startOfMonth()->toDateString());
+        $endDate = $request->get('end_date', now()->endOfMonth()->toDateString());
 
         $customerCounts = Customer::where('company_id', $companyId)
             ->where('assigned_to', $user->id)
@@ -115,6 +124,7 @@ class SalesRepController extends Controller
         $orderStats = Order::where('orders.company_id', $companyId)
             ->whereHas('customer', fn ($q) => $q->where('assigned_to', $user->id))
             ->whereNotIn('orders.status', ['cancelled', 'draft'])
+            ->whereBetween('orders.created_at', [$startDate, $endDate])
             ->select(
                 DB::raw('COUNT(orders.id) as total_orders'),
                 DB::raw('SUM(orders.total_amount) as total_revenue'),
@@ -123,6 +133,7 @@ class SalesRepController extends Controller
             ->first();
 
         $paymentStats = Payment::where('payments.company_id', $companyId)
+            ->whereBetween('payments.created_at', [$startDate, $endDate])
             ->whereNotNull('payments.customer_id')
             ->join('customers', 'payments.customer_id', '=', 'customers.id')
             ->where('customers.assigned_to', $user->id)
@@ -135,6 +146,7 @@ class SalesRepController extends Controller
 
         $recentOrders = Order::where('orders.company_id', $companyId)
             ->whereHas('customer', fn ($q) => $q->where('assigned_to', $user->id))
+            ->whereBetween('orders.created_at', [$startDate, $endDate])
             ->with('customer')
             ->latest()
             ->limit(10)
@@ -170,6 +182,10 @@ class SalesRepController extends Controller
             ],
             'recentOrders' => $recentOrders,
             'customers' => $customers,
+            'filters' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ],
         ]);
     }
 
