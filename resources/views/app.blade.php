@@ -25,9 +25,38 @@
     @inertia
     <script>
         if ('serviceWorker' in navigator) {
+            let refreshing = false;
+
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (refreshing) return;
+                refreshing = true;
+                window.location.reload();
+            });
+
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('SW registered:', reg.scope))
+                    .then(reg => {
+                        reg.addEventListener('updatefound', () => {
+                            const worker = reg.installing;
+                            if (!worker) return;
+
+                            worker.addEventListener('statechange', () => {
+                                if (
+                                    worker.state === 'installed' &&
+                                    navigator.serviceWorker.controller
+                                ) {
+                                    worker.postMessage({ type: 'SKIP_WAITING' });
+                                }
+                            });
+                        });
+
+                        const check = () => reg.update().catch(() => {});
+                        setInterval(check, 60 * 60 * 1000);
+                        window.addEventListener('focus', check);
+                        document.addEventListener('visibilitychange', () => {
+                            if (document.visibilityState === 'visible') check();
+                        });
+                    })
                     .catch(err => console.log('SW registration failed:', err));
             });
         }
