@@ -1,61 +1,77 @@
-const VERSION = 'v2';
+const VERSION = 'v3';
+
+const PRECACHE_CACHE = `supply4me-precache-${VERSION}`;
+const DATA_CACHE = `supply4me-data-${VERSION}`;
 const STATIC_CACHE = `supply4me-static-${VERSION}`;
-const RUNTIME_CACHE = `supply4me-runtime-${VERSION}`;
+
+const CURRENT_CACHES = [PRECACHE_CACHE, DATA_CACHE, STATIC_CACHE];
+
+const PRECACHE_URLS = ['/', '/shop', '/manifest.json', '/images/logo_dark.png'];
+
+const STATIC_PREFIXES = ['/build/', '/images/', '/fonts/', '/icons/'];
 
 const OFFLINE_PATHS = ['/', '/shop'];
+const OFFLINE_PREFIXES = ['/product/'];
 
-const OFFLINE_ASSETS = [
-    '/',
-    '/shop',
-    '/manifest.json',
-    '/images/logo_dark.png',
-];
+const NETWORK_ONLY_PREFIXES = ['/api/', '/sanctum/', '/livewire/', '/broadcasting/'];
 
 const isStaticAsset = (url) =>
-    url.pathname.startsWith('/build/') ||
-    url.pathname.startsWith('/images/') ||
-    url.pathname.startsWith('/fonts/');
+    STATIC_PREFIXES.some((prefix) => url.pathname.startsWith(prefix));
 
-const isCacheable = (response) => {
+const isOfflineCachable = (url) =>
+    OFFLINE_PATHS.includes(url.pathname) ||
+    OFFLINE_PREFIXES.some((prefix) => url.pathname.startsWith(prefix));
+
+const isStoreable = (response) => {
+    if (!response || response.status !== 200 || response.type !== 'basic') {
+        return false;
+    }
+
+    if (response.headers.get('Vary') === '*') {
+        return false;
+    }
+
     const control = response.headers.get('Cache-Control') || '';
-    return !control.includes('no-store') && !control.includes('private');
+
+    return !control.includes('no-store');
 };
 
-const cacheFirst = (request) =>
+const putInCache = (cacheName, request, response) => {
+    const clone = response.clone();
+    caches.open(cacheName).then((cache) => cache.put(request, clone));
+};
+
+const serveStatic = (request) =>
     caches.match(request).then((cached) => {
         if (cached) {
             return cached;
         }
 
         return fetch(request).then((response) => {
-            if (response && response.status === 200 && response.type === 'basic') {
-                const clone = response.clone();
-                caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, clone));
+            if (isStoreable(response)) {
+                putInCache(STATIC_CACHE, request, response);
             }
             return response;
         });
     });
 
-const networkFirst = (request) =>
+const serveDynamic = (request) =>
     fetch(request)
         .then((response) => {
-            if (
-                response &&
-                response.status === 200 &&
-                response.type === 'basic' &&
-                isCacheable(response) &&
-                OFFLINE_PATHS.includes(new URL(request.url).pathname)
-            ) {
-                const clone = response.clone();
-                caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, clone));
+            if (isStoreable(response) && isOfflineCachable(new URL(request.url))) {
+                putInCache(DATA_CACHE, request, response);
             }
             return response;
         })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match('/shop')));
+        .catch(() =>
+            caches
+                .match(request)
+                .then((cached) => cached || caches.match('/shop'))
+        );
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(STATIC_CACHE).then((cache) => cache.addAll(OFFLINE_ASSETS))
+        caches.open(PRECACHE_CACHE).then((cache) => cache.addAll(PRECACHE_URLS))
     );
     self.skipWaiting();
 });
@@ -65,8 +81,8 @@ self.addEventListener('activate', (event) => {
         caches.keys().then((keys) =>
             Promise.all(
                 keys
-                    .filter((name) => name !== STATIC_CACHE && name !== RUNTIME_CACHE)
-                    .map((name) => caches.delete(name))
+                    .filter((key) => !CURRENT_CACHES.includes(key))
+                    .map((key) => caches.delete(key))
             )
         )
     );
@@ -86,22 +102,16 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/sanctum/')) {
-        return;
-    }
-
-    if (request.headers.get('X-Inertia')) {
-        return;
-    }
-
-    if (request.mode === 'navigate') {
-        event.respondWith(networkFirst(request));
+    if (NETWORK_ONLY_PREFIXES.some((prefix) => url.pathname.startsWith(prefix))) {
         return;
     }
 
     if (isStaticAsset(url)) {
-        event.respondWith(cacheFirst(request));
+        event.respondWith(serveStatic(request));
+        return;
     }
+
+    event.respondWith(serveDynamic(request));
 });
 
 self.addEventListener('message', (event) => {
